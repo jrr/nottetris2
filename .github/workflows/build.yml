@@ -4,9 +4,21 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu:16.04
+    runs-on: ubuntu-latest
+    container: ubuntu:16.04
 
     steps:
       - uses: actions/checkout@v2
 
-      - run: echo hello world
+      - run: make apt-install-deps
+
+      - name: download love2d
+        run: |
+          make 0.7.2.tar.gz
+          tar xfz 0.7.2.tar.gz
+
+      - name: build love2d
+        run: |
+          ./platform/unix/automagic
+          ./configure
+          make
