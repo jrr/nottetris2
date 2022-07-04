@@ -28,3 +28,4 @@ jobs:
           ./platform/unix/automagic
           ./configure
           make
+          ./src/love --version
