@@ -1,4 +1,8 @@
 function love.load()
+	-- if this works (visible from CI output), put it behind a command-line parameter:
+	print "exiting.."
+        love.event.push("q")
+
 	--requires--
 	require "controls"
 	require "gameB"
