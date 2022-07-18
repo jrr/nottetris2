@@ -29,3 +29,7 @@ jobs:
           ./configure
           make
           ./src/love --version
+
+      - name: invoke game
+        run: |
+          ./love-0.7.2/src/love .
