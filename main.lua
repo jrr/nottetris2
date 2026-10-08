@@ -26,7 +26,7 @@ function love.load()
 			love.graphics.setMode( 160*scale, 144*scale, false, vsync, 16 )
 		end
 	else
-		love.graphics.setMode( 0, 0, true, vsync, 16 )
+		love.graphics.setMode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
 		love.mouse.setVisible( false )
 		desktopwidth, desktopheight = love.graphics.getWidth(), love.graphics.getHeight()
 		saveoptions()
@@ -581,7 +581,7 @@ function togglefullscreen(fullscr)
 		physicsscale = scale/4
 		love.graphics.setMode( 160*scale, 144*scale, false, vsync, 16 )
 	else
-		love.graphics.setMode( 0, 0, true, vsync, 16 )
+		love.graphics.setMode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
 		desktopwidth, desktopheight = love.graphics.getWidth(), love.graphics.getHeight()
 		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
 		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
