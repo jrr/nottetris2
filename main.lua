@@ -454,10 +454,10 @@ function newPaddedImageFont(filename, glyphs)
         padded:paste(source, 0, 0)
 		local image = love.graphics.newImage(padded)
 		image:setFilter("nearest", "nearest")
-        return love.graphics.newImageFont(image, glyphs)
+        return love.graphics.newImageFont(image, glyphs, 1) --0.10 no longer adds a pixel between glyphs
     end
 	
-    return love.graphics.newImageFont(source, glyphs)
+    return love.graphics.newImageFont(source, glyphs, 1)
 end
 
 function scaleImagedata(imagedata, i)
@@ -572,8 +572,8 @@ function autosize()
 	desktopwidth, desktopheight = love.window.getDesktopDimensions()
 end
 
-function setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags
-	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, fsaa=fsaa})
+function setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags (fsaa is msaa from 0.10)
+	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
 end
 
 function togglefullscreen(fullscr)
