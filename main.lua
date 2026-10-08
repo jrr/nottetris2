@@ -1,11 +1,11 @@
 function love.load()
 	--requires--
-	require "gameB.lua"
-	require "gameBmulti.lua"
-	require "gameA.lua"
-	require "menu.lua"
-	require "failed.lua"
-	require "rocket.lua"
+	require "gameB"
+	require "gameBmulti"
+	require "gameA"
+	require "menu"
+	require "failed"
+	require "rocket"
 	
 	vsync = true
 	
@@ -697,8 +697,8 @@ function table2string(mytable)
 	return output
 end
 
-function getPoints2table(shape)
-	x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8 = shape:getPoints()
+function getPoints2table(fixture) --world coordinates of a polygon fixture's points
+	x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8 = fixture:getBody():getWorldPoints(fixture:getShape():getPoints())
 	if x4 == nil then
 		return {x1,y1,x2,y2,x3,y3}
 	end
@@ -715,6 +715,92 @@ function getPoints2table(shape)
 		return {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7}
 	end
 	return     {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8}
+end
+
+--LÖVE 0.7 made polygons from the convex hull of the points it was given, dropping
+--collinear and inward points; 0.8 uses the points as they are. This is 0.7's Graham
+--scan, so cut pieces get the same shapes. Takes and returns {x1,y1,x2,y2,...}.
+function convexhull(coords)
+	if #coords <= 6 then
+		return coords
+	end
+	local points = {}
+	for i = 1, #coords, 2 do
+		table.insert(points, {coords[i], coords[i+1]})
+	end
+	local anchor = 1
+	for i = 2, #points do
+		if points[i][2] < points[anchor][2] or (points[i][2] == points[anchor][2] and points[i][1] < points[anchor][1]) then
+			anchor = i
+		end
+	end
+	local a = table.remove(points, anchor)
+	local function cross(o, p, q)
+		return (p[1]-o[1])*(q[2]-o[2]) - (q[1]-o[1])*(p[2]-o[2])
+	end
+	table.sort(points, function(p, q)
+		local c = cross(a, p, q)
+		if math.abs(c) > 1e-12 then
+			return c > 0
+		end
+		return (p[1]-a[1])^2 + (p[2]-a[2])^2 < (q[1]-a[1])^2 + (q[2]-a[2])^2
+	end)
+	local hull = {a, points[1]}
+	for i = 2, #points do
+		while #hull > 1 and cross(hull[#hull-1], hull[#hull], points[i]) <= 1e-12 do
+			table.remove(hull)
+		end
+		table.insert(hull, points[i])
+	end
+	local result = {}
+	for i, p in ipairs(hull) do
+		result[i*2-1], result[i*2] = p[1], p[2]
+	end
+	return result
+end
+
+--Shapes in LÖVE 0.7 belonged to a body directly and had friction 0.5, restitution 0.1
+--and density 1. In 0.8 they're attached to the body by a fixture, whose defaults
+--differ, so these set 0.7's values.
+function newfixture(body, shape)
+	local fixture = love.physics.newFixture(body, shape, 1)
+	fixture:setFriction(0.5)
+	fixture:setRestitution(0.1)
+	return fixture
+end
+
+--LÖVE 0.7 collected contacts during world:update and only then called the collision
+--callback, with each pair of shapes' data. 0.8 calls it in the middle of the update,
+--when bodies can't be created, which the games do when a piece lands. So contacts are
+--queued during the update and handed to the callback afterwards, as 0.7 did.
+local queuedcollisions = {}
+
+function queuecollisions(callback) --use as world:setCallbacks(queuecollisions(collide))
+	return function(a, b)
+		table.insert(queuedcollisions, {callback, a, b})
+	end
+end
+
+local function userdata(fixture) --nil if the fixture was destroyed by an earlier callback
+	local ok, data = pcall(fixture.getUserData, fixture)
+	return ok and data or nil
+end
+
+function updateworld(dt)
+	world:update(dt)
+	local queue = queuedcollisions
+	queuedcollisions = {}
+	for _, c in ipairs(queue) do
+		c[1](userdata(c[2]), userdata(c[3]))
+	end
+end
+
+function newrectanglefixture(body, x, y, width, height)
+	return newfixture(body, love.physics.newRectangleShape(x, y, width, height))
+end
+
+function newpolygonfixture(body, ...)
+	return newfixture(body, love.physics.newPolygonShape(unpack(convexhull({...}))))
 end
 
 function getrainbowcolor(i)
