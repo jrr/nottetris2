@@ -791,7 +791,7 @@ local function userdata(fixture) --nil if the fixture was destroyed by an earlie
 end
 
 function updateworld(dt)
-	world:update(dt)
+	world:update(dt, 8, 6) --11 defaults to 3 position iterations; earlier versions ran 6
 	local queue = queuedcollisions
 	queuedcollisions = {}
 	for _, c in ipairs(queue) do
