@@ -837,7 +837,7 @@ function getrainbowcolor(i)
 	return {r, g, b}
 end
 
-function love.keypressed( key, unicode )
+function love.keypressed( key )
 	if gamestate == nil then
 		if key == "return" then
 			gamestate = "title"
@@ -1228,20 +1228,23 @@ function love.keypressed( key, unicode )
 				cursorblink = true
 				highscorename[highscoreno] = string.sub(highscorename[highscoreno], 1, highscorename[highscoreno]:len()-1)
 			end
-			
-		elseif whitelist[unicode] == true then
-			if highscorename[highscoreno]:len() < 6 then
-				cursorblink = true
-				highscorename[highscoreno] = highscorename[highscoreno] .. string.char(unicode)
-				love.audio.stop(highscorebeep)
-				love.audio.play(highscorebeep)
-			end
 		end
 	elseif string.sub(gamestate, 1, 6) == "rocket" then
 		if key == "return" then
 			love.audio.stop(musicrocket1to3)
 			love.audio.stop(musicrocket4)
 			failed_checkhighscores()
+		end
+	end
+end
+
+function love.textinput( text ) --0.9 sends typed characters here instead of to keypressed
+	if gamestate == "highscoreentry" and text:len() == 1 and whitelist[text:byte()] == true then
+		if highscorename[highscoreno]:len() < 6 then
+			cursorblink = true
+			highscorename[highscoreno] = highscorename[highscoreno] .. text
+			love.audio.stop(highscorebeep)
+			love.audio.play(highscorebeep)
 		end
 	end
 end
