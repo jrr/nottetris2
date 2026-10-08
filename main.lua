@@ -572,8 +572,8 @@ function autosize()
 	desktopwidth, desktopheight = love.window.getDesktopDimensions()
 end
 
-function setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags
-	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, fsaa=fsaa})
+function setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags (fsaa is msaa from 0.10)
+	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
 end
 
 function togglefullscreen(fullscr)
