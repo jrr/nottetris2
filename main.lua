@@ -92,7 +92,7 @@ function love.load()
 	musicoptions:setVolume( 1 )
 	musicoptions:setLooping( true )
 	
-	boot = love.audio.newSource( "sounds/boot.ogg")
+	boot = love.audio.newSource( "sounds/boot.ogg", "stream") --11 needs the type; stream was the default
 	blockfall = love.audio.newSource( "sounds/blockfall.ogg", "stream")
 	blockturn = love.audio.newSource( "sounds/turn.ogg", "stream")
 	blockmove = love.audio.newSource( "sounds/move.ogg", "stream")
@@ -132,7 +132,7 @@ function love.load()
 	math.randomseed( os.time() )
 	math.random();math.random();math.random() --discarding some as they seem to tend to unrandomness.
 	
-	love.graphics.setBackgroundColor( 255, 255, 255 )
+	love.graphics.setBackgroundColor( 1, 1, 1 ) --11 takes colors as 0-1
 
 	p1wins = 0
 	p2wins = 0
@@ -380,18 +380,19 @@ function newImageData(path, s)
 	for y = 0, height-1 do
 		for x = 0, width-1 do
 			local oldr, oldg, oldb, olda = imagedata:getPixel(x, y)
+			oldr = oldr*255 --11 gives pixels as 0-1
 			
 			if olda ~= 0 then
 				if oldr > 203 and oldr < 213 then --lightgrey
 					local r = 145 + rr*64
 					local g = 145 + rg*64
 					local b = 145 + rb*64
-					imagedata:setPixel(x, y, r, g, b, olda)
+					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
 				elseif oldr > 107 and oldr < 117 then --darkgrey
 					local r = 73 + rr*43
 					local g = 73 + rg*43
 					local b = 73 + rb*43
-					imagedata:setPixel(x, y, r, g, b, olda)
+					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
 				end
 			end
 		end
@@ -452,9 +453,9 @@ function newPaddedImageFont(filename, glyphs)
     if wp ~= w or hp ~= h then
         local padded = love.image.newImageData(wp, hp)
         padded:paste(source, 0, 0)
-		local image = love.graphics.newImage(padded)
-		image:setFilter("nearest", "nearest")
-        return love.graphics.newImageFont(image, glyphs, 1) --0.10 no longer adds a pixel between glyphs
+		local font = love.graphics.newImageFont(padded, glyphs, 1) --0.10 no longer adds a pixel between glyphs; 11 takes ImageData, not an Image
+		font:setFilter("nearest", "nearest")
+        return font
     end
 	
     return love.graphics.newImageFont(source, glyphs, 1)
@@ -499,7 +500,7 @@ function changevolume(i)
 end
 
 function loadoptions()
-	if love.filesystem.exists("options.txt") then
+	if love.filesystem.getInfo("options.txt") then --11 deprecates exists, and says so on screen
 		local s = love.filesystem.read("options.txt")
 		local split1 = s:split("\n")
 		for i = 1, #split1 do
@@ -608,7 +609,7 @@ function loadhighscores()
 		fileloc = "highscoresB.txt"
 	end
 	
-	if love.filesystem.exists( fileloc ) then
+	if love.filesystem.getInfo( fileloc ) then
 		
 		highdata = love.filesystem.read( fileloc )
 		highdata = highdata:split(";")
@@ -790,7 +791,7 @@ local function userdata(fixture) --nil if the fixture was destroyed by an earlie
 end
 
 function updateworld(dt)
-	world:update(dt)
+	world:update(dt, 8, 6) --11 defaults to 3 position iterations; earlier versions ran 6
 	local queue = queuedcollisions
 	queuedcollisions = {}
 	for _, c in ipairs(queue) do
@@ -1140,7 +1141,7 @@ function love.keypressed( key )
 				love.audio.play(pausesound)
 			else
 				if musicno < 4 then
-					love.audio.resume(music[musicno])
+					music[musicno]:play() --11 has no love.audio.resume; play resumes a paused source
 				end
 			end
 		end
