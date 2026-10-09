@@ -89,6 +89,7 @@ function failed_checkhighscores()
 			love.audio.play(highscoreintro)
 			highscoremusicstart = love.timer.getTime()
 			musicchanged = false
+			love.keyboard.setTextInput(true) --12 (SDL3) starts with text input off, so typed names never arrived
 			gamestate = "highscoreentry"
 			break
 		end
