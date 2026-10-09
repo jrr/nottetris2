@@ -702,7 +702,7 @@ function table2string(mytable)
 end
 
 function getPoints2table(fixture) --world coordinates of a polygon fixture's points
-	x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8 = fixture:getBody():getWorldPoints(fixture:getShape():getPoints())
+	x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8 = fixture:getBody():getWorldPoints(fixture:getPoints()) --12's shapes are their own fixtures
 	if x4 == nil then
 		return {x1,y1,x2,y2,x3,y3}
 	end
@@ -766,8 +766,7 @@ end
 --Shapes in LÖVE 0.7 belonged to a body directly and had friction 0.5, restitution 0.1
 --and density 1. In 0.8 they're attached to the body by a fixture, whose defaults
 --differ, so these set 0.7's values.
-function newfixture(body, shape)
-	local fixture = love.physics.newFixture(body, shape, 1)
+function newfixture(fixture) --12 attaches shapes to bodies itself, with density 1; they replace fixtures
 	fixture:setFriction(0.5)
 	fixture:setRestitution(0.1)
 	return fixture
@@ -800,11 +799,11 @@ function updateworld(dt)
 end
 
 function newrectanglefixture(body, x, y, width, height)
-	return newfixture(body, love.physics.newRectangleShape(x, y, width, height))
+	return newfixture(love.physics.newRectangleShape(body, x, y, width, height))
 end
 
 function newpolygonfixture(body, ...)
-	return newfixture(body, love.physics.newPolygonShape(unpack(convexhull({...}))))
+	return newfixture(love.physics.newPolygonShape(body, unpack(convexhull({...}))))
 end
 
 function getrainbowcolor(i)
