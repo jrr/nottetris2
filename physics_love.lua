@@ -1,4 +1,4 @@
---The physics the game needs, on LÖVE (Box2D). A Chipmunk version of this file provides the same functions.
+--The physics the game needs, on LÖVE (Box2D). physics_chipmunk.lua provides the same functions on Chipmunk.
 --Look love.* up on every call rather than keeping references, as platform_love.lua does.
 --
 --These functions make worlds, bodies and shapes. The game then calls methods on them, by LÖVE's
