@@ -1,0 +1,14 @@
+# The Playdate SDK and Arm's toolchain, for build.sh: `mise install` here, once.
+[tools]
+cmake = "4"
+
+# Arm's own toolchain builds; mise's gcc-arm-none-eabi plugin only offers Intel builds for macOS.
+"http:arm-none-eabi-gcc" = { version = "14.3.rel1", url = "https://developer.arm.com/-/media/Files/downloads/gnu/{{ version }}/binrel/arm-gnu-toolchain-{{ version }}-darwin-arm64-arm-none-eabi.tar.xz", strip_components = 1, bin_path = "bin" }
+
+# The SDK zip holds an installer package whose postinstall script just copies the SDK folder
+# into ~/Developer/PlaydateSDK, so unpack the folder from the package here instead.
+"http:playdate-sdk" = { version = "3.1.2", url = "https://download.panic.com/playdate_sdk/PlaydateSDK-{{ version }}.zip", postinstall = "cd \"$MISE_TOOL_INSTALL_PATH\" && pkgutil --expand-full PlaydateSDK.pkg pkg && mv pkg/PlaydateSDK.pkg/Payload/PlaydateSDK sdk && rm -rf pkg PlaydateSDK.pkg __MACOSX && (xattr -rd com.apple.quarantine sdk || true)" }
+
+[env]
+PLAYDATE_SDK_PATH = { value = "{{ exec(command='mise where http:playdate-sdk') }}/sdk", tools = true }
+_.path = { path = "{{ env.PLAYDATE_SDK_PATH }}/bin", tools = true }
