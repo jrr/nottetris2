@@ -6,46 +6,19 @@ require "physics_chipmunk"
 function game_load()
 	--requires--
 	require "gameB"
-	require "gameBmulti"
 	require "gameA"
 	require "menu"
 	require "failed"
 	require "rocket"
 	
 	vsync = true
+	hue = 0.08 --the color the art is tinted
 	
+	--the window: as big as fits on the screen, up to 5 times the Game Boy's
 	autosize()
-	
-	suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
-	if suggestedscale > 5 then
-		suggestedscale = 5
-	end
-	
-	loadoptions()
-	
-	maxscale = math.min(math.floor(desktopheight/144), math.floor(desktopwidth/160)) 
-	maxmpscale = math.min(math.floor(desktopheight/144), math.floor(desktopwidth/274)) 
-	
-	if fullscreen == false then
-		if scale ~= 5 then
-			platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
-		end
-	else
-		platform.setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
-		platform.setmousevisible( false )
-		desktopwidth, desktopheight = platform.getdimensions()
-		saveoptions()
-		
-		suggestedscale = math.floor((desktopheight-50)/144)
-		if suggestedscale > 5 then
-			suggestedscale = 5
-		end
-		maxscale = math.min(math.floor(desktopheight/144), math.floor(desktopwidth/160))
-		
-		scale = maxscale
-		
-		fullscreenoffsetX = (desktopwidth-160*scale)/2
-		fullscreenoffsetY = (desktopheight-144*scale)/2
+	scale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160), 5)
+	if scale ~= 5 then
+		platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
 	end
 	
 	physicsscale = scale/4
@@ -85,17 +58,9 @@ function game_load()
 	platform.setvolume( musicrocket1to3, 0.6 )
 	platform.setlooping( musicrocket1to3, false )
 	
-	musicresults = platform.newmusic( "sounds/resultsmusic" )
-	platform.setvolume( musicresults, 1 )
-	platform.setlooping( musicresults, false )
-	
 	highscoreintro = platform.newmusic( "sounds/highscoreintro" )
 	platform.setvolume( highscoreintro, 0.6 )
 	platform.setlooping( highscoreintro, false )
-	
-	musicoptions = platform.newmusic( "sounds/musicoptions" )
-	platform.setvolume( musicoptions, 1 )
-	platform.setlooping( musicoptions, true )
 	
 	boot = platform.newsound( "sounds/boot" )
 	blockfall = platform.newsound( "sounds/blockfall" )
@@ -109,11 +74,6 @@ function game_load()
 	highscorebeep = platform.newsound( "sounds/highscorebeep" )
 	newlevel = platform.newsound( "sounds/newlevel" )
 	platform.setvolume( newlevel, 0.6 )
-	
-	changevolume(volume)
-	
-	--IMAGES THAT WON'T CHANGE HUE:
-	rainbowgradient = platform.newimage("graphics/rainbow", false)
 	
 	--Whitelist for highscorenames--
 	whitelist = {}
@@ -139,9 +99,6 @@ function game_load()
 	
 	platform.setbackgroundcolor( 1, 1, 1 )
 
-	p1wins = 0
-	p2wins = 0
-
 	skipupdate = true
 	soundenabled = true
 	startdelay = 1
@@ -152,7 +109,6 @@ function game_load()
 	cursorblinkrate = 0.14
 	selectblink = true
 	cursorblink = true
-	playerselection = 1
 	musicno = 1 --
 	gameno = 1 --
 	selection = 1 --
@@ -172,8 +128,6 @@ function game_load()
 	blockrot = 10
 	blockrestitution = 0.1
 	minmass = 1
-	
-	optionschoices = {"volume", "color", "scale", "fullscrn"}
 	
 	piececenter = {}
 	piececenter[1] = {17, 5}
@@ -210,61 +164,40 @@ end
 function loadimages()
 	--IMAGES--
 	--menu--
-	stabyourselflogo = platform.newimage("graphics/stabyourselflogo", true)
-	logo = platform.newimage("graphics/logo", true)
-	title = platform.newimage("graphics/title", true)
-	gametype = platform.newimage("graphics/gametype", true)
-	mpmenu = platform.newimage("graphics/mpmenu", true)
-	optionsmenu = platform.newimage("graphics/options", true)
-	volumeslider = platform.newimage("graphics/volumeslider", true)
+	stabyourselflogo = platform.newimage("graphics/stabyourselflogo")
+	logo = platform.newimage("graphics/logo")
+	title = platform.newimage("graphics/title")
+	gametype = platform.newimage("graphics/gametype")
 	--game--
-	gamebackground = platform.newimage("graphics/gamebackground", true)
-	gamebackgroundcutoff = platform.newimage("graphics/gamebackgroundgamea", true)
-	gamebackgroundmulti = platform.newimage("graphics/gamebackgroundmulti", true)
-	multiresults = platform.newimage("graphics/multiresults", true)
-	
-	number1 = platform.newimage("graphics/versus/number1", true)
-	number2 = platform.newimage("graphics/versus/number2", true)
-	number3 = platform.newimage("graphics/versus/number3", true)
-	
-	gameover = platform.newimage("graphics/gameover", true)
-	gameovercutoff = platform.newimage("graphics/gameovercutoff", true)
-	pausegraphic = platform.newimage("graphics/pause", true)
-	pausegraphiccutoff = platform.newimage("graphics/pausecutoff", true)
-	
-	--figures--
-	marioidle = platform.newimage("graphics/versus/marioidle", true)
-	mariojump = platform.newimage("graphics/versus/mariojump", true)
-	mariocry1 = platform.newimage("graphics/versus/mariocry1", true)
-	mariocry2 = platform.newimage("graphics/versus/mariocry2", true)
-	
-	luigiidle = platform.newimage("graphics/versus/luigiidle", true)
-	luigijump = platform.newimage("graphics/versus/luigijump", true)
-	luigicry1 = platform.newimage("graphics/versus/luigicry1", true)
-	luigicry2 = platform.newimage("graphics/versus/luigicry2", true)
+	gamebackground = platform.newimage("graphics/gamebackground")
+	gamebackgroundcutoff = platform.newimage("graphics/gamebackgroundgamea")
+	gameover = platform.newimage("graphics/gameover")
+	gameovercutoff = platform.newimage("graphics/gameovercutoff")
+	pausegraphic = platform.newimage("graphics/pause")
+	pausegraphiccutoff = platform.newimage("graphics/pausecutoff")
 	
 	--rockets--
-	rocket1 = platform.newimage("graphics/rocket1", true)
-	rocket2 = platform.newimage("graphics/rocket2", true)
-	rocket3 = platform.newimage("graphics/rocket3", true)
-	spaceshuttle = platform.newimage("graphics/spaceshuttle", true)
+	rocket1 = platform.newimage("graphics/rocket1")
+	rocket2 = platform.newimage("graphics/rocket2")
+	rocket3 = platform.newimage("graphics/rocket3")
+	spaceshuttle = platform.newimage("graphics/spaceshuttle")
 	
-	rocketbackground = platform.newimage("graphics/rocketbackground", true)
-	bigrocketbackground = platform.newimage("graphics/bigrocketbackground", true)
-	bigrockettakeoffbackground = platform.newimage("graphics/bigrockettakeoffbackground", true)
+	rocketbackground = platform.newimage("graphics/rocketbackground")
+	bigrocketbackground = platform.newimage("graphics/bigrocketbackground")
+	bigrockettakeoffbackground = platform.newimage("graphics/bigrockettakeoffbackground")
 	
 	
-	smoke1left = platform.newimage("graphics/smoke1left", true)
-	smoke1right = platform.newimage("graphics/smoke1right", true)
-	smoke2left = platform.newimage("graphics/smoke2left", true)
-	smoke2right = platform.newimage("graphics/smoke2right", true)
+	smoke1left = platform.newimage("graphics/smoke1left")
+	smoke1right = platform.newimage("graphics/smoke1right")
+	smoke2left = platform.newimage("graphics/smoke2left")
+	smoke2right = platform.newimage("graphics/smoke2right")
 	
-	fire1 = platform.newimage("graphics/fire1", true)
-	fire2 = platform.newimage("graphics/fire2", true)
-	firebig1 = platform.newimage("graphics/firebig1", true)
-	firebig2 = platform.newimage("graphics/firebig2", true)
+	fire1 = platform.newimage("graphics/fire1")
+	fire2 = platform.newimage("graphics/fire2")
+	firebig1 = platform.newimage("graphics/firebig1")
+	firebig2 = platform.newimage("graphics/firebig2")
 	
-	congratsline = platform.newimage("graphics/congratsline", true)
+	congratsline = platform.newimage("graphics/congratsline")
 	
 	--nextpiece
 	nextpieceimg = {}
@@ -295,7 +228,7 @@ function game_update(dt)
 		dt = math.min(dt, minfps)
 	end
 	
-	if gamestate == "logo" or gamestate == "credits" or gamestate == "title" or gamestate == "menu" or gamestate == "multimenu" or gamestate == "highscoreentry" or gamestate == "options" then
+	if gamestate == "logo" or gamestate == "credits" or gamestate == "title" or gamestate == "menu" or gamestate == "highscoreentry" then
 		menu_update(dt)
 	elseif gamestate == "gameA" or gamestate == "failingA" then
 		if pause == false then
@@ -305,22 +238,18 @@ function game_update(dt)
 		if pause == false then
 			gameB_update(dt)
 		end
-		elseif gamestate == "gameBmulti" or gamestate == "failingBmulti" or gamestate == "failedBmulti" or gamestate == "gameBmulti_results" then
-		gameBmulti_update(dt)
 	elseif gamestate == "rocket1" or gamestate == "rocket2" or gamestate == "rocket3" or gamestate == "rocket4" then
 		rocket_update()
 	end
 end
 
 function game_draw()
-	if gamestate == "logo" or gamestate == "credits" or gamestate == "title" or gamestate == "menu" or gamestate == "multimenu" or gamestate == "highscoreentry" or gamestate == "options" then
+	if gamestate == "logo" or gamestate == "credits" or gamestate == "title" or gamestate == "menu" or gamestate == "highscoreentry" then
 		menu_draw()
 	elseif gamestate == "gameA" or gamestate == "failingA" then
 		gameA_draw()
 	elseif gamestate == "gameB" or gamestate == "failingB" then
 		gameB_draw()
-	elseif gamestate == "gameBmulti" or gamestate == "failingBmulti" or gamestate == "failedBmulti" or gamestate == "gameBmulti_results" then
-		gameBmulti_draw()
 	elseif gamestate == "failed" then
 		failed_draw()
 	elseif gamestate == "rocket1" or gamestate == "rocket2" or gamestate == "rocket3" or gamestate == "rocket4" then
@@ -328,127 +257,8 @@ function game_draw()
 	end
 end
 
-function changevolume(i)
-	platform.setvolume( music[1], 0.6*i )
-	platform.setvolume( music[2], 0.6*i )
-	platform.setvolume( music[3], 0.6*i )
-	platform.setvolume( musictitle, 0.6*i )
-	platform.setvolume( musichighscore, 0.6*i )
-	platform.setvolume( musicrocket4, 0.6*i )
-	platform.setvolume( musicrocket1to3, 0.6*i )
-	platform.setvolume( musicresults, i )
-	platform.setvolume( highscoreintro, 0.6*i )
-	platform.setvolume( musicoptions, i )
-	platform.setvolume( boot, i )
-	platform.setvolume( blockfall, i )
-	platform.setvolume( blockturn, i )
-	platform.setvolume( blockmove, i )
-	platform.setvolume( lineclear, i )
-	platform.setvolume( fourlineclear, i )
-	platform.setvolume( gameover1, i )
-	platform.setvolume( gameover2, i )
-	platform.setvolume( pausesound, i )
-	platform.setvolume( highscorebeep, i )
-	platform.setvolume( newlevel, 0.6*i )
-end
-
-function loadoptions()
-	if platform.exists("options.txt") then
-		local s = platform.read("options.txt")
-		local split1 = s:split("\n")
-		for i = 1, #split1 do
-			local split2 = split1[i]:split("=")
-			if split2[1] == "volume" then
-				local v = tonumber(split2[2])
-				--clamp and round
-				if v < 0 then
-					v = 0
-				elseif v > 1 then
-					v = 1
-				end
-				v = math.floor(v*10)/10
-				
-				volume = v
-				
-			elseif split2[1] == "hue" then
-				hue = tonumber(split2[2])
-			
-			elseif split2[1] == "scale" then
-				scale = tonumber(split2[2])
-			
-			elseif split2[1] == "fullscreen" then
-				if split2[2] == "true" then
-					fullscreen = true
-				else
-					fullscreen = false
-				end	
-			end
-		end
-		
-		if volume == nil then
-			volume = 1
-		end
-		if hue == nil then
-			hue = 0.08
-		end
-		if fullscreen == nil then
-			fullscreen = false
-		end
-		
-		if scale == nil then
-			scale = suggestedscale
-		end
-		
-		
-	else
-		volume = 1
-		hue = 0.08
-		autosize()
-		scale = suggestedscale
-		fullscreen = false
-	end
-	
-	saveoptions()
-end
-
-function saveoptions()
-	local s = ""
-	
-	s = s .. "volume=" .. volume .. "\n"
-	s = s .. "hue=" .. hue .. "\n"
-	s = s .. "scale=" .. scale .. "\n"
-	s = s .. "fullscreen=" .. tostring(fullscreen) .. "\n"
-	
-	platform.write("options.txt", s)
-end
-
 function autosize()
 	desktopwidth, desktopheight = platform.getdesktopdimensions()
-end
-
-function togglefullscreen(fullscr)
-	fullscreen = fullscr
-	platform.setmousevisible( not fullscreen )
-	if fullscr == false then
-		scale = suggestedscale
-		physicsscale = scale/4
-		platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
-	else
-		platform.setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
-		desktopwidth, desktopheight = platform.getdimensions()
-		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
-		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
-		if suggestedscale > 5 then
-			suggestedscale = 5
-		end
-		maxscale = math.min(math.floor(desktopheight/144), math.floor(desktopwidth/160))
-		
-		scale = maxscale
-		physicsscale = scale/4
-		
-		fullscreenoffsetX = (desktopwidth-160*scale)/2
-		fullscreenoffsetY = (desktopheight-144*scale)/2
-	end
 end
 
 function loadhighscores()
@@ -505,15 +315,6 @@ function savehighscores()
 		highdata = highdata..highscorename[i]..";"..highscore[i]..";"
 	end
 	platform.write( fileloc, highdata.."\n" )
-end
-
-function changescale(i)
-	platform.setmode( 160*i, 144*i, false, vsync, 16 )
-	nextpieceimg = {}
-	for j = 1, 7 do
-		nextpieceimg[j] = platform.newpieceimage( "graphics/pieces/"..j, i )
-	end
-	physicsscale = i/4
 end
 
 function string:split(delimiter)
@@ -668,32 +469,15 @@ function game_keypressed( key )
 		
 	elseif gamestate == "title" then
 		if key == "return" then
-			if playerselection ~= 3 then
-				if soundenabled then
-					platform.stop(musictitle)
-					if musicno < 4 then
-						platform.play(music[musicno])
-					end
-				end
-			end
-			if playerselection == 1 then
-				gamestate = "menu"
-			elseif playerselection == 2 then
-				gamestate = "multimenu"
-			else
-				gamestate = "options"
-				if soundenabled then
+			if soundenabled then
 				platform.stop(musictitle)
-				platform.play(musicoptions)
+				if musicno < 4 then
+					platform.play(music[musicno])
 				end
-				optionsselection = 1
 			end
+			gamestate = "menu"
 		elseif key == "escape" then
 			platform.quit()
-		elseif key == "left" and playerselection > 1 then
-			playerselection = playerselection - 1
-		elseif key == "right" and playerselection < 3 then
-			playerselection = playerselection + 1
 		end
 		
 	elseif gamestate == "menu" then	
@@ -771,169 +555,6 @@ function game_keypressed( key )
 			loadhighscores()
 		end
 	
-	elseif gamestate == "options" then
-		if key == "escape" then
-			if soundenabled then
-				platform.stop(musicoptions)
-				platform.stop(musictitle)
-				platform.play(musictitle)
-			end
-			saveoptions()
-			loadimages()
-			gamestate = "title"
-		elseif key == "down" then
-			optionsselection = optionsselection + 1
-			if optionsselection > #optionschoices then
-				optionsselection = 1
-			end
-			selectblink = true
-			oldtime = platform.gettime()
-			
-		elseif key == "up" then
-			optionsselection = optionsselection - 1
-			if optionsselection == 0 then
-				optionsselection = #optionschoices
-			end
-			selectblink = true
-			oldtime = platform.gettime()
-			
-		elseif key == "left" then
-			if optionsselection == 1 then
-				if volume >= 0.1 then
-					volume = volume - 0.1
-					if volume < 0.1 then
-						volume = 0
-					end
-					changevolume(volume)
-				end
-				
-			elseif optionsselection == 3 then
-				if fullscreen == false then
-					if scale > 1 then
-						scale = scale - 1
-						changescale(scale)
-					end
-				end
-				
-			elseif optionsselection == 4 then
-				if fullscreen == false then
-					togglefullscreen(true)
-				end
-			
-			end
-			
-		elseif key == "right" then
-			if optionsselection == 1 then
-				if volume <= 0.9 then
-					volume = volume + 0.1
-					changevolume(volume)
-				end
-				
-			elseif optionsselection == 3 then
-				if fullscreen == false then
-					if scale < maxscale then
-						scale = scale + 1
-						changescale(scale)
-					end
-				end
-				
-			elseif optionsselection == 4 then
-				if fullscreen == true then
-					togglefullscreen(false)
-				end
-				
-			end
-			
-		elseif key == "return" then
-			if optionsselection == 1 then
-				volume = 1
-				changevolume(volume)
-			elseif optionsselection == 2 then
-				hue = 0.08
-				optionsmenu = platform.newimage("graphics/options", true)
-				volumeslider = platform.newimage("graphics/volumeslider", true)
-			elseif optionsselection == 3 then
-				if fullscreen == false then
-					if scale ~= suggestedscale then
-						scale = suggestedscale
-						changescale(scale)
-					end
-				end
-			elseif optionsselection == 4 then
-				if fullscreen == true then
-					togglefullscreen(false)
-				end
-			end
-			
-		end
-	
-	elseif gamestate == "multimenu" then	
-		oldmusicno = musicno
-		if key == "escape" then
-			if musicno < 4 then
-				platform.stop(music[musicno])
-			end
-			gamestate = "title"
-			platform.stop(musictitle)
-			platform.play(musictitle)
-		elseif key == "return" then
-			gameBmulti_load()
-		elseif key == "left" or key == "a" then
-			if selection == 2 or selection == 4 or selection == 6 then
-				selection = selection - 1
-				selectblink = true
-				oldtime = platform.gettime()
-			end
-		elseif key == "right" or key == "d" then
-			if selection == 1 or selection == 3 or selection == 5 then
-				selection = selection + 1
-				selectblink = true
-				oldtime = platform.gettime()
-			end
-		elseif key == "up" or key == "w" then
-			if selection == 3 or selection == 4 or selection == 5 or selection == 6 then
-				selection = selection - 2
-				selectblink = true
-				oldtime = platform.gettime()
-				if selection < 3 then
-					selection = gameno
-					selectblink = false
-					oldtime = platform.gettime()
-				end
-			elseif selection == 1 or selection == 2 then
-				selection = musicno + 2
-				selectblink = false
-				oldtime = platform.gettime()
-			end
-		elseif key == "down" or key == "s" then
-			if selection == 1 or selection == 2 or selection == 3 or selection == 4 then
-				selection = selection + 2
-				selectblink = true
-				oldtime = platform.gettime()
-				if selection > 2 and selection < 5 then
-					selection = musicno + 2
-					selectblink = false
-					oldtime = platform.gettime()
-				end
-			elseif selection == 5 or selection == 6 then
-				selection = gameno
-				selectblink = false
-				oldtime = platform.gettime()
-			end
-		end
-		if selection > 2 and key ~= "return" and key ~= "escape" then
-			musicno = selection - 2
-			if oldmusicno ~= musicno and oldmusicno ~= 4 then
-				platform.stop(music[oldmusicno])
-			end
-			if musicno < 4 then
-				platform.play(music[musicno])
-			end
-		elseif key ~= "return" and key ~= "escape" then
-			gameno = selection
-			loadhighscores()
-		end
-			
 	elseif gamestate == "gameA" or gamestate == "gameB" or gamestate == "failingA" or gamestate == "failingB" then
 
 		if key == "return" then
@@ -970,49 +591,6 @@ function game_keypressed( key )
 				end
 			end
 		end
-	elseif gamestate == "gameBmulti" and gamestarted == false then
-		if key == "escape" then
-			if not fullscreen then
-				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
-			end
-			gamestate = "multimenu"
-			if musicno < 4 then
-				platform.play(music[musicno])
-			end
-		end
-	elseif gamestate == "gameBmulti" and gamestarted == true then
-		if key == "escape" then
-			if not fullscreen then
-				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
-			end
-			gamestate = "multimenu"
-		end
-		if key == "a" or key == "d" then
-			platform.stop(blockmove)
-			platform.play(blockmove)
-		elseif key == "left" or key == "right" then
-			platform.stop(blockmove)
-			platform.play(blockmove)
-		elseif key == "g" or key == "h" then
-			platform.stop(blockturn)
-			platform.play(blockturn)
-		elseif key == "kp1" or key == "kp2" then
-			platform.stop(blockturn)
-			platform.play(blockturn)
-		end
-		
-	elseif gamestate == "gameBmulti_results" then
-		if key == "return" or key == "escape" then
-			if musicno < 4 then
-				platform.stop(musicresults)
-				platform.play(music[musicno])
-			end
-			if not fullscreen then
-				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
-			end
-			gamestate = "multimenu"
-		end
-		
 	elseif gamestate == "failed" then
 		if key == "return" or key == "y" or key == "z" or key == "x" or key == "w" or key == "left" or key == "down" or key == "up" or key == "right" then 
 			platform.stop(gameover2)

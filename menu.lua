@@ -24,11 +24,6 @@ function menu_load()
 end
 
 function menu_draw()
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
-	end
-
 	if gamestate == "logo" then		
 		if logotime <= logoduration then
 			platform.draw(stabyourselflogo, 7*scale, math.floor(-22*scale + 80*(logotime/logoduration)*scale), 0, scale, scale)
@@ -45,13 +40,7 @@ function menu_draw()
 	
 	elseif gamestate == "title" then----------
 		platform.draw(title, 0, 0, 0, scale)
-	if playerselection == 1 then
-		platform.print(">", 1*scale, 124*scale, 0, scale)
-	elseif playerselection == 2 then
-		platform.print(">", 47*scale, 124*scale, 0, scale)
-	else
-		platform.print(">", 93*scale, 124*scale, 0, scale)
-	end
+	platform.print(">", 1*scale, 124*scale, 0, scale)
 	------------------------------------------
 	
 	elseif gamestate == "menu" or gamestate == "highscoreentry" then
@@ -91,54 +80,6 @@ function menu_draw()
 		end
 	----------------------------------------------
 	
-	elseif gamestate == "multimenu" then
-		platform.draw(mpmenu, 0, 0, 0, scale)
-		if selection > 2 then
-			if gameno == 1 then
-				platform.print( "stack", 28*scale, 47*scale, 0, scale)
-			else
-				platform.print( "invade", 88*scale, 47*scale, 0, scale)
-			end
-		else
-			if musicno == 1 then
-				platform.print( "a-type", 24*scale, 81*scale, 0, scale)
-			elseif musicno == 2 then
-				platform.print( "b-type", 88*scale, 81*scale, 0, scale)
-			elseif musicno == 3 then
-				platform.print( "c-type", 24*scale, 97*scale, 0, scale)
-			else
-				platform.print( " off  ", 88*scale, 97*scale, 0, scale)
-			end
-		end
-		
-		if selectblink == true then
-			if selection ==1 then
-				platform.print( "stack", 28*scale, 47*scale, 0, scale)
-			elseif selection == 2 then
-				platform.print( "invade", 88*scale, 47*scale, 0, scale)
-			elseif selection == 3 then
-				platform.print( "a-type", 24*scale, 81*scale, 0, scale)
-			elseif selection == 4 then
-				platform.print( "b-type", 88*scale, 81*scale, 0, scale)
-			elseif selection == 5 then
-				platform.print( "c-type", 24*scale, 97*scale, 0, scale)
-			elseif selection == 6 then
-				platform.print( " off  ", 88*scale, 97*scale, 0, scale)
-			end
-		end
-		
-		--win counter
-		if p1wins < 10 then
-			platform.print( "0"..p1wins, 15*scale, 31*scale, 0, scale)
-		else
-			platform.print( p1wins, 15*scale, 31*scale, 0, scale)
-		end
-		
-		if p2wins < 10 then
-			platform.print( "0"..p2wins, 129*scale, 31*scale, 0, scale)
-		else
-			platform.print( p2wins, 129*scale, 31*scale, 0, scale)
-		end
 	end
 	
 	if gamestate == "menu" or gamestate == "highscoreentry" then
@@ -174,41 +115,6 @@ function menu_draw()
 		end
 	end
 	
-	if gamestate == "options" then
-		platform.draw(optionsmenu, 0, 0, 0, scale, scale)
-		platform.draw(rainbowgradient, 73*scale, 33*scale, 0, scale, scale)
-		
-		--volume slider
-		platform.draw(volumeslider, 71*scale+round(76*volume)*scale, 15*scale, 0, scale, scale)
-		
-		--hue slider
-		platform.draw(volumeslider, 71*scale+round(76*hue*scale), 31*scale, 0, scale, scale)
-		
-		--blend out unavailable scales
-		for i = 2, 7 do
-			if i > maxscale then
-				platform.print(" ", 75*scale+(i-1)*11*scale, 50*scale, 0, scale)
-			end
-		end
-		
-		--current scale
-		if fullscreen == false then
-			platform.print(scale, 75*scale+(scale-1)*11*scale, 50*scale, 0, scale)
-		end
-		
-		--fullscreen
-		if fullscreen then
-			platform.print("yes", 96*scale, 66*scale, 0, scale)
-		else
-			platform.print("no", 133*scale, 66*scale, 0, scale)
-		end
-		
-		
-		if selectblink then
-			platform.print(optionschoices[optionsselection], 19*scale, 18*scale+(optionsselection-1)*16*scale, 0, scale)
-		end
-		
-	end
 	------------------------------------------
 end
 
@@ -238,35 +144,11 @@ function menu_update(dt)
 		end
 	end
 	
-	if gamestate == "menu" or gamestate == "multimenu" or gamestate == "options" then
+	if gamestate == "menu" then
 		currenttime = platform.gettime()
 		if currenttime - oldtime > selectblinkrate then
 			selectblink = not selectblink
 			oldtime = currenttime
-		end
-	end
-	
-	if gamestate == "options" then
-		if optionsselection == 2 then
-			if platform.isdown("left") then
-				if hue > 0 then
-					hue = hue - 0.5*dt
-					if hue < 0 then
-						hue = 0
-					end
-					optionsmenu = platform.newimage("graphics/options", true)
-					volumeslider = platform.newimage("graphics/volumeslider", true)
-				end
-			elseif platform.isdown("right") then
-				if hue < 1 then
-					hue = hue + 0.5*dt
-					if hue > 1 then
-						hue = 1
-					end
-					optionsmenu = platform.newimage("graphics/options", true)
-					volumeslider = platform.newimage("graphics/volumeslider", true)
-				end
-			end
 		end
 	end
 	

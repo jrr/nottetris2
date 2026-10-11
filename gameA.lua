@@ -129,14 +129,6 @@ function createtetriA(i, uniqueid, x, y) --creates block, including body, shapes
 end
 
 function gameA_draw()
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
-	end
-	
 	--background--
 	platform.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
 	---------------
@@ -183,11 +175,7 @@ function gameA_draw()
 	----------------
 	--Last score
 	if scoreaddtimer < scoreaddtime then
-		if fullscreen then
-			platform.setscissor(105*scale+fullscreenoffsetX, 35*scale+fullscreenoffsetY, 55*scale, 9*scale)
-		else
-			platform.setscissor(105*scale, 35*scale, 55*scale, 9*scale)
-		end
+		platform.setscissor(105*scale, 35*scale, 55*scale, 9*scale)
 		
 		platform.setfont(whitefont)
 		
@@ -200,11 +188,7 @@ function gameA_draw()
 		
 		platform.setfont(tetrisfont)	
 		
-		if fullscreen then
-			platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
-		else
-			platform.setscissor()
-		end
+		platform.setscissor()
 	end
 	
 	
@@ -266,13 +250,6 @@ function gameA_draw()
 	-----------------------------------------------
 	
 	
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor()
-	end
 end
 
 function gameA_update(dt)

@@ -49,14 +49,6 @@ function rocket_update()
 end
 
 function rocket_draw()
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
-	end
-	
 	currenttime = platform.gettime()
 	timelapsed = currenttime - rockettimer
 	
@@ -156,11 +148,4 @@ function rocket_draw()
 		end
 	end
 	
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor()
-	end
 end

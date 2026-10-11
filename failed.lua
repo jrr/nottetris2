@@ -6,14 +6,6 @@ function failed_load()
 end
 
 function failed_draw()
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
-	end
-	
 	if gameno == 1 then
 		platform.draw(gamebackgroundcutoff, 0, 0, 0, scale)
 		platform.draw(gameovercutoff, 14*scale, 0, 0, scale)
@@ -53,13 +45,6 @@ function failed_draw()
 	-----------------------------------------------
 	
 	
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor()
-	end
 end
 
 function failed_update()

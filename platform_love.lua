@@ -83,16 +83,8 @@ function platform.setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode a
 	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
 end
 
-function platform.getdimensions() --the window's size
-	return love.graphics.getWidth(), love.graphics.getHeight()
-end
-
 function platform.getdesktopdimensions()
 	return love.window.getDesktopDimensions()
-end
-
-function platform.setmousevisible(visible)
-	love.mouse.setVisible(visible)
 end
 
 function platform.quit()
@@ -124,10 +116,6 @@ function platform.rectangle(mode, x, y, width, height)
 	love.graphics.rectangle(mode, x, y, width, height)
 end
 
-function platform.translate(x, y) --move what's drawn after this
-	love.graphics.translate(x, y)
-end
-
 function platform.setscissor(...) --x, y, width, height in screen coordinates: draw only inside; none to draw everywhere
 	love.graphics.setScissor(...)
 end
@@ -138,7 +126,7 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 	love.graphics.present()
 end
 
---images. These helpers are LÖVE only: they tint the art by the color option (hue), scale it, and pad it to powers of two for old graphics cards.
+--images. These helpers are LÖVE only: they tint the art by hue, scale it, and pad it to powers of two for old graphics cards.
 local newImageData, newPaddedImage, padImagedata, newPaddedImageFont, scaleImagedata
 function newImageData(path, s)
 	local imagedata = love.image.newImageData( path )
@@ -250,13 +238,8 @@ function scaleImagedata(imagedata, i)
 end
 
 
-function platform.newimage(path, tinted) --path without extension; tinted: recolored by the color option
-	local image
-	if tinted then
-		image = newPaddedImage(path .. ".png")
-	else
-		image = love.graphics.newImage(path .. ".png")
-	end
+function platform.newimage(path) --path without extension; tinted by hue
+	local image = newPaddedImage(path .. ".png")
 	image:setFilter("nearest", "nearest")
 	return image
 end
