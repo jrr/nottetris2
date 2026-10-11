@@ -338,9 +338,9 @@ function gameA_update(dt)
 
 	
 	--DENSITY UPDATE TIMER
-	if densityupdatetimer >= densityupdateinterval then
-		while densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration do
-			checklinedensity(false)
+	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration then
+		checklinedensity(false) --once, however many intervals have passed: more would only find the same, and make a slow frame slower
+		while densityupdatetimer >= densityupdateinterval do
 			densityupdatetimer = densityupdatetimer - densityupdateinterval
 		end
 	end
