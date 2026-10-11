@@ -2,6 +2,27 @@
 --Look love.* up on every call rather than keeping references: the harness replaces some of them after this file loads.
 platform = {}
 
+--LÖVE calls the game through these; Playdate will call the same game_ functions
+function love.load()
+	game_load()
+end
+
+function love.update(dt)
+	game_update(dt)
+end
+
+function love.draw()
+	game_draw()
+end
+
+function love.keypressed(key)
+	game_keypressed(key)
+end
+
+function love.textinput(text) --0.9 sends typed characters here instead of to keypressed
+	game_textinput(text)
+end
+
 function platform.gettime() --seconds, for timing animations
 	return love.timer.getTime()
 end

@@ -1,7 +1,7 @@
 table.unpack = table.unpack or unpack --Lua 5.2 moved unpack into table; LÖVE's LuaJIT only has the global
 require "platform_love"
 
-function love.load()
+function game_load()
 	--requires--
 	require "gameB"
 	require "gameBmulti"
@@ -276,7 +276,7 @@ function loadimages()
 	platform.setfont(tetrisfont)
 end
 
-function love.update(dt)
+function game_update(dt)
 	if gamestate == nil then
 		startdelaytime = startdelaytime + dt
 		if startdelaytime >= startdelay then
@@ -310,7 +310,7 @@ function love.update(dt)
 	end
 end
 
-function love.draw()
+function game_draw()
 	if gamestate == "logo" or gamestate == "credits" or gamestate == "title" or gamestate == "menu" or gamestate == "multimenu" or gamestate == "highscoreentry" or gamestate == "options" then
 		menu_draw()
 	elseif gamestate == "gameA" or gamestate == "failingA" then
@@ -685,7 +685,7 @@ function getrainbowcolor(i)
 	return {r, g, b}
 end
 
-function love.keypressed( key )
+function game_keypressed( key )
 	if gamestate == nil then
 		if key == "return" then
 			gamestate = "title"
@@ -1086,7 +1086,7 @@ function love.keypressed( key )
 	end
 end
 
-function love.textinput( text ) --0.9 sends typed characters here instead of to keypressed
+function game_textinput( text ) --typed characters, for entering a name
 	if gamestate == "highscoreentry" and text:len() == 1 and whitelist[text:byte()] == true then
 		if highscorename[highscoreno]:len() < 6 then
 			cursorblink = true
