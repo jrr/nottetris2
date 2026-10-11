@@ -64,7 +64,7 @@ function gameBmulti_load()
 	
 	--PHYSICS--
 	meter = 30
-	world = love.physics.newWorld(0, 500, true )
+	world = physics.newworld(0, 500, collideBmulti)
 	
 	
 	wallshapesp1 = {}
@@ -104,7 +104,6 @@ function gameBmulti_load()
 	wallshapesp2[2] = newpolygonfixture(wallbodiesp2, 516,640, 516,672, 836,672, 836,640)
 	wallshapesp2[2]:setUserData("groundp2")
 	-----------	
-	world:setCallbacks(queuecollisions(collideBmulti))
 	-----------
 	
 	randomtable[1] = math.random(7)
@@ -304,7 +303,7 @@ function gameBmulti_update(dt)
 		nextpiecerot = nextpiecerot - math.pi*2
 	end
 
-	updateworld(dt)
+	physics.update(world, dt)
 	newtime = platform.gettime()
 	if gamestarted == false then
 		if newtime - starttimer > 3 then

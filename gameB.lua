@@ -12,7 +12,7 @@ function gameB_load()
 	
 	--PHYSICS--
 	meter = 30
-	world = love.physics.newWorld(0, 500, true )
+	world = physics.newworld(0, 500, collideB)
 	
 	tetrikind = {}
 	wallshapes = {}
@@ -32,7 +32,6 @@ function gameB_load()
 	wallshapes[3] = newpolygonfixture(wallbodies, -8,-96, 384,-96, 384,-64, -8,-64)
 	wallshapes[3]:setUserData("ceiling")
 	
-	world:setCallbacks(queuecollisions(collideB))
 	-----------
 	
 	--FIRST "nextpiece"-
@@ -232,7 +231,7 @@ function gameB_update(dt)
 		end
 	end
 	
-	updateworld(dt)
+	physics.update(world, dt)
 	
 	if gamestate == "failingB" then
 		clearcheck = true

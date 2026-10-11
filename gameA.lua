@@ -21,7 +21,7 @@ function gameA_load()
 	
 	--PHYSICS--
 	meter = 30
-	world = love.physics.newWorld(0, 500, true )
+	world = physics.newworld(0, 500, collideA)
 	
 	tetrikind = {}
 	wallshapes = {}
@@ -43,7 +43,6 @@ function gameA_load()
 	wallshapes[3] = newpolygonfixture(wallbodies,-8,-96, 384,-96, 384,-64, -8,-64)
 	wallshapes[3]:setUserData({"ceiling"})
 	
-	world:setCallbacks(queuecollisions(collideA))
 	-----------
 	
 	--FIRST "nextpiece"-
@@ -354,7 +353,7 @@ function gameA_update(dt)
 	
 	endblock = false
 
-	updateworld(dt)
+	physics.update(world, dt)
 
 	if endblock then
 		endblockA()

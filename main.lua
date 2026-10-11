@@ -1,5 +1,6 @@
 table.unpack = table.unpack or unpack --Lua 5.2 moved unpack into table; LÖVE's LuaJIT only has the global
 require "platform_love"
+require "physics_love"
 
 function game_load()
 	--requires--
@@ -618,32 +619,6 @@ function newfixture(body, shape)
 	fixture:setFriction(0.5)
 	fixture:setRestitution(0.1)
 	return fixture
-end
-
---LÖVE 0.7 collected contacts during world:update and only then called the collision
---callback, with each pair of shapes' data. 0.8 calls it in the middle of the update,
---when bodies can't be created, which the games do when a piece lands. So contacts are
---queued during the update and handed to the callback afterwards, as 0.7 did.
-local queuedcollisions = {}
-
-function queuecollisions(callback) --use as world:setCallbacks(queuecollisions(collide))
-	return function(a, b)
-		table.insert(queuedcollisions, {callback, a, b})
-	end
-end
-
-local function userdata(fixture) --nil if the fixture was destroyed by an earlier callback
-	local ok, data = pcall(fixture.getUserData, fixture)
-	return ok and data or nil
-end
-
-function updateworld(dt)
-	world:update(dt, 8, 6) --11 defaults to 3 position iterations; earlier versions ran 6
-	local queue = queuedcollisions
-	queuedcollisions = {}
-	for _, c in ipairs(queue) do
-		c[1](userdata(c[2]), userdata(c[3]))
-	end
 end
 
 function newrectanglefixture(body, x, y, width, height)
