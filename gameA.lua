@@ -132,26 +132,26 @@ end
 function gameA_draw()
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(fullscreenoffsetX, fullscreenoffsetY)
+		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
 	--background--
-	love.graphics.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
+	platform.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
 	---------------
 	--tetrishapes--
 	if cuttingtimer == lineclearduration then
 		for i,v in pairs(tetribodies) do
 			if pause == false then
-				love.graphics.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+				platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 			end
 		end
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
-				love.graphics.draw( tetricutimg[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], 1, 1, piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
+				platform.draw( tetricutimg[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], 1, 1, piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
 			end
 		end
 		
@@ -167,44 +167,44 @@ function gameA_draw()
 			
 			for i = 1, 18 do
 				if linesremoved[i] == true then
-					love.graphics.setColor(r/255, g/255, b/255) --11 takes colors as 0-1
+					platform.setcolor(r/255, g/255, b/255) --11 takes colors as 0-1
 					
-					love.graphics.rectangle("fill", 14*scale, (i-1)*8*scale, 82*scale, 8*scale)
+					platform.rectangle("fill", 14*scale, (i-1)*8*scale, 82*scale, 8*scale)
 				end
 			end
 		end
 	end
 	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	--Next piece
 	if pause == false then
-		love.graphics.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
 	end
 	
 	----------------
 	--Last score
 	if scoreaddtimer < scoreaddtime then
 		if fullscreen then
-			love.graphics.setScissor(105*scale+fullscreenoffsetX, 35*scale+fullscreenoffsetY, 55*scale, 9*scale)
+			platform.setscissor(105*scale+fullscreenoffsetX, 35*scale+fullscreenoffsetY, 55*scale, 9*scale)
 		else
-			love.graphics.setScissor(105*scale, 35*scale, 55*scale, 9*scale)
+			platform.setscissor(105*scale, 35*scale, 55*scale, 9*scale)
 		end
 		
-		love.graphics.setFont(whitefont)
+		platform.setfont(whitefont)
 		
 		local offsetX = 0
 		for i = 1, tostring(lastscoreadd):len() - 1 do
 			offsetX = offsetX -	8*scale
 		end
 		
-		love.graphics.print("+" .. lastscoreadd, 136*scale+offsetX, 36*scale-scoreaddtimer/scoreaddtime*8*scale, 0, scale)
+		platform.print("+" .. lastscoreadd, 136*scale+offsetX, 36*scale-scoreaddtimer/scoreaddtime*8*scale, 0, scale)
 		
-		love.graphics.setFont(tetrisfont)	
+		platform.setfont(tetrisfont)	
 		
 		if fullscreen then
-			love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+			platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 		else
-			love.graphics.setScissor()
+			platform.setscissor()
 		end
 	end
 	
@@ -223,16 +223,16 @@ function gameA_draw()
 			color = 235-(fullness/1)*180
 		end
 		
-		love.graphics.setColor(color/255, color/255, color/255)
-		love.graphics.rectangle("fill", 0, (i-1)*8*scale, math.floor(6*scale*fullness), 8*scale)
+		platform.setcolor(color/255, color/255, color/255)
+		platform.rectangle("fill", 0, (i-1)*8*scale, math.floor(6*scale*fullness), 8*scale)
 	end
 	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	
 	---------
 	--start--
 	if pause == true then
-		love.graphics.draw(pausegraphiccutoff, 14*scale, 0, 0, scale, scale)
+		platform.draw(pausegraphiccutoff, 14*scale, 0, 0, scale, scale)
 	end
 	---------
 	
@@ -244,7 +244,7 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale, scale)
+	platform.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale, scale)
 	
 	
 	--"level"--
@@ -254,7 +254,7 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale, scale)
+	platform.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale, scale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -263,16 +263,16 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale, scale)
+	platform.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale, scale)
 	-----------------------------------------------
 	
 	
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(-fullscreenoffsetX, -fullscreenoffsetY)
+		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 
@@ -969,9 +969,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 			end
 			
 			--Draw the screen before removing lines.
-			love.graphics.clear()
-			gameA_draw()
-			love.graphics.present( )
+			platform.drawnow(gameA_draw)
 			
 			for i = 1, 18 do
 				if linesremoved[i] then

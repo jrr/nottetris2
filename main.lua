@@ -135,7 +135,7 @@ function love.load()
 	math.randomseed( os.time() )
 	math.random();math.random();math.random() --discarding some as they seem to tend to unrandomness.
 	
-	love.graphics.setBackgroundColor( 1, 1, 1 ) --11 takes colors as 0-1
+	platform.setbackgroundcolor( 1, 1, 1 )
 
 	p1wins = 0
 	p2wins = 0
@@ -273,7 +273,7 @@ function loadimages()
 	--font--
 	tetrisfont = newPaddedImageFont("graphics/font.png", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<! ")
 	whitefont = newPaddedImageFont("graphics/fontwhite.png", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<!+ ")
-	love.graphics.setFont(tetrisfont)
+	platform.setfont(tetrisfont)
 	
 	--filters!
 	stabyourselflogo:setFilter("nearest", "nearest")
@@ -841,21 +841,21 @@ function love.keypressed( key )
 	if gamestate == nil then
 		if key == "return" then
 			gamestate = "title"
-			love.graphics.setBackgroundColor( 0, 0, 0)
+			platform.setbackgroundcolor( 0, 0, 0)
 			platform.play(musictitle)
 		end
 		
 	elseif gamestate == "logo" then
 		if key == "return" then
 			gamestate = "title"
-			love.graphics.setBackgroundColor( 0, 0, 0)
+			platform.setbackgroundcolor( 0, 0, 0)
 			platform.play(musictitle)
 		end
 		
 	elseif gamestate == "credits" then
 		if key == "return" then
 			gamestate = "title"
-			love.graphics.setBackgroundColor( 0, 0, 0)
+			platform.setbackgroundcolor( 0, 0, 0)
 			platform.play(musictitle)
 		end
 		

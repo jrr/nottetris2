@@ -114,69 +114,69 @@ end
 
 function gameBmulti_draw()
 	if fullscreen then
-		love.graphics.translate(mpfullscreenoffsetX, mpfullscreenoffsetY)
+		platform.translate(mpfullscreenoffsetX, mpfullscreenoffsetY)
 		
-		love.graphics.setScissor(mpfullscreenoffsetX, mpfullscreenoffsetY, 274*mpscale, 144*mpscale)
+		platform.setscissor(mpfullscreenoffsetX, mpfullscreenoffsetY, 274*mpscale, 144*mpscale)
 	end
 
 	--background--
 	if gamestate ~= "gameBmulti_results" then
-		love.graphics.draw(gamebackgroundmulti, 0, 0, 0, mpscale)
+		platform.draw(gamebackgroundmulti, 0, 0, 0, mpscale)
 	else
-		love.graphics.draw(multiresults, 0, 0, 0, mpscale)
+		platform.draw(multiresults, 0, 0, 0, mpscale)
 	end
 	---------------
 	if gamestarted == false then
 		if newtime - starttimer > 2 then
-			love.graphics.draw( number1, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number1, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number1, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number1, 153*mpscale, 48*mpscale, 0, mpscale)
 		elseif newtime - starttimer > 1 then
-			love.graphics.draw( number2, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number2, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number2, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number2, 153*mpscale, 48*mpscale, 0, mpscale)
 		elseif newtime - starttimer > 0 then
-			love.graphics.draw( number3, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number3, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number3, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number3, 153*mpscale, 48*mpscale, 0, mpscale)
 		end
 	end
 	--tetrishapes P1--
 	
 	for i,v in pairs(tetribodiesp1) do
-		love.graphics.setColor(1, 1, 1)
+		platform.setcolor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
 			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(table.unpack(p1color))
+				platform.setcolor(table.unpack(p1color))
 			end
 		end
 		
-		love.graphics.draw( tetriimagesp1[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp1[i]][1]*mpscale, piececenter[tetrikindp1[i]][2]*mpscale)
+		platform.draw( tetriimagesp1[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp1[i]][1]*mpscale, piececenter[tetrikindp1[i]][2]*mpscale)
 	end
 	
 	if p1fail == false and nextpiecep1 then
 		--Next piece
-		love.graphics.draw(nextpieceimgmp[nextpiecep1], 24*mpscale, 120*mpscale, -nextpiecerot, 1, 1, piececenterpreview[nextpiecep1][1]*mpscale, piececenterpreview[nextpiecep1][2]*mpscale)
+		platform.draw(nextpieceimgmp[nextpiecep1], 24*mpscale, 120*mpscale, -nextpiecerot, 1, 1, piececenterpreview[nextpiecep1][1]*mpscale, piececenterpreview[nextpiecep1][2]*mpscale)
 	end
 	
 	----------------
 	--tetrishapes P2--	
 	for i,v in pairs(tetribodiesp2) do
-		love.graphics.setColor(1, 1, 1)
+		platform.setcolor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
 			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(table.unpack(p2color))
+				platform.setcolor(table.unpack(p2color))
 			end
 		end
-		love.graphics.draw( tetriimagesp2[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp2[i]][1]*mpscale, piececenter[tetrikindp2[i]][2]*mpscale)
+		platform.draw( tetriimagesp2[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp2[i]][1]*mpscale, piececenter[tetrikindp2[i]][2]*mpscale)
 	end
 	----------------	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	
 	if p2fail == false and nextpiecep2 then
 		--Next piece
-		love.graphics.draw(nextpieceimgmp[nextpiecep2], 250*mpscale, 120*mpscale, nextpiecerot, 1, 1, piececenterpreview[nextpiecep2][1]*mpscale, piececenterpreview[nextpiecep2][2]*mpscale)
+		platform.draw(nextpieceimgmp[nextpiecep2], 250*mpscale, 120*mpscale, nextpiecerot, 1, 1, piececenterpreview[nextpiecep2][1]*mpscale, piececenterpreview[nextpiecep2][2]*mpscale)
 	end
 	--SCORES P1---------------------------------------
 	
@@ -187,7 +187,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( scorescorep1, 36*mpscale + offsetX, 24*mpscale, 0, mpscale)
+	platform.print( scorescorep1, 36*mpscale + offsetX, 24*mpscale, 0, mpscale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -196,7 +196,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( linesscorep1, 28*mpscale + offsetX, 80*mpscale, 0, mpscale)
+	platform.print( linesscorep1, 28*mpscale + offsetX, 80*mpscale, 0, mpscale)
 	-----------------------------------------------
 	
 	--SCORES P2---------------------------------------
@@ -207,7 +207,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( scorescorep2, 262*mpscale + offsetX, 24*mpscale, 0, mpscale)
+	platform.print( scorescorep2, 262*mpscale + offsetX, 24*mpscale, 0, mpscale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -216,83 +216,83 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( linesscorep2, 254*mpscale + offsetX, 80*mpscale, 0, mpscale)
+	platform.print( linesscorep2, 254*mpscale + offsetX, 80*mpscale, 0, mpscale)
 	-----------------------------------------------
 	
 	if gamestate == "gameBmulti_results" then
 		--win counter
 		if p1wins < 10 then
-			love.graphics.print( "0"..p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( "0"..p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
 		else
-			love.graphics.print( p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
 		end
 		
 		if p2wins < 10 then
-			love.graphics.print( "0"..p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( "0"..p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
 		else
-			love.graphics.print( p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
 		end
 		
 		if winner == 1 then
 			--mario
 			if jumpframe == false then
-				love.graphics.draw( marioidle, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
+				platform.draw( marioidle, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
 			else
-				love.graphics.draw( mariojump, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
+				platform.draw( mariojump, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
 			end
 			
 			--luigi
 			if cryframe == false then
-				love.graphics.draw( luigicry1, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
+				platform.draw( luigicry1, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
 			else
-				love.graphics.draw( luigicry2, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
-				love.graphics.print( "mario", 93*mpscale, 20*mpscale, 0, mpscale)
-				love.graphics.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
+				platform.draw( luigicry2, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
+				platform.print( "mario", 93*mpscale, 20*mpscale, 0, mpscale)
+				platform.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
 				for i = 1, 5 do
-					love.graphics.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
-					love.graphics.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
 				end
 			end
 		elseif winner == 2 then
 			--luigi
 			if jumpframe == false then
-				love.graphics.draw( luigiidle, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
+				platform.draw( luigiidle, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
 			else
-				love.graphics.draw( luigijump, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
+				platform.draw( luigijump, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
 			end
 			
 			--mario
 			if cryframe == false then
-				love.graphics.draw( mariocry1, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
+				platform.draw( mariocry1, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
 			else
-				love.graphics.draw( mariocry2, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
-				love.graphics.print( "luigi", 93*mpscale, 20*mpscale, 0, mpscale)
-				love.graphics.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
+				platform.draw( mariocry2, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
+				platform.print( "luigi", 93*mpscale, 20*mpscale, 0, mpscale)
+				platform.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
 				for i = 1, 5 do
-					love.graphics.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
-					love.graphics.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
 				end
 			end
 		else --draw
 			--mario
-			love.graphics.draw( marioidle, 84*mpscale, 69*mpscale, 0, mpscale, mpscale)
+			platform.draw( marioidle, 84*mpscale, 69*mpscale, 0, mpscale, mpscale)
 			if cryframe == false then
-				love.graphics.print( "draw", 160*mpscale, 40*mpscale, 0, mpscale)
+				platform.print( "draw", 160*mpscale, 40*mpscale, 0, mpscale)
 			end
 			
 			--luigi
-			love.graphics.draw( luigiidle, 162*mpscale, 65*mpscale,  0, mpscale, mpscale)
+			platform.draw( luigiidle, 162*mpscale, 65*mpscale,  0, mpscale, mpscale)
 			if cryframe == false then
-				love.graphics.print( "draw", 80*mpscale, 40*mpscale, 0, mpscale)
+				platform.print( "draw", 80*mpscale, 40*mpscale, 0, mpscale)
 			end
 			
 		end
 	end
 	
 	if fullscreen then
-		love.graphics.translate(-mpfullscreenoffsetX, -mpfullscreenoffsetY)
+		platform.translate(-mpfullscreenoffsetX, -mpfullscreenoffsetY)
 		
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 	

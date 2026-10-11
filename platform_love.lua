@@ -77,3 +77,42 @@ end
 function platform.quit()
 	love.event.quit() --0.8 renamed the "q" event to "quit"
 end
+
+--drawing, with LÖVE's arguments; colors are 0-1 (11 takes colors as 0-1)
+function platform.draw(...) --image, x, y, rotation, scale x, scale y, origin x, origin y
+	love.graphics.draw(...)
+end
+
+function platform.print(...) --text, x, y, rotation, scale x, scale y, in the current font
+	love.graphics.print(...)
+end
+
+function platform.setfont(font)
+	love.graphics.setFont(font)
+end
+
+function platform.setcolor(r, g, b)
+	love.graphics.setColor(r, g, b)
+end
+
+function platform.setbackgroundcolor(r, g, b)
+	love.graphics.setBackgroundColor(r, g, b)
+end
+
+function platform.rectangle(mode, x, y, width, height)
+	love.graphics.rectangle(mode, x, y, width, height)
+end
+
+function platform.translate(x, y) --move what's drawn after this
+	love.graphics.translate(x, y)
+end
+
+function platform.setscissor(...) --x, y, width, height in screen coordinates: draw only inside; none to draw everywhere
+	love.graphics.setScissor(...)
+end
+
+function platform.drawnow(draw) --show a frame from the middle of an update
+	love.graphics.clear()
+	draw()
+	love.graphics.present()
+end

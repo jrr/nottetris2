@@ -121,30 +121,30 @@ end
 function gameB_draw()
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(fullscreenoffsetX, fullscreenoffsetY)
+		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
 	--background--
-	love.graphics.draw(gamebackground, 0, 0, 0, scale)
+	platform.draw(gamebackground, 0, 0, 0, scale)
 	---------------
 	--tetrishapes--
 	for i,v in pairs(tetribodies) do
 		if pause == false then
-			love.graphics.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+			platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 		end
 	end
 	
 	--Next piece
 	if pause == false then
-		love.graphics.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
 	end
 	----------------
 	--start--
 	if pause == true then
-		love.graphics.draw(pausegraphic, 16*scale, 0, 0, scale)
+		platform.draw(pausegraphic, 16*scale, 0, 0, scale)
 	end
 	---------
 	
@@ -156,7 +156,7 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
+	platform.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
 	
 	
 	--"level"--
@@ -166,7 +166,7 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
+	platform.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -175,16 +175,16 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
+	platform.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
 	-----------------------------------------------
 	
 	
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(-fullscreenoffsetX, -fullscreenoffsetY)
+		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 	
