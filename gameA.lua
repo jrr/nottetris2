@@ -384,8 +384,8 @@ function gameA_update(dt)
 end
 
 function getintersectX(shape, y) --returns left and right collision points to a certain shape on a Y coordinate (or -1, -0.9 if no collision)
-	local _, _, lefttime = shape:rayCast( 55, y, 385, y, 1)
-	local _, _, righttime = shape:rayCast( 385, y, 55, y, 1)
+	local lefttime = physics.raycast(shape, 55, y, 385, y)
+	local righttime = physics.raycast(shape, 385, y, 55, y)
 	if lefttime ~= nil and righttime ~= nil then
 		local leftx = 330 * lefttime + 55
 		local rightx = 385 - 330 * righttime
@@ -444,7 +444,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 				inside = false
 				below = false
 				coordinateproperties[i-ioffset][j] = {}
-				coordinates = getPoints2table(w)
+				coordinates = physics.getworldpoints(w)
 				
 				for y = 1, #coordinates, 2 do --Every Point
 					if coordinates[y+1] < upperline then --POINT ABOVE CUTRECT
@@ -476,7 +476,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 					tetrishapescopy[#tetrishapescopy+1]=refineshape(lowerline, -1, i-ioffset, v, j, w)
 					refined = true
 				else
-					tetrishapescopy[#tetrishapescopy+1] = convexhull(getPoints2table(tetrishapes[i-ioffset][j]))
+					tetrishapescopy[#tetrishapescopy+1] = convexhull(physics.getworldpoints(tetrishapes[i-ioffset][j]))
 				end
 			end
 			if refined == true then
@@ -648,7 +648,7 @@ function cutimage(bodyid, numberofgroups) --cuts the image of a body based on it
 	end
 	
 	--get if to chose lower or upper line
-	local posy = getPoints2table(tetrishapes[bodyid][1])
+	local posy = physics.getworldpoints(tetrishapes[bodyid][1])
 	posy = posy[2]
 	
 	if posy > (upperline + lowerline) / 2 then
@@ -672,7 +672,7 @@ function cutimage(bodyid, numberofgroups) --cuts the image of a body based on it
 	--find out the limits of there's more than 1 body being created
 	if numberofgroups > 1 then
 		for s = 1, #tetrishapes[bodyid] do
-			local cotable = getPoints2table(tetrishapes[bodyid][s])
+			local cotable = physics.getworldpoints(tetrishapes[bodyid][s])
 			for i = 1, #cotable, 2 do
 				local x, y = tetribodies[bodyid]:getLocalPoint(cotable[i], cotable[i+1])
 				x = x+width/2
@@ -722,7 +722,7 @@ end
 function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape using the old coordinates and the cutting line; returns its points in world coordinates
 	local leftx, rightx = getintersectX(tetrishapes[bodyid][shapeid], line)
 	if leftx ~= -1 then --Not sure what to do if not
-		local coords = getPoints2table(tetrishapes[bodyid][shapeid])
+		local coords = physics.getworldpoints(tetrishapes[bodyid][shapeid])
 		
 		--remove all points inside the cutting zone
 		local lastcutoff
@@ -771,7 +771,7 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 			print("#coords")
 		end
 	else
-		return convexhull(getPoints2table(tetrishapes[bodyid][shapeid]))
+		return convexhull(physics.getworldpoints(tetrishapes[bodyid][shapeid]))
 	end
 end
 
@@ -786,7 +786,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 	
 	for i = 2, #tetribodies do
 		for j, k in pairs(tetrishapes[i]) do
-			local coords = getPoints2table(k)
+			local coords = physics.getworldpoints(k)
 			--Get first and last involved line
 			local firstline = 19
 			local lastline =  0
@@ -801,7 +801,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 			
 			for line = firstline, lastline do
 				if line >= 1 and line <= 18 then
-					coords = getPoints2table(k)
+					coords = physics.getworldpoints(k)
 					
 					if line > firstline then
 						local offset = 0

@@ -42,3 +42,13 @@ end
 function physics.newpolygon(body, ...) --x1, y1, x2, y2, ...: convex, at most 8 points
 	return love.physics.newFixture(body, love.physics.newPolygonShape(...), 1)
 end
+
+--questions about a shape
+function physics.raycast(shape, x1, y1, x2, y2) --how far along the line from x1, y1 to x2, y2 it first meets the shape (0-1), or nil
+	local _, _, fraction = shape:rayCast(x1, y1, x2, y2, 1)
+	return fraction
+end
+
+function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
+	return {shape:getBody():getWorldPoints(shape:getShape():getPoints())}
+end

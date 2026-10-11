@@ -549,26 +549,6 @@ function table2string(mytable)
 	return output
 end
 
-function getPoints2table(fixture) --world coordinates of a polygon fixture's points
-	x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8 = fixture:getBody():getWorldPoints(fixture:getShape():getPoints())
-	if x4 == nil then
-		return {x1,y1,x2,y2,x3,y3}
-	end
-	if x5 == nil then
-		return {x1,y1,x2,y2,x3,y3,x4,y4}
-	end
-	if x6 == nil then
-		return {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5}
-	end
-	if x7 == nil then
-		return {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6}
-	end
-	if x8 == nil then
-		return {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7}
-	end
-	return     {x1,y1,x2,y2,x3,y3,x4,y4,x5,y5,x6,y6,x7,y7,x8,y8}
-end
-
 --LÖVE 0.7 made polygons from the convex hull of the points it was given, dropping
 --collinear and inward points; 0.8 uses the points as they are. This is 0.7's Graham
 --scan, so cut pieces get the same shapes. Takes and returns {x1,y1,x2,y2,...}.
