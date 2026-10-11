@@ -12,3 +12,4 @@ import "failed"
 import "rocket"
 
 game_load()
+import "perf"

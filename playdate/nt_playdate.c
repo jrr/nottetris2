@@ -11,9 +11,21 @@ static char WORLD[] = "nt.World";
 static char BODY[] = "nt.Body";
 static char SHAPE[] = "nt.Shape";
 
-static ntWorld *world(int pos) { return pd->lua->getArgObject(pos, WORLD, NULL); }
-static cpBody *body(int pos) { return pd->lua->getArgObject(pos, BODY, NULL); }
-static cpShape *shape(int pos) { return pd->lua->getArgObject(pos, SHAPE, NULL); }
+/* getArgObject gives NULL for anything but an object of that class: make that a Lua error, with a
+ * traceback, rather than a crash in Chipmunk */
+static void *object(int pos, char *type) {
+	void *p = pd->lua->getArgObject(pos, type, NULL);
+	if (p == NULL) {
+		const char *class = NULL;
+		int t = pd->lua->getArgType(pos, &class);
+		pd->system->error("nt: argument %d should be %s, is type %d %s", pos, type, t, class ? class : "");
+	}
+	return p;
+}
+
+static ntWorld *world(int pos) { return object(pos, WORLD); }
+static cpBody *body(int pos) { return object(pos, BODY); }
+static cpShape *shape(int pos) { return object(pos, SHAPE); }
 static double number(int pos) { return pd->lua->getArgFloat(pos); }
 
 static int push2(double *out) {

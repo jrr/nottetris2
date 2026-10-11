@@ -23,7 +23,7 @@ quiet() { # the SDK's cmake echoes every command: show the output only when a st
 
 rm -rf Source
 mkdir -p Source build
-cp main.lua platform_playdate.lua pdxinfo Source/
+cp main.lua platform_playdate.lua perf.lua pdxinfo Source/
 cp ../main.lua Source/game.lua
 for f in gameA gameB menu failed rocket physics_chipmunk; do
 	cp ../$f.lua Source/
