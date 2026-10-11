@@ -54,7 +54,7 @@ end
 
 function createtetriB(i, uniqueid, x, y)
 
-	tetriimages[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", scale )
+	tetriimages[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, scale )
 	tetrikind[uniqueid] = i
 	tetrishapes[uniqueid] = {}
 	
@@ -121,30 +121,30 @@ end
 function gameB_draw()
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(fullscreenoffsetX, fullscreenoffsetY)
+		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
 	--background--
-	love.graphics.draw(gamebackground, 0, 0, 0, scale)
+	platform.draw(gamebackground, 0, 0, 0, scale)
 	---------------
 	--tetrishapes--
 	for i,v in pairs(tetribodies) do
 		if pause == false then
-			love.graphics.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+			platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 		end
 	end
 	
 	--Next piece
 	if pause == false then
-		love.graphics.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
 	end
 	----------------
 	--start--
 	if pause == true then
-		love.graphics.draw(pausegraphic, 16*scale, 0, 0, scale)
+		platform.draw(pausegraphic, 16*scale, 0, 0, scale)
 	end
 	---------
 	
@@ -156,7 +156,7 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
+	platform.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
 	
 	
 	--"level"--
@@ -166,7 +166,7 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
+	platform.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -175,16 +175,16 @@ function gameB_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
+	platform.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
 	-----------------------------------------------
 	
 	
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(-fullscreenoffsetX, -fullscreenoffsetY)
+		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 	
@@ -196,28 +196,28 @@ function gameB_update(dt)
 	end
 
 	if gamestate == "gameB" then
-		if love.keyboard.isDown( "x" ) then
+		if platform.isdown( "x" ) then
 			if tetribodies[1]:getAngularVelocity() < 3 then
 				tetribodies[1]:applyTorque( 70*meter*meter )
 			end
 		end
-		if love.keyboard.isDown( "y" ) or love.keyboard.isDown( "z" ) or love.keyboard.isDown( "w" ) then
+		if platform.isdown( "y" ) or platform.isdown( "z" ) or platform.isdown( "w" ) then
 			if tetribodies[1]:getAngularVelocity() > -3 then
 				tetribodies[1]:applyTorque( -70*meter*meter )
 			end
 		end
 	
-		if love.keyboard.isDown( "left" ) then
+		if platform.isdown( "left" ) then
 			local x, y = tetribodies[1]:getWorldCenter()
 			tetribodies[1]:applyForce( -70*meter, 0, x, y )
 		end
-		if love.keyboard.isDown( "right" ) then
+		if platform.isdown( "right" ) then
 			local x, y = tetribodies[1]:getWorldCenter()
 			tetribodies[1]:applyForce( 70*meter, 0, x, y )
 		end
 		
 		local x, y = tetribodies[1]:getLinearVelocity( )
-		if love.keyboard.isDown( "down" ) then
+		if platform.isdown( "down" ) then
 			--commented part limits the blackfallspeed
 			if y > difficulty_speed*5 then
 				tetribodies[1]:setLinearVelocity(x, difficulty_speed*5)
@@ -263,10 +263,10 @@ function endblockB()
 		--LOSE--
 		gamestate = "failingB"
 		if musicno < 4 then
-			love.audio.stop(music[musicno])
+			platform.stop(music[musicno])
 		end
-		love.audio.stop(gameover1)
-		love.audio.play(gameover1)
+		platform.stop(gameover1)
+		platform.play(gameover1)
 	
 		wallshapes[2]:destroy()
 		wallshapes[2] = nil
@@ -289,8 +289,8 @@ function endblockB()
 		linesscore = linesscore + 1
 		scorescore = linesscore * 100
 		
-		love.audio.stop(blockfall)
-		love.audio.play(blockfall)
+		platform.stop(blockfall)
+		platform.play(blockfall)
 		
 		game_addTetriB()
 	end

@@ -1,6 +1,6 @@
 function gameBmulti_load()
 	if musicno < 4 then
-		love.audio.stop(music[musicno])
+		platform.stop(music[musicno])
 	end
 	
 	gamestate = "gameBmulti"
@@ -19,13 +19,13 @@ function gameBmulti_load()
 	mpfullscreenoffsetY = (desktopheight-144*mpscale)/2
 	
 	if not fullscreen then
-		setmode( 274*mpscale, 144*mpscale, fullscreen, vsync, 16 )
+		platform.setmode( 274*mpscale, 144*mpscale, fullscreen, vsync, 16 )
 	end
 	
 	--nextpieces
 	nextpieceimgmp = {}
 	for i = 1, 7 do
-		nextpieceimgmp[i] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+		nextpieceimgmp[i] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	end
 	
 	difficulty_speed = 100
@@ -108,75 +108,75 @@ function gameBmulti_load()
 	-----------
 	
 	randomtable[1] = math.random(7)
-	starttimer = love.timer.getTime()
+	starttimer = platform.gettime()
 	--first piece! hooray.
 end
 
 function gameBmulti_draw()
 	if fullscreen then
-		love.graphics.translate(mpfullscreenoffsetX, mpfullscreenoffsetY)
+		platform.translate(mpfullscreenoffsetX, mpfullscreenoffsetY)
 		
-		love.graphics.setScissor(mpfullscreenoffsetX, mpfullscreenoffsetY, 274*mpscale, 144*mpscale)
+		platform.setscissor(mpfullscreenoffsetX, mpfullscreenoffsetY, 274*mpscale, 144*mpscale)
 	end
 
 	--background--
 	if gamestate ~= "gameBmulti_results" then
-		love.graphics.draw(gamebackgroundmulti, 0, 0, 0, mpscale)
+		platform.draw(gamebackgroundmulti, 0, 0, 0, mpscale)
 	else
-		love.graphics.draw(multiresults, 0, 0, 0, mpscale)
+		platform.draw(multiresults, 0, 0, 0, mpscale)
 	end
 	---------------
 	if gamestarted == false then
 		if newtime - starttimer > 2 then
-			love.graphics.draw( number1, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number1, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number1, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number1, 153*mpscale, 48*mpscale, 0, mpscale)
 		elseif newtime - starttimer > 1 then
-			love.graphics.draw( number2, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number2, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number2, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number2, 153*mpscale, 48*mpscale, 0, mpscale)
 		elseif newtime - starttimer > 0 then
-			love.graphics.draw( number3, 73*mpscale, 48*mpscale, 0, mpscale)
-			love.graphics.draw( number3, 153*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number3, 73*mpscale, 48*mpscale, 0, mpscale)
+			platform.draw( number3, 153*mpscale, 48*mpscale, 0, mpscale)
 		end
 	end
 	--tetrishapes P1--
 	
 	for i,v in pairs(tetribodiesp1) do
-		love.graphics.setColor(1, 1, 1)
+		platform.setcolor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
-			timepassed = love.timer.getTime() - colorizetimer
+			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(table.unpack(p1color))
+				platform.setcolor(table.unpack(p1color))
 			end
 		end
 		
-		love.graphics.draw( tetriimagesp1[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp1[i]][1]*mpscale, piececenter[tetrikindp1[i]][2]*mpscale)
+		platform.draw( tetriimagesp1[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp1[i]][1]*mpscale, piececenter[tetrikindp1[i]][2]*mpscale)
 	end
 	
 	if p1fail == false and nextpiecep1 then
 		--Next piece
-		love.graphics.draw(nextpieceimgmp[nextpiecep1], 24*mpscale, 120*mpscale, -nextpiecerot, 1, 1, piececenterpreview[nextpiecep1][1]*mpscale, piececenterpreview[nextpiecep1][2]*mpscale)
+		platform.draw(nextpieceimgmp[nextpiecep1], 24*mpscale, 120*mpscale, -nextpiecerot, 1, 1, piececenterpreview[nextpiecep1][1]*mpscale, piececenterpreview[nextpiecep1][2]*mpscale)
 	end
 	
 	----------------
 	--tetrishapes P2--	
 	for i,v in pairs(tetribodiesp2) do
-		love.graphics.setColor(1, 1, 1)
+		platform.setcolor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
-			timepassed = love.timer.getTime() - colorizetimer
+			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(table.unpack(p2color))
+				platform.setcolor(table.unpack(p2color))
 			end
 		end
-		love.graphics.draw( tetriimagesp2[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp2[i]][1]*mpscale, piececenter[tetrikindp2[i]][2]*mpscale)
+		platform.draw( tetriimagesp2[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp2[i]][1]*mpscale, piececenter[tetrikindp2[i]][2]*mpscale)
 	end
 	----------------	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	
 	if p2fail == false and nextpiecep2 then
 		--Next piece
-		love.graphics.draw(nextpieceimgmp[nextpiecep2], 250*mpscale, 120*mpscale, nextpiecerot, 1, 1, piececenterpreview[nextpiecep2][1]*mpscale, piececenterpreview[nextpiecep2][2]*mpscale)
+		platform.draw(nextpieceimgmp[nextpiecep2], 250*mpscale, 120*mpscale, nextpiecerot, 1, 1, piececenterpreview[nextpiecep2][1]*mpscale, piececenterpreview[nextpiecep2][2]*mpscale)
 	end
 	--SCORES P1---------------------------------------
 	
@@ -187,7 +187,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( scorescorep1, 36*mpscale + offsetX, 24*mpscale, 0, mpscale)
+	platform.print( scorescorep1, 36*mpscale + offsetX, 24*mpscale, 0, mpscale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -196,7 +196,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( linesscorep1, 28*mpscale + offsetX, 80*mpscale, 0, mpscale)
+	platform.print( linesscorep1, 28*mpscale + offsetX, 80*mpscale, 0, mpscale)
 	-----------------------------------------------
 	
 	--SCORES P2---------------------------------------
@@ -207,7 +207,7 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( scorescorep2, 262*mpscale + offsetX, 24*mpscale, 0, mpscale)
+	platform.print( scorescorep2, 262*mpscale + offsetX, 24*mpscale, 0, mpscale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -216,83 +216,83 @@ function gameBmulti_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*mpscale
 	end
-	love.graphics.print( linesscorep2, 254*mpscale + offsetX, 80*mpscale, 0, mpscale)
+	platform.print( linesscorep2, 254*mpscale + offsetX, 80*mpscale, 0, mpscale)
 	-----------------------------------------------
 	
 	if gamestate == "gameBmulti_results" then
 		--win counter
 		if p1wins < 10 then
-			love.graphics.print( "0"..p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( "0"..p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
 		else
-			love.graphics.print( p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( p1wins, 111*mpscale, 128*mpscale, 0, mpscale)
 		end
 		
 		if p2wins < 10 then
-			love.graphics.print( "0"..p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( "0"..p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
 		else
-			love.graphics.print( p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
+			platform.print( p2wins, 193*mpscale, 128*mpscale, 0, mpscale)
 		end
 		
 		if winner == 1 then
 			--mario
 			if jumpframe == false then
-				love.graphics.draw( marioidle, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
+				platform.draw( marioidle, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
 			else
-				love.graphics.draw( mariojump, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
+				platform.draw( mariojump, mariobody:getX()*physicsmpscale, mariobody:getY()*physicsmpscale, mariobody:getAngle(), mpscale, mpscale, 12, 13.5)
 			end
 			
 			--luigi
 			if cryframe == false then
-				love.graphics.draw( luigicry1, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
+				platform.draw( luigicry1, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
 			else
-				love.graphics.draw( luigicry2, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
-				love.graphics.print( "mario", 93*mpscale, 20*mpscale, 0, mpscale)
-				love.graphics.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
+				platform.draw( luigicry2, 162*mpscale, 66*mpscale,  0, mpscale, mpscale)
+				platform.print( "mario", 93*mpscale, 20*mpscale, 0, mpscale)
+				platform.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
 				for i = 1, 5 do
-					love.graphics.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
-					love.graphics.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
 				end
 			end
 		elseif winner == 2 then
 			--luigi
 			if jumpframe == false then
-				love.graphics.draw( luigiidle, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
+				platform.draw( luigiidle, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
 			else
-				love.graphics.draw( luigijump, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
+				platform.draw( luigijump, luigibody:getX()*physicsmpscale, luigibody:getY()*physicsmpscale, luigibody:getAngle(), mpscale, mpscale, 14, 15.5)
 			end
 			
 			--mario
 			if cryframe == false then
-				love.graphics.draw( mariocry1, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
+				platform.draw( mariocry1, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
 			else
-				love.graphics.draw( mariocry2, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
-				love.graphics.print( "luigi", 93*mpscale, 20*mpscale, 0, mpscale)
-				love.graphics.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
+				platform.draw( mariocry2, 83*mpscale, 66*mpscale, 0, mpscale, mpscale)
+				platform.print( "luigi", 93*mpscale, 20*mpscale, 0, mpscale)
+				platform.print( "wins!", 141*mpscale, 20*mpscale, 0, mpscale)
 				for i = 1, 5 do
-					love.graphics.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
-					love.graphics.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (86+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
+					platform.draw( congratsline, (134+(8*i-1))*mpscale, 28*mpscale, 0, mpscale, mpscale)
 				end
 			end
 		else --draw
 			--mario
-			love.graphics.draw( marioidle, 84*mpscale, 69*mpscale, 0, mpscale, mpscale)
+			platform.draw( marioidle, 84*mpscale, 69*mpscale, 0, mpscale, mpscale)
 			if cryframe == false then
-				love.graphics.print( "draw", 160*mpscale, 40*mpscale, 0, mpscale)
+				platform.print( "draw", 160*mpscale, 40*mpscale, 0, mpscale)
 			end
 			
 			--luigi
-			love.graphics.draw( luigiidle, 162*mpscale, 65*mpscale,  0, mpscale, mpscale)
+			platform.draw( luigiidle, 162*mpscale, 65*mpscale,  0, mpscale, mpscale)
 			if cryframe == false then
-				love.graphics.print( "draw", 80*mpscale, 40*mpscale, 0, mpscale)
+				platform.print( "draw", 80*mpscale, 40*mpscale, 0, mpscale)
 			end
 			
 		end
 	end
 	
 	if fullscreen then
-		love.graphics.translate(-mpfullscreenoffsetX, -mpfullscreenoffsetY)
+		platform.translate(-mpfullscreenoffsetX, -mpfullscreenoffsetY)
 		
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 	
@@ -305,53 +305,53 @@ function gameBmulti_update(dt)
 	end
 
 	updateworld(dt)
-	newtime = love.timer.getTime()
+	newtime = platform.gettime()
 	if gamestarted == false then
 		if newtime - starttimer > 3 then
 			if musicno < 4 then
-				love.audio.play(music[musicno])
+				platform.play(music[musicno])
 			end
 			startgame()
 			gamestarted = true
 		elseif newtime - starttimer > 2 and beeped[3] == false then
 			beeped[3] = true
-			love.audio.stop(highscorebeep)
-			love.audio.play(highscorebeep)
+			platform.stop(highscorebeep)
+			platform.play(highscorebeep)
 		elseif newtime - starttimer > 1 and beeped[2] == false then
 			beeped[2] = true
-			love.audio.stop(highscorebeep)
-			love.audio.play(highscorebeep)
+			platform.stop(highscorebeep)
+			platform.play(highscorebeep)
 		elseif newtime - starttimer > 0 and beeped[1] == false then
 			beeped[1] = true
-			love.audio.stop(highscorebeep)
-			love.audio.play(highscorebeep)
+			platform.stop(highscorebeep)
+			platform.play(highscorebeep)
 		end
 		
 	elseif gamestate == "gameBmulti" then
 		--PLAYER 1--
 		if p1fail == false then
-			if love.keyboard.isDown( "h" ) then --clockwise
+			if platform.isdown( "h" ) then --clockwise
 				if tetribodiesp1[counterp1]:getAngularVelocity() < 3 then
 					tetribodiesp1[counterp1]:applyTorque( 70*meter*meter )
 				end
 			end
-			if love.keyboard.isDown( "g" ) then --counterclockwise
+			if platform.isdown( "g" ) then --counterclockwise
 				if tetribodiesp1[counterp1]:getAngularVelocity() > -3 then
 					tetribodiesp1[counterp1]:applyTorque( -70*meter*meter )
 				end
 			end
 		   
-			if love.keyboard.isDown( "a" ) then --left
+			if platform.isdown( "a" ) then --left
 				x, y = tetribodiesp1[counterp1]:getWorldCenter()
 				tetribodiesp1[counterp1]:applyForce( -70*meter, 0, x, y )
 			end
-			if love.keyboard.isDown( "d" ) then --right
+			if platform.isdown( "d" ) then --right
 				x, y = tetribodiesp1[counterp1]:getWorldCenter()
 				tetribodiesp1[counterp1]:applyForce( 70*meter, 0, x, y )
 			end
 			
 			local x, y = tetribodiesp1[counterp1]:getLinearVelocity()
-			if love.keyboard.isDown( "s" ) then --down
+			if platform.isdown( "s" ) then --down
 				if y > difficulty_speed*5 then
 					tetribodiesp1[counterp1]:setLinearVelocity(x, difficulty_speed*5)
 				else
@@ -366,28 +366,28 @@ function gameBmulti_update(dt)
 		end
 		--PLAYER 2--
 		if p2fail == false then
-			if love.keyboard.isDown( "kp2" ) then --clockwise
+			if platform.isdown( "kp2" ) then --clockwise
 				if tetribodiesp2[counterp2]:getAngularVelocity() < 3 then
 					tetribodiesp2[counterp2]:applyTorque( 70*meter*meter )
 				end
 			end
-			if love.keyboard.isDown( "kp1" ) then --counterclockwise
+			if platform.isdown( "kp1" ) then --counterclockwise
 				if tetribodiesp2[counterp2]:getAngularVelocity() > -3 then
 					tetribodiesp2[counterp2]:applyTorque( -70*meter*meter )
 				end
 			end
 		   
-			if love.keyboard.isDown( "left" ) then --left
+			if platform.isdown( "left" ) then --left
 				x, y = tetribodiesp2[counterp2]:getWorldCenter()
 				tetribodiesp2[counterp2]:applyForce( -70*meter, 0, x, y )
 			end
-			if love.keyboard.isDown( "right" ) then --right
+			if platform.isdown( "right" ) then --right
 				x, y = tetribodiesp2[counterp2]:getWorldCenter()
 				tetribodiesp2[counterp2]:applyForce( 70*meter, 0, x, y )
 			end
 			
 			local x, y = tetribodiesp2[counterp2]:getLinearVelocity()
-			if love.keyboard.isDown( "down" ) then --down
+			if platform.isdown( "down" ) then --down
 				if y > difficulty_speed*5 then
 					tetribodiesp2[counterp2]:setLinearVelocity(x, difficulty_speed*5)
 				else
@@ -401,15 +401,15 @@ function gameBmulti_update(dt)
 			end
 		end
 	elseif gamestate == "failingBmulti" then
-		timepassed = love.timer.getTime() - colorizetimer
+		timepassed = platform.gettime() - colorizetimer
 		if timepassed > colorizeduration then
 			gamestate = "failedBmulti"
 			
 			wallshapesp1[2]:destroy()
 			wallshapesp2[2]:destroy()
 			
-			love.audio.stop(gameover2)
-			love.audio.play(gameover2)
+			platform.stop(gameover2)
+			platform.play(gameover2)
 		end
 	elseif gamestate == "failedBmulti" then
 		clearcheck = true
@@ -427,10 +427,10 @@ function gameBmulti_update(dt)
 		
 		if clearcheck then --RESULTS SCREEN INI!--
 			gamestate = "gameBmulti_results"
-			jumptimer = love.timer.getTime()
-			crytimer = love.timer.getTime()
+			jumptimer = platform.gettime()
+			crytimer = platform.gettime()
 			
-			love.audio.play(musicresults)
+			platform.play(musicresults)
 			
 			resultsfloorbody = love.physics.newBody(world, 32, -64, "static")
 			resultsfloorshape = newpolygonfixture(resultsfloorbody, 196,448, 196,480, 836,480, 836,448)
@@ -464,9 +464,9 @@ function gameBmulti_update(dt)
 			jumpframe = true
 		end
 	elseif gamestate == "gameBmulti_results" then
-		jumptimepassed = love.timer.getTime() - jumptimer
+		jumptimepassed = platform.gettime() - jumptimer
 		if jumptimepassed > 2 then
-			jumptimer = love.timer.getTime()
+			jumptimer = platform.gettime()
 			jumpframe = true
 			if winner == 1 then
 				mariobody:setY(mariobody:getY()-1)
@@ -479,27 +479,27 @@ function gameBmulti_update(dt)
 			end
 		end
 		
-		crytimepassed = love.timer.getTime() - crytimer
+		crytimepassed = platform.gettime() - crytimer
 		if crytimepassed > 0.4 then
 			cryframe = not cryframe
-			crytimer = love.timer.getTime()
+			crytimer = platform.gettime()
 		end
 		
 		if winner == 1 then
-			if love.keyboard.isDown ("a") then
+			if platform.isdown ("a") then
 				x, y = mariobody:getWorldCenter()
 				mariobody:applyForce( -30*meter, 0, x, y-8 )
 			end
-			if love.keyboard.isDown ("d") then
+			if platform.isdown ("d") then
 				x, y = mariobody:getWorldCenter()
 				mariobody:applyForce( 30*meter, 0, x, y-8 )
 			end
 		elseif winner == 2 then
-			if love.keyboard.isDown ("left") then
+			if platform.isdown ("left") then
 				x, y = luigibody:getWorldCenter()
 				luigibody:applyForce( -30*meter, 0, x, y-8 )
 			end
-			if love.keyboard.isDown ("right") then
+			if platform.isdown ("right") then
 				x, y = luigibody:getWorldCenter()
 				luigibody:applyForce( 30*meter, 0, x, y-8 )
 			end
@@ -571,7 +571,7 @@ function game_addTetriBmultip2()
 end
 
 function createtetriBmultip1(i, uniqueid, x, y)
-	tetriimagesp1[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+	tetriimagesp1[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	tetrikindp1[uniqueid] = i
 	tetrishapesp1[uniqueid] = {}
 	if i == 1 then --I
@@ -636,7 +636,7 @@ function createtetriBmultip1(i, uniqueid, x, y)
 end
 
 function createtetriBmultip2(i, uniqueid, x, y)
-	tetriimagesp2[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+	tetriimagesp2[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	tetrikindp2[uniqueid] = i
 	tetrishapesp2[uniqueid] = {}
 	if i == 1 then --I
@@ -734,8 +734,8 @@ function endblockp1()
 			endgame()
 		end
 	else --P1 didn't hit the top yet
-		love.audio.stop(blockfall)
-		love.audio.play(blockfall)
+		platform.stop(blockfall)
+		platform.play(blockfall)
 		linesscorep1 = linesscorep1 + 1
 		scorescorep1 = linesscorep1 * 100
 		game_addTetriBmultip1()
@@ -757,8 +757,8 @@ function endblockp2()
 			endgame()
 		end
 	else --P2 didn't hit the top yet
-		love.audio.stop(blockfall)
-		love.audio.play(blockfall)
+		platform.stop(blockfall)
+		platform.play(blockfall)
 		linesscorep2 = linesscorep2 + 1
 		scorescorep2 = linesscorep2 * 100
 		game_addTetriBmultip2()
@@ -766,15 +766,15 @@ function endblockp2()
 end
 
 function endgame()
-	colorizetimer = love.timer.getTime()
+	colorizetimer = platform.gettime()
 	gamestate = "failingBmulti"
 	
 	if musicno < 4 then
-		love.audio.stop(music[musicno])
+		platform.stop(music[musicno])
 	end
 	
-	love.audio.stop(gameover1)
-	love.audio.play(gameover1)
+	platform.stop(gameover1)
+	platform.play(gameover1)
 	
 	if scorescorep1 > scorescorep2 then
 		p1wins = p1wins + 1

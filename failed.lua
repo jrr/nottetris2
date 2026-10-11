@@ -2,24 +2,24 @@ function failed_load()
 	gamestate = "failed"
 	tetribodies = {} -- CLEAR ALL
 	tetrishapes = {} -- PIECES
-	love.audio.play(gameover2)
+	platform.play(gameover2)
 end
 
 function failed_draw()
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(fullscreenoffsetX, fullscreenoffsetY)
+		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
 	if gameno == 1 then
-		love.graphics.draw(gamebackgroundcutoff, 0, 0, 0, scale)
-		love.graphics.draw(gameovercutoff, 14*scale, 0, 0, scale)
+		platform.draw(gamebackgroundcutoff, 0, 0, 0, scale)
+		platform.draw(gameovercutoff, 14*scale, 0, 0, scale)
 	else
-		love.graphics.draw(gamebackground, 0, 0, 0, scale)
-		love.graphics.draw(gameover, 16*scale, 0, 0, scale)
+		platform.draw(gamebackground, 0, 0, 0, scale)
+		platform.draw(gameover, 16*scale, 0, 0, scale)
 	end
 	
 	--SCORES---------------------------------------
@@ -30,7 +30,7 @@ function failed_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
+	platform.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale)
 	
 	
 	--"level"--
@@ -40,7 +40,7 @@ function failed_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
+	platform.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -49,16 +49,16 @@ function failed_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
+	platform.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale)
 	-----------------------------------------------
 	
 	
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(-fullscreenoffsetX, -fullscreenoffsetY)
+		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 
@@ -69,7 +69,7 @@ end
 function failed_checkhighscores()
 	highscoreno = 0
 	selectblink = true
-	oldtime = love.timer.getTime()
+	oldtime = platform.gettime()
 	for i = 1, 3 do
 		if scorescore > highscore[i] then
 			if i == 1 then
@@ -86,8 +86,8 @@ function failed_checkhighscores()
 			highscorename[i] = ""
 			highscore[i] = scorescore
 			cursorblink = true
-			love.audio.play(highscoreintro)
-			highscoremusicstart = love.timer.getTime()
+			platform.play(highscoreintro)
+			highscoremusicstart = platform.gettime()
 			musicchanged = false
 			gamestate = "highscoreentry"
 			break
@@ -96,7 +96,7 @@ function failed_checkhighscores()
 	if highscoreno == 0 then--no new highscore
 		gamestate = "menu"
 		if musicno < 4 then
-			love.audio.play(music[musicno])
+			platform.play(music[musicno])
 		end
 	end
 end

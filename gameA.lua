@@ -64,8 +64,8 @@ end
 
 function createtetriA(i, uniqueid, x, y) --creates block, including body, shapes, image, imagedata and whatnot.
 
-	tetriimagedata[uniqueid] = newImageData( "graphics/pieces/"..i..".png", scale)
-	tetriimages[uniqueid] = padImagedata( tetriimagedata[uniqueid] )
+	tetriimagedata[uniqueid] = platform.newpiecepixels( "graphics/pieces/"..i, scale)
+	tetriimages[uniqueid] = platform.imagefrompixels( tetriimagedata[uniqueid] )
 	tetrikind[uniqueid] = i
 	tetrishapes[uniqueid] = {}
 	
@@ -132,26 +132,26 @@ end
 function gameA_draw()
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(fullscreenoffsetX, fullscreenoffsetY)
+		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
 	--background--
-	love.graphics.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
+	platform.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
 	---------------
 	--tetrishapes--
 	if cuttingtimer == lineclearduration then
 		for i,v in pairs(tetribodies) do
 			if pause == false then
-				love.graphics.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+				platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 			end
 		end
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
-				love.graphics.draw( tetricutimg[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], 1, 1, piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
+				platform.draw( tetricutimg[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], 1, 1, piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
 			end
 		end
 		
@@ -167,44 +167,44 @@ function gameA_draw()
 			
 			for i = 1, 18 do
 				if linesremoved[i] == true then
-					love.graphics.setColor(r/255, g/255, b/255) --11 takes colors as 0-1
+					platform.setcolor(r/255, g/255, b/255) --11 takes colors as 0-1
 					
-					love.graphics.rectangle("fill", 14*scale, (i-1)*8*scale, 82*scale, 8*scale)
+					platform.rectangle("fill", 14*scale, (i-1)*8*scale, 82*scale, 8*scale)
 				end
 			end
 		end
 	end
 	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	--Next piece
 	if pause == false then
-		love.graphics.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
 	end
 	
 	----------------
 	--Last score
 	if scoreaddtimer < scoreaddtime then
 		if fullscreen then
-			love.graphics.setScissor(105*scale+fullscreenoffsetX, 35*scale+fullscreenoffsetY, 55*scale, 9*scale)
+			platform.setscissor(105*scale+fullscreenoffsetX, 35*scale+fullscreenoffsetY, 55*scale, 9*scale)
 		else
-			love.graphics.setScissor(105*scale, 35*scale, 55*scale, 9*scale)
+			platform.setscissor(105*scale, 35*scale, 55*scale, 9*scale)
 		end
 		
-		love.graphics.setFont(whitefont)
+		platform.setfont(whitefont)
 		
 		local offsetX = 0
 		for i = 1, tostring(lastscoreadd):len() - 1 do
 			offsetX = offsetX -	8*scale
 		end
 		
-		love.graphics.print("+" .. lastscoreadd, 136*scale+offsetX, 36*scale-scoreaddtimer/scoreaddtime*8*scale, 0, scale)
+		platform.print("+" .. lastscoreadd, 136*scale+offsetX, 36*scale-scoreaddtimer/scoreaddtime*8*scale, 0, scale)
 		
-		love.graphics.setFont(tetrisfont)	
+		platform.setfont(tetrisfont)	
 		
 		if fullscreen then
-			love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
+			platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 		else
-			love.graphics.setScissor()
+			platform.setscissor()
 		end
 	end
 	
@@ -223,16 +223,16 @@ function gameA_draw()
 			color = 235-(fullness/1)*180
 		end
 		
-		love.graphics.setColor(color/255, color/255, color/255)
-		love.graphics.rectangle("fill", 0, (i-1)*8*scale, math.floor(6*scale*fullness), 8*scale)
+		platform.setcolor(color/255, color/255, color/255)
+		platform.rectangle("fill", 0, (i-1)*8*scale, math.floor(6*scale*fullness), 8*scale)
 	end
 	
-	love.graphics.setColor(1, 1, 1)
+	platform.setcolor(1, 1, 1)
 	
 	---------
 	--start--
 	if pause == true then
-		love.graphics.draw(pausegraphiccutoff, 14*scale, 0, 0, scale, scale)
+		platform.draw(pausegraphiccutoff, 14*scale, 0, 0, scale, scale)
 	end
 	---------
 	
@@ -244,7 +244,7 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale, scale)
+	platform.print( scorescore, 144*scale + offsetX, 24*scale, 0, scale, scale)
 	
 	
 	--"level"--
@@ -254,7 +254,7 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale, scale)
+	platform.print( levelscore, 136*scale + offsetX, 56*scale, 0, scale, scale)
 	
 	--"tiles"--
 	offsetX = 0
@@ -263,16 +263,16 @@ function gameA_draw()
 	for i = 1, scorestring:len() - 1 do
 		offsetX = offsetX - 8*scale
 	end
-	love.graphics.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale, scale)
+	platform.print( linesscore, 136*scale + offsetX, 80*scale, 0, scale, scale)
 	-----------------------------------------------
 	
 	
 	--FULLSCREEN OFFSET
 	if fullscreen then
-		love.graphics.translate(-fullscreenoffsetX, -fullscreenoffsetY)
+		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
 		
 		--scissor
-		love.graphics.setScissor()
+		platform.setscissor()
 	end
 end
 
@@ -297,8 +297,8 @@ function gameA_update(dt)
 			scoreaddtimer = 0
 		
 			if newlevelbeep then
-				love.audio.stop(newlevel)
-				love.audio.play(newlevel)
+				platform.stop(newlevel)
+				platform.play(newlevel)
 				newlevelbeep = false
 			end
 		end
@@ -316,28 +316,28 @@ function gameA_update(dt)
 	end
 		
 	if gamestate == "gameA" then
-		if love.keyboard.isDown( "x" ) then
+		if platform.isdown( "x" ) then
 			if tetribodies[1]:getAngularVelocity() < 3 then
 				tetribodies[1]:applyTorque( 70*meter*meter )
 			end
 		end
-		if love.keyboard.isDown( "y" ) or love.keyboard.isDown( "z" ) or love.keyboard.isDown( "w" ) then
+		if platform.isdown( "y" ) or platform.isdown( "z" ) or platform.isdown( "w" ) then
 			if tetribodies[1]:getAngularVelocity() > -3 then
 				tetribodies[1]:applyTorque( -70*meter*meter )
 			end
 		end
 	
-		if love.keyboard.isDown( "left" ) then
+		if platform.isdown( "left" ) then
 			local x, y = tetribodies[1]:getWorldCenter()
 			tetribodies[1]:applyForce( -70*meter, 0, x, y )
 		end
-		if love.keyboard.isDown( "right" ) then
+		if platform.isdown( "right" ) then
 			local x, y = tetribodies[1]:getWorldCenter()
 			tetribodies[1]:applyForce( 70*meter, 0, x, y )
 		end
 		
 		local x, y = tetribodies[1]:getLinearVelocity( )
-		if love.keyboard.isDown( "down" ) then
+		if platform.isdown( "down" ) then
 			--commented part limits the blackfallspeed
 			if y > 500 then
 				tetribodies[1]:setLinearVelocity(x, 500)
@@ -548,8 +548,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						end
 						
 						--save old imagedata to local var first in case we create a new bodyid..
-						backupimagedata = love.image.newImageData( tetriimagedata[i-ioffset]:getWidth(), tetriimagedata[i-ioffset]:getHeight())
-						backupimagedata:paste(tetriimagedata[i-ioffset], 0, 0, 0, 0, tetriimagedata[i-ioffset]:getWidth(), tetriimagedata[i-ioffset]:getHeight() )
+						backupimagedata = platform.copypixels( tetriimagedata[i-ioffset] )
 						
 						--cut the image.
 						cutimage(i-ioffset, numberofgroups)
@@ -592,14 +591,12 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						tetribodies[highestbody()]:setBullet(true)
 						tetribodies[highestbody()]:setAngularVelocity(tetribodies[i-ioffset]:getAngularVelocity())
 						
-						tetriimagedata[highestbody()] = love.image.newImageData( backupimagedata:getWidth(), backupimagedata:getHeight())
-						tetriimagedata[highestbody()]:paste( backupimagedata, 0, 0, 0, 0, backupimagedata:getWidth(), backupimagedata:getHeight() )
-						tetriimages[highestbody()] = padImagedata( tetriimagedata[highestbody()] )
+						tetriimagedata[highestbody()] = platform.copypixels( backupimagedata )
+						tetriimages[highestbody()] = platform.imagefrompixels( tetriimagedata[highestbody()] )
 						tetrikind[highestbody()] = tetrikind[i-ioffset]
 						
-						debugimagedata = love.image.newImageData( backupimagedata:getWidth(), backupimagedata:getHeight())
-						debugimagedata:paste(backupimagedata, 0, 0, 0, 0, backupimagedata:getWidth(), backupimagedata:getHeight() )
-						debugimage = padImagedata( debugimagedata )
+						debugimagedata = platform.copypixels( backupimagedata )
+						debugimage = platform.imagefrompixels( debugimagedata )
 						
 						--cut the image
 						cutimage(highestbody(), numberofgroups)
@@ -631,8 +628,7 @@ end
 
 function cutimage(bodyid, numberofgroups) --cuts the image of a body based on its shapes (2nd argument might be obsolete)
 	
-	local width = tetriimagedata[bodyid]:getWidth()
-	local height = tetriimagedata[bodyid]:getHeight()
+	local width, height = platform.getpixelsize( tetriimagedata[bodyid] )
 	
 	--[[ This old method used the angle between the two cutting points and all the other points to determine if the point should be removed. 
 		 But it sometimes bugged out for reasons I couldn't figure out so I'm going for the less good looking easy approach. Boo :(
@@ -716,12 +712,12 @@ function cutimage(bodyid, numberofgroups) --cuts the image of a body based on it
 			end
 			
 			if deletepixel then
-				tetriimagedata[bodyid]:setPixel(x, y, 1, 1, 1, 0)
+				platform.erasepixel( tetriimagedata[bodyid], x, y )
 			end
 		end
 	end
 	
-	tetriimages[bodyid] = padImagedata( tetriimagedata[bodyid] )
+	tetriimages[bodyid] = platform.imagefrompixels( tetriimagedata[bodyid] )
 end
 
 function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape using the old coordinates and the cutting line; returns its points in world coordinates
@@ -899,7 +895,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 							table.insert(tetricutpos, tetribodies[i]:getY())
 							table.insert(tetricutang, tetribodies[i]:getAngle())
 							table.insert(tetricutkind, tetrikind[i])
-							table.insert(tetricutimg, padImagedata(tetriimagedata[i]))
+							table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
 						end
 					end
 					
@@ -919,11 +915,11 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 	
 		if removedlines then
 			if numberoflines >= 4 then
-				love.audio.stop(fourlineclear)
-				love.audio.play(fourlineclear)
+				platform.stop(fourlineclear)
+				platform.play(fourlineclear)
 			else
-				love.audio.stop(lineclear)
-				love.audio.play(lineclear)
+				platform.stop(lineclear)
+				platform.play(lineclear)
 			end
 			
 			--Possible scoring functions:
@@ -969,9 +965,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 			end
 			
 			--Draw the screen before removing lines.
-			love.graphics.clear()
-			gameA_draw()
-			love.graphics.present( )
+			platform.drawnow(gameA_draw)
 			
 			for i = 1, 18 do
 				if linesremoved[i] then
@@ -979,8 +973,8 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 				end
 			end
 		else
-			love.audio.stop(blockfall)
-			love.audio.play(blockfall)
+			platform.stop(blockfall)
+			platform.play(blockfall)
 		end
 		
 		return removedlines
@@ -1141,10 +1135,10 @@ function collideA(a, b, coll) --box2d callback. calls endblock.
 				if tetribodies[1]:getY() < losingY then
 					gamestate = "failingA"
 					if musicno < 4 then
-						love.audio.stop(music[musicno])
+						platform.stop(music[musicno])
 					end
-					love.audio.stop(gameover1)
-					love.audio.play(gameover1)
+					platform.stop(gameover1)
+					platform.play(gameover1)
 				
 					wallshapes[2]:destroy()
 					wallshapes[2] = nil
@@ -1152,7 +1146,7 @@ function collideA(a, b, coll) --box2d callback. calls endblock.
 					tetrikind[highestbody()+1] = tetrikind[1]
 					
 					tetriimagedata[highestbody()+1] = tetriimagedata[1]
-					tetriimages[highestbody()+1] = padImagedata( tetriimagedata[highestbody()+1] )
+					tetriimages[highestbody()+1] = platform.imagefrompixels( tetriimagedata[highestbody()+1] )
 					
 					tetribodies[highestbody()+1] = tetribodies[1]
 					tetribodies[highestbody()]:setLinearDamping(0.5)
