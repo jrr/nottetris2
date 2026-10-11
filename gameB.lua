@@ -124,7 +124,7 @@ function gameB_draw()
 	--tetrishapes--
 	for i,v in pairs(tetribodies) do
 		if pause == false then
-			platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+			platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 		end
 	end
 	

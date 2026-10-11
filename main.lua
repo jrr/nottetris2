@@ -14,12 +14,7 @@ function game_load()
 	vsync = true
 	hue = 0.08 --the color the art is tinted
 	
-	--the window: as big as fits on the screen, up to 5 times the Game Boy's
-	autosize()
-	scale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160), 5)
-	if scale ~= 5 then
-		platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
-	end
+	scale = platform.setupscreen(vsync) --how many pixels to draw for each of the Game Boy's
 	
 	physicsscale = scale/4
 	
@@ -94,7 +89,7 @@ function game_load()
 	
 	-----------------------------
 	
-	math.randomseed( os.time() )
+	platform.randomseed()
 	math.random();math.random();math.random() --discarding some as they seem to tend to unrandomness.
 	
 	platform.setbackgroundcolor( 1, 1, 1 )
@@ -257,10 +252,6 @@ function game_draw()
 	end
 end
 
-function autosize()
-	desktopwidth, desktopheight = platform.getdesktopdimensions()
-end
-
 function loadhighscores()
 	if gameno == 1 then
 		fileloc = "highscoresA.txt"
@@ -412,6 +403,18 @@ end
 
 function newpolygonshape(body, ...)
 	return shapedefaults(physics.newpolygon(body, table.unpack(convexhull({...}))))
+end
+
+function piecepolygons(shapes) --where a piece's shapes are on the screen: {{x1, y1, x2, y2, ...}, ...}
+	local polygons = {}
+	for _, shape in pairs(shapes) do
+		local points = physics.getworldpoints(shape)
+		for j = 1, #points do
+			points[j] = points[j]*physicsscale
+		end
+		polygons[#polygons+1] = points
+	end
+	return polygons
 end
 
 function getrainbowcolor(i)
