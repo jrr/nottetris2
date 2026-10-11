@@ -8,8 +8,8 @@
 #                               # show its console output (until Ctrl-C)
 #
 # Source/ is put together here each time: this directory's Lua, the game's (its main.lua as
-# game.lua, since Playdate's own entry point is main.lua) and its art. The C builds then add
-# pdex.dylib (Simulator) and pdex.elf (device) to it, and pdc makes the pdx.
+# game.lua, since Playdate's own entry point is main.lua) and its art, and the C built for the
+# Simulator (pdex.dylib) and the device (pdex.elf); pdc makes the pdx from it.
 set -euo pipefail
 cd "$(dirname "$0")"
 eval "$(mise env -s bash)"
@@ -35,6 +35,10 @@ quiet cmake --build build/sim -j
 quiet cmake -S . -B build/device -DPRODUCT_DIR="$PWD/build/device" -DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_TOOLCHAIN_FILE="$PLAYDATE_SDK_PATH/C_API/buildsupport/arm.cmake"
 quiet cmake --build build/device -j
+# The SDK's cmake copies the binaries into Source/ only when it relinks them, and Source/ is new
+# each time, so copy them here: pdex.dylib for the Simulator, pdex.elf (stripped) for the device.
+cp build/sim/libnottetris2.dylib Source/pdex.dylib
+arm-none-eabi-strip --strip-unneeded -R .comment -g build/device/nottetris2_DEVICE.elf -o Source/pdex.elf
 
 rm -rf build/nottetris2.pdx
 pdc Source build/nottetris2.pdx
