@@ -158,9 +158,9 @@ function gameA_draw()
 		--blinky lines
 		
 		local section = math.ceil(cuttingtimer/(lineclearduration/lineclearblinks))
-		if math.mod(section, 2) == 1 or cuttingtimer == 0 then
+		if math.fmod(section, 2) == 1 or cuttingtimer == 0 then
 		
-			local rr, rg, rb = unpack(getrainbowcolor(hue))
+			local rr, rg, rb = table.unpack(getrainbowcolor(hue))
 			local r = 145 + rr*64
 			local g = 145 + rg*64
 			local b = 145 + rb*64
@@ -538,11 +538,11 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						tetrishapes[i-ioffset] = {}
 						for b, c in pairs(tetrishapescopy) do
 							if shapegroups[b] == a then
-								cotable = {unpack(tetrishapescopy[b])}
+								cotable = {table.unpack(tetrishapescopy[b])}
 								for var = 1, #cotable, 2 do
 									cotable[var], cotable[var+1] = tetribodies[i-ioffset]:getLocalPoint(cotable[var], cotable[var+1])
 								end
-								tetrishapes[i-ioffset][#tetrishapes[i-ioffset]+1] = newpolygonfixture(tetribodies[i-ioffset], unpack(cotable))
+								tetrishapes[i-ioffset][#tetrishapes[i-ioffset]+1] = newpolygonfixture(tetribodies[i-ioffset], table.unpack(cotable))
 								tetrishapes[i-ioffset][#tetrishapes[i-ioffset]]:setUserData({i-ioffset}) --set the shape name for collision
 							end
 						end
@@ -577,11 +577,11 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						
 						for b, c in pairs(tetrishapescopy) do
 							if shapegroups[b] == a then
-								cotable = {unpack(tetrishapescopy[b])}
+								cotable = {table.unpack(tetrishapescopy[b])}
 								for var = 1, #cotable, 2 do
 									cotable[var], cotable[var+1] = tetribodies[i-ioffset]:getLocalPoint(cotable[var], cotable[var+1])
 								end
-								tetrishapes[highestbody()][#tetrishapes[highestbody()]+1] = newpolygonfixture(tetribodies[highestbody()], unpack(cotable))
+								tetrishapes[highestbody()][#tetrishapes[highestbody()]+1] = newpolygonfixture(tetribodies[highestbody()], table.unpack(cotable))
 								tetrishapes[highestbody()][#tetrishapes[highestbody()]]:setUserData({highestbody()}) --set the shape name for collision
 							end
 						end

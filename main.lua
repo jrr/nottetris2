@@ -1,3 +1,5 @@
+table.unpack = table.unpack or unpack --Lua 5.2 moved unpack into table; LÖVE's LuaJIT only has the global
+
 function love.load()
 	--requires--
 	require "gameB"
@@ -375,7 +377,7 @@ function newImageData(path, s)
 	
 	local width, height = imagedata:getWidth(), imagedata:getHeight()
 	
-	local rr, rg, rb = unpack(getrainbowcolor(hue))
+	local rr, rg, rb = table.unpack(getrainbowcolor(hue))
 	
 	for y = 0, height-1 do
 		for x = 0, width-1 do
@@ -411,8 +413,8 @@ function newPaddedImage(filename, s)
     local w, h = source:getWidth(), source:getHeight()
    
     -- Find closest power-of-two.
-    local wp = math.pow(2, math.ceil(math.log(w)/math.log(2)))
-    local hp = math.pow(2, math.ceil(math.log(h)/math.log(2)))
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
    
     -- Only pad if needed:
     if wp ~= w or hp ~= h then
@@ -428,8 +430,8 @@ function padImagedata(source) --returns image, not imagedata!
     local w, h = source:getWidth(), source:getHeight()
    
     -- Find closest power-of-two.
-    local wp = math.pow(2, math.ceil(math.log(w)/math.log(2)))
-    local hp = math.pow(2, math.ceil(math.log(h)/math.log(2)))
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
    
     -- Only pad if needed:
     if wp ~= w or hp ~= h then
@@ -446,8 +448,8 @@ function newPaddedImageFont(filename, glyphs)
     local w, h = source:getWidth(), source:getHeight()
    
     -- Find closest power-of-two.
-    local wp = math.pow(2, math.ceil(math.log(w)/math.log(2)))
-    local hp = math.pow(2, math.ceil(math.log(h)/math.log(2)))
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
    
     -- Only pad if needed:
     if wp ~= w or hp ~= h then
@@ -804,7 +806,7 @@ function newrectanglefixture(body, x, y, width, height)
 end
 
 function newpolygonfixture(body, ...)
-	return newfixture(body, love.physics.newPolygonShape(unpack(convexhull({...}))))
+	return newfixture(body, love.physics.newPolygonShape(table.unpack(convexhull({...}))))
 end
 
 function getrainbowcolor(i)

@@ -146,7 +146,7 @@ function gameBmulti_draw()
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
 			timepassed = love.timer.getTime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(unpack(p1color))
+				love.graphics.setColor(table.unpack(p1color))
 			end
 		end
 		
@@ -166,7 +166,7 @@ function gameBmulti_draw()
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
 			timepassed = love.timer.getTime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
-				love.graphics.setColor(unpack(p2color))
+				love.graphics.setColor(table.unpack(p2color))
 			end
 		end
 		love.graphics.draw( tetriimagesp2[i], v:getX()*physicsmpscale, v:getY()*physicsmpscale, v:getAngle(), 1, 1, piececenter[tetrikindp2[i]][1]*mpscale, piececenter[tetrikindp2[i]][2]*mpscale)
@@ -786,9 +786,9 @@ function endgame()
 		winner = 3
 	end
 	if p1wins > 99 then
-		p1wins = math.mod(p1wins, 100)
+		p1wins = math.fmod(p1wins, 100)
 	end
 	if p2wins > 99 then
-		p2wins = math.mod(p2wins, 100)
+		p2wins = math.fmod(p2wins, 100)
 	end
 end
