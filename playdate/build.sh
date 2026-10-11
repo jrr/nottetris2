@@ -49,8 +49,8 @@ if [ "${1:-}" = --sim ]; then
 fi
 
 if [ "${1:-}" = --device ]; then
-	waitfor() { # up to 30 seconds for a path to exist, or with !, not to
-		for _ in $(seq 60); do
+	waitfor() { # up to a minute for a path to exist, or with !, not to
+		for _ in $(seq 120); do
 			if [ "$1" = "!" ]; then [ ! -e "$2" ] && return; else [ -e "$1" ] && return; fi
 			sleep 0.5
 		done
@@ -66,8 +66,9 @@ if [ "${1:-}" = --device ]; then
 		pdutil "$port" datadisk
 		waitfor "$volume/Games"
 	fi
-	rm -rf "$volume/Games/nottetris2.pdx"
-	cp -R build/nottetris2.pdx "$volume/Games/"
+	rm -rf "$volume/Games/nottetris2.pdx" "$volume/Games/._nottetris2.pdx"
+	cp -RX build/nottetris2.pdx "$volume/Games/" # -X: no ._ files for macOS's extended attributes
+	diff -rq build/nottetris2.pdx "$volume/Games/nottetris2.pdx" || { echo "the copy on the Playdate doesn't match" >&2; exit 1; }
 	diskutil eject "$volume" > /dev/null
 	waitfor ! "$volume"
 	# the serial port goes away while the disk is mounted and comes back once it's ejected
