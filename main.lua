@@ -1,6 +1,7 @@
 table.unpack = table.unpack or unpack --Lua 5.2 moved unpack into table; LÖVE's LuaJIT only has the global
 require "platform_love"
-require "physics_love"
+require "nt_physics_love" --Chipmunk; physics_love.lua is the same physics on Box2D
+require "physics_chipmunk"
 
 function game_load()
 	--requires--
