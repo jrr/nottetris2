@@ -12,7 +12,7 @@ function gameB_load()
 	
 	--PHYSICS--
 	meter = 30
-	world = love.physics.newWorld(0, 500, true )
+	world = physics.newworld(0, 500, collideB)
 	
 	tetrikind = {}
 	wallshapes = {}
@@ -20,19 +20,18 @@ function gameB_load()
 	tetribodies = {}
 	offsetshapes = {}
 	
-	wallbodies = love.physics.newBody(world, 32, -64, "static") --WALLS
-	wallshapes[0] = newpolygonfixture(wallbodies, 0, -64, 0,672, 32,672, 32,-64)
+	wallbodies = physics.newbody(world, 32, -64, "static") --WALLS
+	wallshapes[0] = newpolygonshape(wallbodies, 0, -64, 0,672, 32,672, 32,-64)
 	wallshapes[0]:setUserData("left")
 	wallshapes[0]:setFriction(0.00001)
-	wallshapes[1] = newpolygonfixture(wallbodies, 352,-64, 352,672, 384,672, 384,-64)
+	wallshapes[1] = newpolygonshape(wallbodies, 352,-64, 352,672, 384,672, 384,-64)
 	wallshapes[1]:setUserData("right")
 	wallshapes[1]:setFriction(0.00001)
-	wallshapes[2] = newpolygonfixture(wallbodies, 24,640, 24,672, 352,672, 352,640)
+	wallshapes[2] = newpolygonshape(wallbodies, 24,640, 24,672, 352,672, 352,640)
 	wallshapes[2]:setUserData("ground")
-	wallshapes[3] = newpolygonfixture(wallbodies, -8,-96, 384,-96, 384,-64, -8,-64)
+	wallshapes[3] = newpolygonshape(wallbodies, -8,-96, 384,-96, 384,-64, -8,-64)
 	wallshapes[3]:setUserData("ceiling")
 	
-	world:setCallbacks(queuecollisions(collideB))
 	-----------
 	
 	--FIRST "nextpiece"-
@@ -59,53 +58,53 @@ function createtetriB(i, uniqueid, x, y)
 	tetrishapes[uniqueid] = {}
 	
 	if i == 1 then --I
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -48,0, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], -16,0, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 16,0, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], 48,0, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -48,0, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], -16,0, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 16,0, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], 48,0, 32, 32)
 		
 	elseif i == 2 then --J
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -32,-16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], 0,-16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 32,-16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], 32,16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -32,-16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], 0,-16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 32,-16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], 32,16, 32, 32)
 		
 	elseif i == 3 then --L
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -32,-16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], 0,-16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 32,-16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], -32,16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -32,-16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], 0,-16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 32,-16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], -32,16, 32, 32)
 		
 	elseif i == 4 then --O
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -16,-16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], -16,16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 16,16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], 16,-16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -16,-16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], -16,16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 16,16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], 16,-16, 32, 32)
 		
 	elseif i == 5 then --S
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -32,16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], 0,-16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 32,-16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], 0,16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -32,16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], 0,-16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 32,-16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], 0,16, 32, 32)
 		
 	elseif i == 6 then --T
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], -32,-16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], 0,-16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 32,-16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], 0,16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], -32,-16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], 0,-16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 32,-16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], 0,16, 32, 32)
 		
 	elseif i == 7 then --Z
-		tetribodies[uniqueid] = love.physics.newBody(world, x, y, "dynamic")
-		tetrishapes[uniqueid][1] = newrectanglefixture(tetribodies[uniqueid], 0,16, 32, 32)
-		tetrishapes[uniqueid][2] = newrectanglefixture(tetribodies[uniqueid], 0,-16, 32, 32)
-		tetrishapes[uniqueid][3] = newrectanglefixture(tetribodies[uniqueid], 32,16, 32, 32)
-		tetrishapes[uniqueid][4] = newrectanglefixture(tetribodies[uniqueid], -32,-16, 32, 32)
+		tetribodies[uniqueid] = physics.newbody(world, x, y, "dynamic")
+		tetrishapes[uniqueid][1] = newrectangleshape(tetribodies[uniqueid], 0,16, 32, 32)
+		tetrishapes[uniqueid][2] = newrectangleshape(tetribodies[uniqueid], 0,-16, 32, 32)
+		tetrishapes[uniqueid][3] = newrectangleshape(tetribodies[uniqueid], 32,16, 32, 32)
+		tetrishapes[uniqueid][4] = newrectangleshape(tetribodies[uniqueid], -32,-16, 32, 32)
 
 	end
 	
@@ -232,7 +231,7 @@ function gameB_update(dt)
 		end
 	end
 	
-	updateworld(dt)
+	physics.update(world, dt)
 	
 	if gamestate == "failingB" then
 		clearcheck = true
