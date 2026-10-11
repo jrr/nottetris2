@@ -503,8 +503,8 @@ function changevolume(i)
 end
 
 function loadoptions()
-	if love.filesystem.getInfo("options.txt") then --11 deprecates exists, and says so on screen
-		local s = love.filesystem.read("options.txt")
+	if platform.exists("options.txt") then
+		local s = platform.read("options.txt")
 		local split1 = s:split("\n")
 		for i = 1, #split1 do
 			local split2 = split1[i]:split("=")
@@ -569,7 +569,7 @@ function saveoptions()
 	s = s .. "scale=" .. scale .. "\n"
 	s = s .. "fullscreen=" .. tostring(fullscreen) .. "\n"
 	
-	love.filesystem.write("options.txt", s)
+	platform.write("options.txt", s)
 end
 
 function autosize()
@@ -612,9 +612,9 @@ function loadhighscores()
 		fileloc = "highscoresB.txt"
 	end
 	
-	if love.filesystem.getInfo( fileloc ) then
+	if platform.exists( fileloc ) then
 		
-		highdata = love.filesystem.read( fileloc )
+		highdata = platform.read( fileloc )
 		highdata = highdata:split(";")
 		highscore = {}
 		highscorename = {}
@@ -658,7 +658,7 @@ function savehighscores()
 	for i = 1, 3 do
 		highdata = highdata..highscorename[i]..";"..highscore[i]..";"
 	end
-	love.filesystem.write( fileloc, highdata.."\n" )
+	platform.write( fileloc, highdata.."\n" )
 end
 
 function changescale(i)
