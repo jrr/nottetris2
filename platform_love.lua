@@ -116,3 +116,130 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 	draw()
 	love.graphics.present()
 end
+
+--images. These helpers are LÖVE only: they tint the art by the color option (hue), scale it, and pad it to powers of two for old graphics cards.
+--Piece images still use them directly, until pieces are drawn from their physics shapes.
+function newImageData(path, s)
+	local imagedata = love.image.newImageData( path )
+	
+	if s then
+		imagedata = scaleImagedata(imagedata, s)
+	end
+	
+	local width, height = imagedata:getWidth(), imagedata:getHeight()
+	
+	local rr, rg, rb = table.unpack(getrainbowcolor(hue))
+	
+	for y = 0, height-1 do
+		for x = 0, width-1 do
+			local oldr, oldg, oldb, olda = imagedata:getPixel(x, y)
+			oldr = oldr*255 --11 gives pixels as 0-1
+			
+			if olda ~= 0 then
+				if oldr > 203 and oldr < 213 then --lightgrey
+					local r = 145 + rr*64
+					local g = 145 + rg*64
+					local b = 145 + rb*64
+					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
+				elseif oldr > 107 and oldr < 117 then --darkgrey
+					local r = 73 + rr*43
+					local g = 73 + rg*43
+					local b = 73 + rb*43
+					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
+				end
+			end
+		end
+	end
+	
+	return imagedata
+end
+
+function newPaddedImage(filename, s)
+    local source = newImageData(filename)
+	
+	if s then
+		source = scaleImagedata(source, s)
+	end
+	
+    local w, h = source:getWidth(), source:getHeight()
+   
+    -- Find closest power-of-two.
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
+   
+    -- Only pad if needed:
+    if wp ~= w or hp ~= h then
+        local padded = love.image.newImageData(wp, hp)
+        padded:paste(source, 0, 0)
+        return love.graphics.newImage(padded)
+    end
+   
+    return love.graphics.newImage(source)
+end
+
+function padImagedata(source) --returns image, not imagedata!
+    local w, h = source:getWidth(), source:getHeight()
+   
+    -- Find closest power-of-two.
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
+   
+    -- Only pad if needed:
+    if wp ~= w or hp ~= h then
+        local padded = love.image.newImageData(wp, hp)
+        padded:paste(source, 0, 0)
+        return love.graphics.newImage(padded)
+    end
+   
+    return love.graphics.newImage(source)
+end
+
+function newPaddedImageFont(filename, glyphs)
+    local source = newImageData(filename)
+    local w, h = source:getWidth(), source:getHeight()
+   
+    -- Find closest power-of-two.
+    local wp = 2^math.ceil(math.log(w)/math.log(2))
+    local hp = 2^math.ceil(math.log(h)/math.log(2))
+   
+    -- Only pad if needed:
+    if wp ~= w or hp ~= h then
+        local padded = love.image.newImageData(wp, hp)
+        padded:paste(source, 0, 0)
+		local font = love.graphics.newImageFont(padded, glyphs, 1) --0.10 no longer adds a pixel between glyphs; 11 takes ImageData, not an Image
+		font:setFilter("nearest", "nearest")
+        return font
+    end
+	
+    return love.graphics.newImageFont(source, glyphs, 1)
+end
+
+function scaleImagedata(imagedata, i)
+	local width, height = imagedata:getWidth(), imagedata:getHeight()
+	local scaled = love.image.newImageData(width*i, height*i)
+	
+	for y = 0, height*i-1 do
+		for x = 0, width*i-1 do
+			local r, g, b, a = imagedata:getPixel(math.floor(x/i), math.floor(y/i))
+			scaled:setPixel(x, y, r, g, b, a)
+		end
+	end	
+	
+	return scaled
+end
+
+
+function platform.newimage(path, tinted) --path without extension; tinted: recolored by the color option
+	local image
+	if tinted then
+		image = newPaddedImage(path .. ".png")
+	else
+		image = love.graphics.newImage(path .. ".png")
+	end
+	image:setFilter("nearest", "nearest")
+	return image
+end
+
+function platform.newfont(path, glyphs) --an image font, tinted like the art
+	return newPaddedImageFont(path .. ".png", glyphs)
+end

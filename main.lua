@@ -111,7 +111,7 @@ function love.load()
 	changevolume(volume)
 	
 	--IMAGES THAT WON'T CHANGE HUE:
-	rainbowgradient = love.graphics.newImage("graphics/rainbow.png")rainbowgradient:setFilter("nearest", "nearest")
+	rainbowgradient = platform.newimage("graphics/rainbow", false)
 	
 	--Whitelist for highscorenames--
 	whitelist = {}
@@ -208,61 +208,61 @@ end
 function loadimages()
 	--IMAGES--
 	--menu--
-	stabyourselflogo = newPaddedImage("graphics/stabyourselflogo.png")
-	logo = newPaddedImage("graphics/logo.png")
-	title = newPaddedImage("graphics/title.png")
-	gametype = newPaddedImage("graphics/gametype.png")
-	mpmenu = newPaddedImage("graphics/mpmenu.png")
-	optionsmenu = newPaddedImage("graphics/options.png")
-	volumeslider = newPaddedImage("graphics/volumeslider.png")
+	stabyourselflogo = platform.newimage("graphics/stabyourselflogo", true)
+	logo = platform.newimage("graphics/logo", true)
+	title = platform.newimage("graphics/title", true)
+	gametype = platform.newimage("graphics/gametype", true)
+	mpmenu = platform.newimage("graphics/mpmenu", true)
+	optionsmenu = platform.newimage("graphics/options", true)
+	volumeslider = platform.newimage("graphics/volumeslider", true)
 	--game--
-	gamebackground = newPaddedImage("graphics/gamebackground.png")
-	gamebackgroundcutoff = newPaddedImage("graphics/gamebackgroundgamea.png")
-	gamebackgroundmulti = newPaddedImage("graphics/gamebackgroundmulti.png")
-	multiresults = newPaddedImage("graphics/multiresults.png")
+	gamebackground = platform.newimage("graphics/gamebackground", true)
+	gamebackgroundcutoff = platform.newimage("graphics/gamebackgroundgamea", true)
+	gamebackgroundmulti = platform.newimage("graphics/gamebackgroundmulti", true)
+	multiresults = platform.newimage("graphics/multiresults", true)
 	
-	number1 = newPaddedImage("graphics/versus/number1.png")
-	number2 = newPaddedImage("graphics/versus/number2.png")
-	number3 = newPaddedImage("graphics/versus/number3.png")
+	number1 = platform.newimage("graphics/versus/number1", true)
+	number2 = platform.newimage("graphics/versus/number2", true)
+	number3 = platform.newimage("graphics/versus/number3", true)
 	
-	gameover = newPaddedImage("graphics/gameover.png")
-	gameovercutoff = newPaddedImage("graphics/gameovercutoff.png")
-	pausegraphic = newPaddedImage("graphics/pause.png")
-	pausegraphiccutoff = newPaddedImage("graphics/pausecutoff.png")
+	gameover = platform.newimage("graphics/gameover", true)
+	gameovercutoff = platform.newimage("graphics/gameovercutoff", true)
+	pausegraphic = platform.newimage("graphics/pause", true)
+	pausegraphiccutoff = platform.newimage("graphics/pausecutoff", true)
 	
 	--figures--
-	marioidle = newPaddedImage("graphics/versus/marioidle.png")
-	mariojump = newPaddedImage("graphics/versus/mariojump.png")
-	mariocry1 = newPaddedImage("graphics/versus/mariocry1.png")
-	mariocry2 = newPaddedImage("graphics/versus/mariocry2.png")
+	marioidle = platform.newimage("graphics/versus/marioidle", true)
+	mariojump = platform.newimage("graphics/versus/mariojump", true)
+	mariocry1 = platform.newimage("graphics/versus/mariocry1", true)
+	mariocry2 = platform.newimage("graphics/versus/mariocry2", true)
 	
-	luigiidle = newPaddedImage("graphics/versus/luigiidle.png")
-	luigijump = newPaddedImage("graphics/versus/luigijump.png")
-	luigicry1 = newPaddedImage("graphics/versus/luigicry1.png")
-	luigicry2 = newPaddedImage("graphics/versus/luigicry2.png")
+	luigiidle = platform.newimage("graphics/versus/luigiidle", true)
+	luigijump = platform.newimage("graphics/versus/luigijump", true)
+	luigicry1 = platform.newimage("graphics/versus/luigicry1", true)
+	luigicry2 = platform.newimage("graphics/versus/luigicry2", true)
 	
 	--rockets--
-	rocket1 = newPaddedImage("graphics/rocket1.png");rocket1:setFilter( "nearest", "nearest" )
-	rocket2 = newPaddedImage("graphics/rocket2.png")
-	rocket3 = newPaddedImage("graphics/rocket3.png")
-	spaceshuttle = newPaddedImage("graphics/spaceshuttle.png")
+	rocket1 = platform.newimage("graphics/rocket1", true)
+	rocket2 = platform.newimage("graphics/rocket2", true)
+	rocket3 = platform.newimage("graphics/rocket3", true)
+	spaceshuttle = platform.newimage("graphics/spaceshuttle", true)
 	
-	rocketbackground = newPaddedImage("graphics/rocketbackground.png")
-	bigrocketbackground = newPaddedImage("graphics/bigrocketbackground.png")
-	bigrockettakeoffbackground = newPaddedImage("graphics/bigrockettakeoffbackground.png")
+	rocketbackground = platform.newimage("graphics/rocketbackground", true)
+	bigrocketbackground = platform.newimage("graphics/bigrocketbackground", true)
+	bigrockettakeoffbackground = platform.newimage("graphics/bigrockettakeoffbackground", true)
 	
 	
-	smoke1left = newPaddedImage("graphics/smoke1left.png")
-	smoke1right = newPaddedImage("graphics/smoke1right.png")
-	smoke2left = newPaddedImage("graphics/smoke2left.png")
-	smoke2right = newPaddedImage("graphics/smoke2right.png")
+	smoke1left = platform.newimage("graphics/smoke1left", true)
+	smoke1right = platform.newimage("graphics/smoke1right", true)
+	smoke2left = platform.newimage("graphics/smoke2left", true)
+	smoke2right = platform.newimage("graphics/smoke2right", true)
 	
-	fire1 = newPaddedImage("graphics/fire1.png")
-	fire2 = newPaddedImage("graphics/fire2.png")
-	firebig1 = newPaddedImage("graphics/firebig1.png")
-	firebig2 = newPaddedImage("graphics/firebig2.png")
+	fire1 = platform.newimage("graphics/fire1", true)
+	fire2 = platform.newimage("graphics/fire2", true)
+	firebig1 = platform.newimage("graphics/firebig1", true)
+	firebig2 = platform.newimage("graphics/firebig2", true)
 	
-	congratsline = newPaddedImage("graphics/congratsline.png")
+	congratsline = platform.newimage("graphics/congratsline", true)
 	
 	--nextpiece
 	nextpieceimg = {}
@@ -271,52 +271,9 @@ function loadimages()
 	end
 	
 	--font--
-	tetrisfont = newPaddedImageFont("graphics/font.png", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<! ")
-	whitefont = newPaddedImageFont("graphics/fontwhite.png", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<!+ ")
+	tetrisfont = platform.newfont("graphics/font", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<! ")
+	whitefont = platform.newfont("graphics/fontwhite", "0123456789abcdefghijklmnopqrstTuvwxyz.,'C-#_>:<!+ ")
 	platform.setfont(tetrisfont)
-	
-	--filters!
-	stabyourselflogo:setFilter("nearest", "nearest")
-	logo:setFilter( "nearest", "nearest" )
-	title:setFilter( "nearest", "nearest" )
-	gametype:setFilter( "nearest", "nearest" )
-	mpmenu:setFilter( "nearest", "nearest" )
-	optionsmenu:setFilter( "nearest", "nearest" )
-	volumeslider:setFilter( "nearest", "nearest" )
-	gamebackground:setFilter( "nearest", "nearest" )
-	gamebackgroundcutoff:setFilter( "nearest", "nearest" )
-	gamebackgroundmulti:setFilter( "nearest", "nearest" )
-	multiresults:setFilter( "nearest", "nearest" )
-	number1:setFilter( "nearest", "nearest" )
-	number2:setFilter( "nearest", "nearest" )
-	number3:setFilter( "nearest", "nearest" )
-	gameover:setFilter( "nearest", "nearest" )
-	gameovercutoff:setFilter( "nearest", "nearest" )
-	pausegraphic:setFilter( "nearest", "nearest" )
-	pausegraphiccutoff:setFilter( "nearest", "nearest" )
-	marioidle:setFilter( "nearest", "nearest" )
-	mariojump:setFilter( "nearest", "nearest" )
-	mariocry1:setFilter( "nearest", "nearest" )
-	mariocry2:setFilter( "nearest", "nearest" )
-	luigiidle:setFilter( "nearest", "nearest" )
-	luigijump:setFilter( "nearest", "nearest" )
-	luigicry1:setFilter( "nearest", "nearest" )
-	luigicry2:setFilter( "nearest", "nearest" )
-	rocket2:setFilter( "nearest", "nearest" )
-	rocket3:setFilter( "nearest", "nearest" )
-	spaceshuttle:setFilter( "nearest", "nearest" )
-	rocketbackground:setFilter( "nearest", "nearest" )
-	bigrocketbackground:setFilter( "nearest", "nearest" )
-	bigrockettakeoffbackground:setFilter( "nearest", "nearest" )
-	smoke1left:setFilter( "nearest", "nearest" )
-	smoke1right:setFilter( "nearest", "nearest" )
-	smoke2left:setFilter( "nearest", "nearest" )
-	smoke2right:setFilter( "nearest", "nearest" )
-	fire1:setFilter( "nearest", "nearest" )
-	fire2:setFilter( "nearest", "nearest" )
-	firebig1:setFilter( "nearest", "nearest" )
-	firebig2:setFilter( "nearest", "nearest" )
-	congratsline:setFilter( "nearest", "nearest" )
 end
 
 function love.update(dt)
@@ -367,115 +324,6 @@ function love.draw()
 	elseif gamestate == "rocket1" or gamestate == "rocket2" or gamestate == "rocket3" or gamestate == "rocket4" then
 		rocket_draw()
 	end
-end
-
-function newImageData(path, s)
-	local imagedata = love.image.newImageData( path )
-	
-	if s then
-		imagedata = scaleImagedata(imagedata, s)
-	end
-	
-	local width, height = imagedata:getWidth(), imagedata:getHeight()
-	
-	local rr, rg, rb = table.unpack(getrainbowcolor(hue))
-	
-	for y = 0, height-1 do
-		for x = 0, width-1 do
-			local oldr, oldg, oldb, olda = imagedata:getPixel(x, y)
-			oldr = oldr*255 --11 gives pixels as 0-1
-			
-			if olda ~= 0 then
-				if oldr > 203 and oldr < 213 then --lightgrey
-					local r = 145 + rr*64
-					local g = 145 + rg*64
-					local b = 145 + rb*64
-					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
-				elseif oldr > 107 and oldr < 117 then --darkgrey
-					local r = 73 + rr*43
-					local g = 73 + rg*43
-					local b = 73 + rb*43
-					imagedata:setPixel(x, y, r/255, g/255, b/255, olda)
-				end
-			end
-		end
-	end
-	
-	return imagedata
-end
-
-function newPaddedImage(filename, s)
-    local source = newImageData(filename)
-	
-	if s then
-		source = scaleImagedata(source, s)
-	end
-	
-    local w, h = source:getWidth(), source:getHeight()
-   
-    -- Find closest power-of-two.
-    local wp = 2^math.ceil(math.log(w)/math.log(2))
-    local hp = 2^math.ceil(math.log(h)/math.log(2))
-   
-    -- Only pad if needed:
-    if wp ~= w or hp ~= h then
-        local padded = love.image.newImageData(wp, hp)
-        padded:paste(source, 0, 0)
-        return love.graphics.newImage(padded)
-    end
-   
-    return love.graphics.newImage(source)
-end
-
-function padImagedata(source) --returns image, not imagedata!
-    local w, h = source:getWidth(), source:getHeight()
-   
-    -- Find closest power-of-two.
-    local wp = 2^math.ceil(math.log(w)/math.log(2))
-    local hp = 2^math.ceil(math.log(h)/math.log(2))
-   
-    -- Only pad if needed:
-    if wp ~= w or hp ~= h then
-        local padded = love.image.newImageData(wp, hp)
-        padded:paste(source, 0, 0)
-        return love.graphics.newImage(padded)
-    end
-   
-    return love.graphics.newImage(source)
-end
-
-function newPaddedImageFont(filename, glyphs)
-    local source = newImageData(filename)
-    local w, h = source:getWidth(), source:getHeight()
-   
-    -- Find closest power-of-two.
-    local wp = 2^math.ceil(math.log(w)/math.log(2))
-    local hp = 2^math.ceil(math.log(h)/math.log(2))
-   
-    -- Only pad if needed:
-    if wp ~= w or hp ~= h then
-        local padded = love.image.newImageData(wp, hp)
-        padded:paste(source, 0, 0)
-		local font = love.graphics.newImageFont(padded, glyphs, 1) --0.10 no longer adds a pixel between glyphs; 11 takes ImageData, not an Image
-		font:setFilter("nearest", "nearest")
-        return font
-    end
-	
-    return love.graphics.newImageFont(source, glyphs, 1)
-end
-
-function scaleImagedata(imagedata, i)
-	local width, height = imagedata:getWidth(), imagedata:getHeight()
-	local scaled = love.image.newImageData(width*i, height*i)
-	
-	for y = 0, height*i-1 do
-		for x = 0, width*i-1 do
-			local r, g, b, a = imagedata:getPixel(math.floor(x/i), math.floor(y/i))
-			scaled:setPixel(x, y, r, g, b, a)
-		end
-	end	
-	
-	return scaled
 end
 
 function changevolume(i)
