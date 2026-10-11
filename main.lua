@@ -408,41 +408,73 @@ function newpolygonshape(body, ...)
 	return shapedefaults(physics.newpolygon(body, table.unpack(convexhull({...}))))
 end
 
---The pieces the physics has put to sleep, other than the falling one, are the pile. It only
---changes when one falls asleep, wakes or goes, so a platform can keep it drawn (platform.startpile).
-local asleep = setmetatable({}, {__mode="k"}) --by body, as of the last frame
-local pilesize, pileversion = 0, 0
+--Pieces that have stopped moving are the pile, which a platform can keep drawn (platform.keepspile)
+--rather than draw each piece every frame. A piece joins it once it's been still a few frames, and
+--leaves it once it's visibly moved from where it was drawn into it.
+local JOINFRAMES = 3
+local STILL = 0.1 --screen pixels a frame, for joining
+local MOVED = 0.5 --screen pixels from where it joined, for leaving
+local pile, last, pilebodies = {}, setmetatable({}, {__mode="k"}), nil
 
-local function updatepile() --returns a number that changes when the pile does
-	local changed, size = false, 0
-	for i, v in pairs(tetribodies) do
-		local sleeping = i ~= 1 and not v:isAwake()
-		if sleeping then
-			size = size + 1
-		end
-		if (asleep[v] or false) ~= sleeping then
-			asleep[v] = sleeping
-			changed = true
-		end
-	end
-	if changed or size ~= pilesize then
-		pilesize = size
-		pileversion = pileversion + 1
-	end
-	return pileversion
+local function distance(pose, x, y, angle) --in screen pixels; turning counts at a block's half-width
+	return (math.abs(x - pose[1]) + math.abs(y - pose[2]) + math.abs(angle - pose[3])*16)*physicsscale
 end
 
-function drawpieces() --tetribodies, with the pile as the platform keeps it
+local function drawpiece(i, v, x, y, angle)
+	platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), x*physicsscale, y*physicsscale, angle, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+end
+
+function drawpieces() --tetribodies, with the pile kept drawn where the platform does that
 	if pause then
 		return
 	end
-	local kept = platform.startpile(updatepile())
+	if not platform.keepspile then
+		for i, v in pairs(tetribodies) do
+			drawpiece(i, v, v:getX(), v:getY(), v:getAngle())
+		end
+		return
+	end
+	if pilebodies ~= tetribodies then --a new game
+		pile, pilebodies = {}, tetribodies
+		platform.clearpile()
+	end
+	--first what leaves the pile, so it's patched before it's drawn
+	local seen, poses = {}, {}
 	for i, v in pairs(tetribodies) do
-		if not (kept and asleep[v]) then
-			platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale, asleep[v])
+		local x, y, angle = v:getX(), v:getY(), v:getAngle()
+		seen[v], poses[v] = true, {x, y, angle}
+		if pile[v] and distance(pile[v], x, y, angle) > MOVED then
+			pile[v] = nil
+			platform.unpile(v)
 		end
 	end
-	platform.endpile()
+	for v in pairs(pile) do
+		if not seen[v] then
+			pile[v] = nil
+			platform.unpile(v)
+		end
+	end
+	platform.drawpile()
+	--then what's moving, and what's joining the pile
+	for i, v in pairs(tetribodies) do
+		if not pile[v] then
+			local x, y, angle = poses[v][1], poses[v][2], poses[v][3]
+			local l = last[v]
+			if l and i ~= 1 and distance(l, x, y, angle) < STILL then
+				l.still = l.still + 1
+			else
+				last[v] = {x, y, angle, still=0}
+				l = last[v]
+			end
+			l[1], l[2], l[3] = x, y, angle
+			if l.still >= JOINFRAMES then
+				pile[v] = {x, y, angle}
+				platform.pilepiece(v, piecepolygons(tetrishapes[i]))
+			else
+				drawpiece(i, v, x, y, angle)
+			end
+		end
+	end
 end
 
 function piecepolygons(shapes) --where a piece's shapes are on the screen: {{x1, y1, x2, y2, ...}, ...}

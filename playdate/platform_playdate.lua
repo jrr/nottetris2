@@ -147,40 +147,59 @@ local function drawpolygons(polygons)
 	setcolor()
 end
 
---The pile, kept in an image the size of the game's screen while its version stays the same.
---While it's redrawn, the moving pieces wait, to go on top of it.
-local pile = gfx.image.new(math.ceil(160*SCALE), 240)
-local pileversion, redrawing, moving = nil, false, {}
+--The pile: pieces that have stopped moving, kept drawn in an image the size of the game's screen.
+--The game says when a piece joins it (drawn into the image) or leaves it (its area of the image
+--redrawn from the pieces still there).
+platform.keepspile = true
+local pileimage = gfx.image.new(math.ceil(160*SCALE), 240)
+local pile = {} --key -> {polygons, x1, y1, x2, y2}
 
-function platform.startpile(version)
-	if version == pileversion then
-		pile:draw(0, 0)
-		return true
-	end
-	pileversion, redrawing = version, true
-	pile:clear(gfx.kColorClear)
-	gfx.pushContext(pile)
-	return false
+function platform.clearpile()
+	pile = {}
+	pileimage:clear(gfx.kColorClear)
 end
 
-function platform.drawpiece(image, polygons, x, y, angle, originx, originy, inpile) --as its polygons
-	if redrawing and not inpile then
-		moving[#moving+1] = polygons
-	else
-		drawpolygons(polygons)
-	end
-end
-
-function platform.endpile()
-	if redrawing then
-		gfx.popContext()
-		redrawing = false
-		pile:draw(0, 0)
-		for i, polygons in ipairs(moving) do
-			drawpolygons(polygons)
-			moving[i] = nil
+function platform.pilepiece(key, polygons) --into the pile, and onto the screen this frame
+	local x1, y1, x2, y2 = math.huge, math.huge, -math.huge, -math.huge
+	for _, points in ipairs(polygons) do
+		for i = 1, #points, 2 do
+			x1, x2 = math.min(x1, points[i]), math.max(x2, points[i])
+			y1, y2 = math.min(y1, points[i+1]), math.max(y2, points[i+1])
 		end
 	end
+	pile[key] = {polygons, math.floor(x1) - 1, math.floor(y1) - 1, math.ceil(x2) + 1, math.ceil(y2) + 1}
+	gfx.pushContext(pileimage)
+	drawpolygons(polygons)
+	gfx.popContext()
+	drawpolygons(polygons)
+end
+
+function platform.unpile(key) --out of the pile: redraw the area it covered
+	local p = pile[key]
+	if not p then
+		return
+	end
+	pile[key] = nil
+	local x1, y1, x2, y2 = p[2], p[3], p[4], p[5]
+	gfx.pushContext(pileimage)
+	gfx.setClipRect(x1, y1, x2 - x1, y2 - y1)
+	gfx.setColor(gfx.kColorClear)
+	gfx.fillRect(x1, y1, x2 - x1, y2 - y1)
+	for _, q in pairs(pile) do
+		if q[2] < x2 and q[4] > x1 and q[3] < y2 and q[5] > y1 then
+			drawpolygons(q[1])
+		end
+	end
+	gfx.clearClipRect()
+	gfx.popContext()
+end
+
+function platform.drawpile()
+	pileimage:draw(0, 0)
+end
+
+function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as its polygons
+	drawpolygons(polygons)
 end
 
 function platform.print(text, x, y)
