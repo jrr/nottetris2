@@ -447,8 +447,13 @@ cpArbiterApplyCachedImpulse(cpArbiter *arb, cpFloat dt_coef)
 	
 	for(int i=0; i<arb->count; i++){
 		struct cpContact *con = &arb->contacts[i];
+		// Not Tetris 2: scale the accumulated impulses as well as what's applied, as Box2D does, so the
+		// solver can take back all of it. Chipmunk scaled only what's applied: when a step was longer than
+		// the one before, the excess stayed in as a kick (a piece landing on a slow frame bounced up the screen).
+		con->jnAcc *= dt_coef;
+		con->jtAcc *= dt_coef;
 		cpVect j = cpvrotate(n, cpv(con->jnAcc, con->jtAcc));
-		apply_impulses(a, b, con->r1, con->r2, cpvmult(j, dt_coef));
+		apply_impulses(a, b, con->r1, con->r2, j);
 	}
 }
 
