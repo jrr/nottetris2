@@ -1,7 +1,13 @@
 /* The game's physics on Playdate: registers nt_physics.c's functions with Playdate's Lua as the
  * global nt, the same functions nt_physics_love.lua makes on LÖVE. That's all the C the game has,
  * so this is also its entry point. Worlds, bodies and shapes go to Lua as objects of the classes
- * nt.World (freed when Lua collects it, with everything in it), nt.Body and nt.Shape. */
+ * nt.World (freed when Lua collects it, with everything in it), nt.Body and nt.Shape.
+ *
+ * Playdate keeps one Lua object for each pointer it's given, with the class it was first given
+ * with. Chipmunk's bodies and shapes are freed while the game plays, and a new body can get the
+ * memory of a shape just freed, whose Lua object Lua hasn't collected yet: the new body would come
+ * back as that nt.Shape. So bodies and shapes go to Lua by handles, which are only freed when Lua
+ * collects their objects, and which empty when what they point to is freed. */
 #include "pd_api.h"
 #include "nt_physics.h"
 
@@ -23,9 +29,34 @@ static void *object(int pos, char *type) {
 	return p;
 }
 
+typedef struct {
+	void *p; /* NULL once freed */
+} handle;
+
+static void push(void *p, char *type) {
+	handle *h = pd->system->realloc(NULL, sizeof(handle));
+	h->p = p;
+	pd->lua->pushObject(h, type, 0);
+}
+
+static void *pointer(int pos, char *type) {
+	handle *h = object(pos, type);
+	if (h->p == NULL) {
+		pd->system->error("nt: argument %d is a %s that was destroyed", pos, type);
+	}
+	return h->p;
+}
+
+static void freehandle(int pos, char *type) {
+	pd->system->realloc(object(pos, type), 0);
+}
+
 static ntWorld *world(int pos) { return object(pos, WORLD); }
-static cpBody *body(int pos) { return object(pos, BODY); }
-static cpShape *shape(int pos) { return object(pos, SHAPE); }
+static cpBody *body(int pos) { return pointer(pos, BODY); }
+static cpShape *shape(int pos) { return pointer(pos, SHAPE); }
+
+static int body_gc(lua_State *L) { freehandle(1, BODY); return 0; }
+static int shape_gc(lua_State *L) { freehandle(1, SHAPE); return 0; }
 static double number(int pos) { return pd->lua->getArgFloat(pos); }
 
 static int push2(double *out) {
@@ -55,11 +86,15 @@ static int world_contact(lua_State *L) {
 }
 
 static int body_new(lua_State *L) {
-	pd->lua->pushObject(nt_body_new(world(1), number(2), number(3), pd->lua->getArgBool(4)), BODY, 0);
+	push(nt_body_new(world(1), number(2), number(3), pd->lua->getArgBool(4)), BODY);
 	return 1;
 }
 
-static int body_free(lua_State *L) { nt_body_free(body(1)); return 0; }
+static int body_free(lua_State *L) { /* and its shapes: physics_chipmunk.lua forgets them */
+	nt_body_free(body(1));
+	((handle *)object(1, BODY))->p = NULL;
+	return 0;
+}
 
 static int body_getposition(lua_State *L) {
 	double out[2];
@@ -118,11 +153,15 @@ static int shape_newpolygon(lua_State *L) { /* body, id, x1, y1, x2, y2, ... */
 	for (int i = 0; i < count*2; i++) {
 		points[i] = number(i + 3);
 	}
-	pd->lua->pushObject(nt_shape_newpolygon(body(1), count, points, pd->lua->getArgInt(2)), SHAPE, 0);
+	push(nt_shape_newpolygon(body(1), count, points, pd->lua->getArgInt(2)), SHAPE);
 	return 1;
 }
 
-static int shape_free(lua_State *L) { nt_shape_free(shape(1)); return 0; }
+static int shape_free(lua_State *L) {
+	nt_shape_free(shape(1));
+	((handle *)object(1, SHAPE))->p = NULL;
+	return 0;
+}
 static int shape_setfriction(lua_State *L) { nt_shape_setfriction(shape(1), number(2)); return 0; }
 static int shape_setrestitution(lua_State *L) { nt_shape_setrestitution(shape(1), number(2)); return 0; }
 static int shape_setdensity(lua_State *L) { nt_shape_setdensity(shape(1), number(2)); return 0; }
@@ -219,11 +258,12 @@ int eventHandler(PlaydateAPI *playdate, PDSystemEvent event, uint32_t arg) {
 	if (event == kEventInitLua) {
 		const char *err = NULL;
 		static const lua_reg worldmethods[] = {{"__gc", world_gc}, {NULL, NULL}};
-		static const lua_reg none[] = {{NULL, NULL}};
+		static const lua_reg bodymethods[] = {{"__gc", body_gc}, {NULL, NULL}};
+		static const lua_reg shapemethods[] = {{"__gc", shape_gc}, {NULL, NULL}};
 		pd = playdate;
 		check(pd->lua->registerClass(WORLD, worldmethods, NULL, 0, &err), WORLD, err);
-		check(pd->lua->registerClass(BODY, none, NULL, 0, &err), BODY, err);
-		check(pd->lua->registerClass(SHAPE, none, NULL, 0, &err), SHAPE, err);
+		check(pd->lua->registerClass(BODY, bodymethods, NULL, 0, &err), BODY, err);
+		check(pd->lua->registerClass(SHAPE, shapemethods, NULL, 0, &err), SHAPE, err);
 		for (unsigned i = 0; i < sizeof(functions)/sizeof(functions[0]); i++) {
 			check(pd->lua->addFunction(functions[i].f, functions[i].name, &err), functions[i].name, err);
 		}
