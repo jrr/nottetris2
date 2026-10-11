@@ -57,7 +57,7 @@ if [ "${1:-}" = --device ]; then
 		echo "timed out waiting for $*" >&2
 		exit 1
 	}
-	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1; }
+	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1 || true; } # none found isn't a failure here
 	volume=/Volumes/PLAYDATE
 	# the mount point shows up before the disk is mounted on it, so wait for a folder inside
 	if [ ! -d "$volume/Games" ]; then
