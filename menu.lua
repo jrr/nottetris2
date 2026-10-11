@@ -254,8 +254,8 @@ function menu_update(dt)
 					if hue < 0 then
 						hue = 0
 					end
-					optionsmenu = newPaddedImage("graphics/options.png");optionsmenu:setFilter( "nearest", "nearest" )
-					volumeslider = newPaddedImage("graphics/volumeslider.png");volumeslider:setFilter( "nearest", "nearest" )
+					optionsmenu = platform.newimage("graphics/options", true)
+					volumeslider = platform.newimage("graphics/volumeslider", true)
 				end
 			elseif platform.isdown("right") then
 				if hue < 1 then
@@ -263,8 +263,8 @@ function menu_update(dt)
 					if hue > 1 then
 						hue = 1
 					end
-					optionsmenu = newPaddedImage("graphics/options.png");optionsmenu:setFilter( "nearest", "nearest" )
-					volumeslider = newPaddedImage("graphics/volumeslider.png");volumeslider:setFilter( "nearest", "nearest" )
+					optionsmenu = platform.newimage("graphics/options", true)
+					volumeslider = platform.newimage("graphics/volumeslider", true)
 				end
 			end
 		end
