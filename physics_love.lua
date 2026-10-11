@@ -29,3 +29,16 @@ function physics.update(world, dt)
 		c[1](userdata(c[2]), userdata(c[3]))
 	end
 end
+
+function physics.newbody(world, x, y, kind) --kind is "dynamic" or "static"
+	return love.physics.newBody(world, x, y, kind)
+end
+
+--shapes, attached to a body, with density 1; points are in the body's coordinates
+function physics.newrectangle(body, x, y, width, height) --centered on x, y
+	return love.physics.newFixture(body, love.physics.newRectangleShape(x, y, width, height), 1)
+end
+
+function physics.newpolygon(body, ...) --x1, y1, x2, y2, ...: convex, at most 8 points
+	return love.physics.newFixture(body, love.physics.newPolygonShape(...), 1)
+end

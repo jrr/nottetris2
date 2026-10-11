@@ -611,22 +611,20 @@ function convexhull(coords)
 	return result
 end
 
---Shapes in LÖVE 0.7 belonged to a body directly and had friction 0.5, restitution 0.1
---and density 1. In 0.8 they're attached to the body by a fixture, whose defaults
---differ, so these set 0.7's values.
-function newfixture(body, shape)
-	local fixture = love.physics.newFixture(body, shape, 1)
-	fixture:setFriction(0.5)
-	fixture:setRestitution(0.1)
-	return fixture
+--Shapes in LÖVE 0.7 had friction 0.5, restitution 0.1 and density 1. 0.8's fixtures
+--have other defaults, so these set 0.7's values.
+local function shapedefaults(shape)
+	shape:setFriction(0.5)
+	shape:setRestitution(0.1)
+	return shape
 end
 
-function newrectanglefixture(body, x, y, width, height)
-	return newfixture(body, love.physics.newRectangleShape(x, y, width, height))
+function newrectangleshape(body, x, y, width, height)
+	return shapedefaults(physics.newrectangle(body, x, y, width, height))
 end
 
-function newpolygonfixture(body, ...)
-	return newfixture(body, love.physics.newPolygonShape(table.unpack(convexhull({...}))))
+function newpolygonshape(body, ...)
+	return shapedefaults(physics.newpolygon(body, table.unpack(convexhull({...}))))
 end
 
 function getrainbowcolor(i)
