@@ -1,5 +1,16 @@
 --The physics the game needs, on LÖVE (Box2D). A Chipmunk version of this file provides the same functions.
 --Look love.* up on every call rather than keeping references, as platform_love.lua does.
+--
+--These functions make worlds, bodies and shapes. The game then calls methods on them, by LÖVE's
+--names, so another version's bodies and shapes need these (the harness's state dumps call the
+--body ones too). Units are pixels, seconds and radians; y points down.
+--  bodies: getX, getY, setY, getAngle, setAngle, getLinearVelocity, setLinearVelocity,
+--    getAngularVelocity, setAngularVelocity, getWorldCenter, applyForce(fx, fy, x, y),
+--    applyTorque, setLinearDamping, setBullet, resetMassData (mass from the shapes' density),
+--    getMass, getLocalPoint, getWorldPoint, destroy
+--  shapes: setUserData, setFriction, setRestitution, setDensity, testPoint(x, y),
+--    destroy, setCategory(n) and setMask(n, ...): Box2D's collision categories, 1-16; a shape
+--    doesn't collide with shapes in the categories it masks
 physics = {}
 
 --LÖVE 0.7 collected contacts during world:update and only then called the collision
