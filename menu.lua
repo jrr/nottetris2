@@ -217,8 +217,8 @@ function menu_update(dt)
 		logotime = logotime + dt
 		
 		if logotime >= logoduration and bootsoundplayed == false then			
-			love.audio.stop(boot)
-			love.audio.play(boot)
+			platform.stop(boot)
+			platform.play(boot)
 			
 			bootsoundplayed = true
 		end
@@ -234,7 +234,7 @@ function menu_update(dt)
 		if currenttime - oldtime > creditsdelay then
 			gamestate = "title"
 			love.graphics.setBackgroundColor( 0, 0, 0)
-			love.audio.play(musictitle)
+			platform.play(musictitle)
 		end
 	end
 	
@@ -279,8 +279,8 @@ function menu_update(dt)
 		if currenttime - highscoremusicstart > 1.2 then
 			if musicchanged == false then
 				musicchanged = true
-				love.audio.stop(highscoreintro)
-				love.audio.play(musichighscore)
+				platform.stop(highscoreintro)
+				platform.play(musichighscore)
 			end
 		end
 	end

@@ -55,58 +55,58 @@ function love.load()
 	--SOUND--
 	music = {}
 	
-	music[1] = love.audio.newSource( "sounds/themeA.ogg", "stream")
-	music[1]:setVolume( 0.6 )
-	music[1]:setLooping( true )
+	music[1] = platform.newmusic( "sounds/themeA" )
+	platform.setvolume( music[1], 0.6 )
+	platform.setlooping( music[1], true )
 	
-	music[2] = love.audio.newSource( "sounds/themeB.ogg", "stream")
-	music[2]:setVolume( 0.6 )
-	music[2]:setLooping( true )
+	music[2] = platform.newmusic( "sounds/themeB" )
+	platform.setvolume( music[2], 0.6 )
+	platform.setlooping( music[2], true )
 	
-	music[3] = love.audio.newSource( "sounds/themeC.ogg", "stream")
-	music[3]:setVolume( 0.6 )
-	music[3]:setLooping( true )
+	music[3] = platform.newmusic( "sounds/themeC" )
+	platform.setvolume( music[3], 0.6 )
+	platform.setlooping( music[3], true )
 	
-	musictitle = love.audio.newSource( "sounds/titlemusic.ogg", "stream")
-	musictitle:setVolume( 0.6 )
-	musictitle:setLooping( true )
+	musictitle = platform.newmusic( "sounds/titlemusic" )
+	platform.setvolume( musictitle, 0.6 )
+	platform.setlooping( musictitle, true )
 	
-	musichighscore = love.audio.newSource( "sounds/highscoremusic.ogg", "stream")
-	musichighscore:setVolume( 0.6 )
-	musichighscore:setLooping( true )
+	musichighscore = platform.newmusic( "sounds/highscoremusic" )
+	platform.setvolume( musichighscore, 0.6 )
+	platform.setlooping( musichighscore, true )
 	
-	musicrocket4 = love.audio.newSource( "sounds/rocket4.ogg", "stream")
-	musicrocket4:setVolume( 0.6 )
-	musicrocket4:setLooping( false )
+	musicrocket4 = platform.newmusic( "sounds/rocket4" )
+	platform.setvolume( musicrocket4, 0.6 )
+	platform.setlooping( musicrocket4, false )
 	
-	musicrocket1to3 = love.audio.newSource( "sounds/rocket1to3.ogg", "stream")
-	musicrocket1to3:setVolume( 0.6 )
-	musicrocket1to3:setLooping( false )
+	musicrocket1to3 = platform.newmusic( "sounds/rocket1to3" )
+	platform.setvolume( musicrocket1to3, 0.6 )
+	platform.setlooping( musicrocket1to3, false )
 	
-	musicresults = love.audio.newSource( "sounds/resultsmusic.ogg", "stream")
-	musicresults:setVolume( 1 )
-	musicresults:setLooping( false )
+	musicresults = platform.newmusic( "sounds/resultsmusic" )
+	platform.setvolume( musicresults, 1 )
+	platform.setlooping( musicresults, false )
 	
-	highscoreintro = love.audio.newSource( "sounds/highscoreintro.ogg", "stream")
-	highscoreintro:setVolume( 0.6 )
-	highscoreintro:setLooping( false )
+	highscoreintro = platform.newmusic( "sounds/highscoreintro" )
+	platform.setvolume( highscoreintro, 0.6 )
+	platform.setlooping( highscoreintro, false )
 	
-	musicoptions = love.audio.newSource( "sounds/musicoptions.ogg", "stream")
-	musicoptions:setVolume( 1 )
-	musicoptions:setLooping( true )
+	musicoptions = platform.newmusic( "sounds/musicoptions" )
+	platform.setvolume( musicoptions, 1 )
+	platform.setlooping( musicoptions, true )
 	
-	boot = love.audio.newSource( "sounds/boot.ogg", "stream") --11 needs the type; stream was the default
-	blockfall = love.audio.newSource( "sounds/blockfall.ogg", "stream")
-	blockturn = love.audio.newSource( "sounds/turn.ogg", "stream")
-	blockmove = love.audio.newSource( "sounds/move.ogg", "stream")
-	lineclear = love.audio.newSource( "sounds/lineclear.ogg", "stream")
-	fourlineclear = love.audio.newSource( "sounds/4lineclear.ogg", "stream")
-	gameover1 = love.audio.newSource( "sounds/gameover1.ogg", "stream")
-	gameover2 = love.audio.newSource( "sounds/gameover2.ogg", "stream")
-	pausesound = love.audio.newSource( "sounds/pause.ogg", "stream")
-	highscorebeep = love.audio.newSource( "sounds/highscorebeep.ogg", "stream")
-	newlevel = love.audio.newSource( "sounds/newlevel.ogg", "stream")
-	newlevel:setVolume( 0.6 )
+	boot = platform.newsound( "sounds/boot" )
+	blockfall = platform.newsound( "sounds/blockfall" )
+	blockturn = platform.newsound( "sounds/turn" )
+	blockmove = platform.newsound( "sounds/move" )
+	lineclear = platform.newsound( "sounds/lineclear" )
+	fourlineclear = platform.newsound( "sounds/4lineclear" )
+	gameover1 = platform.newsound( "sounds/gameover1" )
+	gameover2 = platform.newsound( "sounds/gameover2" )
+	pausesound = platform.newsound( "sounds/pause" )
+	highscorebeep = platform.newsound( "sounds/highscorebeep" )
+	newlevel = platform.newsound( "sounds/newlevel" )
+	platform.setvolume( newlevel, 0.6 )
 	
 	changevolume(volume)
 	
@@ -479,27 +479,27 @@ function scaleImagedata(imagedata, i)
 end
 
 function changevolume(i)
-	music[1]:setVolume( 0.6*i )
-	music[2]:setVolume( 0.6*i )
-	music[3]:setVolume( 0.6*i )
-	musictitle:setVolume( 0.6*i )
-	musichighscore:setVolume( 0.6*i )
-	musicrocket4:setVolume( 0.6*i )
-	musicrocket1to3:setVolume( 0.6*i )
-	musicresults:setVolume( i )
-	highscoreintro:setVolume( 0.6*i )
-	musicoptions:setVolume( i )
-	boot:setVolume( i )
-	blockfall:setVolume( i )
-	blockturn:setVolume( i )
-	blockmove:setVolume( i )
-	lineclear:setVolume( i )
-	fourlineclear:setVolume( i )
-	gameover1:setVolume( i )
-	gameover2:setVolume( i )
-	pausesound:setVolume( i )
-	highscorebeep:setVolume( i )
-	newlevel:setVolume( 0.6*i )
+	platform.setvolume( music[1], 0.6*i )
+	platform.setvolume( music[2], 0.6*i )
+	platform.setvolume( music[3], 0.6*i )
+	platform.setvolume( musictitle, 0.6*i )
+	platform.setvolume( musichighscore, 0.6*i )
+	platform.setvolume( musicrocket4, 0.6*i )
+	platform.setvolume( musicrocket1to3, 0.6*i )
+	platform.setvolume( musicresults, i )
+	platform.setvolume( highscoreintro, 0.6*i )
+	platform.setvolume( musicoptions, i )
+	platform.setvolume( boot, i )
+	platform.setvolume( blockfall, i )
+	platform.setvolume( blockturn, i )
+	platform.setvolume( blockmove, i )
+	platform.setvolume( lineclear, i )
+	platform.setvolume( fourlineclear, i )
+	platform.setvolume( gameover1, i )
+	platform.setvolume( gameover2, i )
+	platform.setvolume( pausesound, i )
+	platform.setvolume( highscorebeep, i )
+	platform.setvolume( newlevel, 0.6*i )
 end
 
 function loadoptions()
@@ -846,30 +846,30 @@ function love.keypressed( key )
 		if key == "return" then
 			gamestate = "title"
 			love.graphics.setBackgroundColor( 0, 0, 0)
-			love.audio.play(musictitle)
+			platform.play(musictitle)
 		end
 		
 	elseif gamestate == "logo" then
 		if key == "return" then
 			gamestate = "title"
 			love.graphics.setBackgroundColor( 0, 0, 0)
-			love.audio.play(musictitle)
+			platform.play(musictitle)
 		end
 		
 	elseif gamestate == "credits" then
 		if key == "return" then
 			gamestate = "title"
 			love.graphics.setBackgroundColor( 0, 0, 0)
-			love.audio.play(musictitle)
+			platform.play(musictitle)
 		end
 		
 	elseif gamestate == "title" then
 		if key == "return" then
 			if playerselection ~= 3 then
 				if soundenabled then
-					love.audio.stop(musictitle)
+					platform.stop(musictitle)
 					if musicno < 4 then
-						love.audio.play(music[musicno])
+						platform.play(music[musicno])
 					end
 				end
 			end
@@ -880,8 +880,8 @@ function love.keypressed( key )
 			else
 				gamestate = "options"
 				if soundenabled then
-				love.audio.stop(musictitle)
-				love.audio.play(musicoptions)
+				platform.stop(musictitle)
+				platform.play(musicoptions)
 				end
 				optionsselection = 1
 			end
@@ -897,12 +897,12 @@ function love.keypressed( key )
 		oldmusicno = musicno
 		if key == "escape" then
 			if musicno < 4 then
-				love.audio.stop(music[musicno])
+				platform.stop(music[musicno])
 			end
 			gamestate = "title"
 			if soundenabled then
-			love.audio.stop(musictitle)
-			love.audio.play(musictitle)
+			platform.stop(musictitle)
+			platform.play(musictitle)
 			end
 		elseif key == "backspace" then
 			newhighscores()
@@ -958,10 +958,10 @@ function love.keypressed( key )
 		if selection > 2 and key ~= "escape" then
 			musicno = selection - 2
 			if oldmusicno ~= musicno and oldmusicno ~= 4 then
-				love.audio.stop(music[oldmusicno])
+				platform.stop(music[oldmusicno])
 			end
 			if musicno < 4 then
-				love.audio.play(music[musicno])
+				platform.play(music[musicno])
 			end
 		elseif key ~= "escape" then
 			gameno = selection
@@ -971,9 +971,9 @@ function love.keypressed( key )
 	elseif gamestate == "options" then
 		if key == "escape" then
 			if soundenabled then
-				love.audio.stop(musicoptions)
-				love.audio.stop(musictitle)
-				love.audio.play(musictitle)
+				platform.stop(musicoptions)
+				platform.stop(musictitle)
+				platform.play(musictitle)
 			end
 			saveoptions()
 			loadimages()
@@ -1068,11 +1068,11 @@ function love.keypressed( key )
 		oldmusicno = musicno
 		if key == "escape" then
 			if musicno < 4 then
-				love.audio.stop(music[musicno])
+				platform.stop(music[musicno])
 			end
 			gamestate = "title"
-			love.audio.stop(musictitle)
-			love.audio.play(musictitle)
+			platform.stop(musictitle)
+			platform.play(musictitle)
 		elseif key == "return" then
 			gameBmulti_load()
 		elseif key == "left" or key == "a" then
@@ -1121,10 +1121,10 @@ function love.keypressed( key )
 		if selection > 2 and key ~= "return" and key ~= "escape" then
 			musicno = selection - 2
 			if oldmusicno ~= musicno and oldmusicno ~= 4 then
-				love.audio.stop(music[oldmusicno])
+				platform.stop(music[oldmusicno])
 			end
 			if musicno < 4 then
-				love.audio.play(music[musicno])
+				platform.play(music[musicno])
 			end
 		elseif key ~= "return" and key ~= "escape" then
 			gameno = selection
@@ -1138,13 +1138,13 @@ function love.keypressed( key )
 
 			if pause == true then
 				if musicno < 4 then
-					love.audio.pause(music[musicno])
+					platform.pause(music[musicno])
 				end
-				love.audio.stop(pausesound)
-				love.audio.play(pausesound)
+				platform.stop(pausesound)
+				platform.play(pausesound)
 			else
 				if musicno < 4 then
-					music[musicno]:play() --11 has no love.audio.resume; play resumes a paused source
+					platform.resume(music[musicno])
 				end
 			end
 		end
@@ -1159,11 +1159,11 @@ function love.keypressed( key )
 				--	tetribodies[counter]:setAngularVelocity(0)
 				--end
 				if key == "left" or key == "right" then
-					love.audio.stop(blockmove)
-					love.audio.play(blockmove)
+					platform.stop(blockmove)
+					platform.play(blockmove)
 				elseif key == "y" or key == "z" or key == "w" or key == "x" then
-					love.audio.stop(blockturn)
-					love.audio.play(blockturn)
+					platform.stop(blockturn)
+					platform.play(blockturn)
 				end
 			end
 		end
@@ -1174,7 +1174,7 @@ function love.keypressed( key )
 			end
 			gamestate = "multimenu"
 			if musicno < 4 then
-				love.audio.play(music[musicno])
+				platform.play(music[musicno])
 			end
 		end
 	elseif gamestate == "gameBmulti" and gamestarted == true then
@@ -1185,24 +1185,24 @@ function love.keypressed( key )
 			gamestate = "multimenu"
 		end
 		if key == "a" or key == "d" then
-			love.audio.stop(blockmove)
-			love.audio.play(blockmove)
+			platform.stop(blockmove)
+			platform.play(blockmove)
 		elseif key == "left" or key == "right" then
-			love.audio.stop(blockmove)
-			love.audio.play(blockmove)
+			platform.stop(blockmove)
+			platform.play(blockmove)
 		elseif key == "g" or key == "h" then
-			love.audio.stop(blockturn)
-			love.audio.play(blockturn)
+			platform.stop(blockturn)
+			platform.play(blockturn)
 		elseif key == "kp1" or key == "kp2" then
-			love.audio.stop(blockturn)
-			love.audio.play(blockturn)
+			platform.stop(blockturn)
+			platform.play(blockturn)
 		end
 		
 	elseif gamestate == "gameBmulti_results" then
 		if key == "return" or key == "escape" then
 			if musicno < 4 then
-				love.audio.stop(musicresults)
-				love.audio.play(music[musicno])
+				platform.stop(musicresults)
+				platform.play(music[musicno])
 			end
 			if not fullscreen then
 				setmode( 160*scale, 144*scale, false, vsync, 0 )
@@ -1212,7 +1212,7 @@ function love.keypressed( key )
 		
 	elseif gamestate == "failed" then
 		if key == "return" or key == "y" or key == "z" or key == "x" or key == "w" or key == "left" or key == "down" or key == "up" or key == "right" then 
-			love.audio.stop(gameover2)
+			platform.stop(gameover2)
 			rocket_load()
 		end
 	elseif gamestate == "highscoreentry" then
@@ -1220,12 +1220,12 @@ function love.keypressed( key )
 			gamestate = "menu"
 			savehighscores()
 			if musicchanged == true then
-				love.audio.stop(musichighscore)
+				platform.stop(musichighscore)
 			else
-				love.audio.stop(highscoreintro)
+				platform.stop(highscoreintro)
 			end
 			if musicno < 4 then
-				love.audio.play(music[musicno])
+				platform.play(music[musicno])
 			end
 		elseif key == "backspace" then
 			if highscorename[highscoreno]:len() > 0 then
@@ -1235,8 +1235,8 @@ function love.keypressed( key )
 		end
 	elseif string.sub(gamestate, 1, 6) == "rocket" then
 		if key == "return" then
-			love.audio.stop(musicrocket1to3)
-			love.audio.stop(musicrocket4)
+			platform.stop(musicrocket1to3)
+			platform.stop(musicrocket4)
 			failed_checkhighscores()
 		end
 	end
@@ -1247,8 +1247,8 @@ function love.textinput( text ) --0.9 sends typed characters here instead of to 
 		if highscorename[highscoreno]:len() < 6 then
 			cursorblink = true
 			highscorename[highscoreno] = highscorename[highscoreno] .. text
-			love.audio.stop(highscorebeep)
-			love.audio.play(highscorebeep)
+			platform.stop(highscorebeep)
+			platform.play(highscorebeep)
 		end
 	end
 end

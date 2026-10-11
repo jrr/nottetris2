@@ -263,10 +263,10 @@ function endblockB()
 		--LOSE--
 		gamestate = "failingB"
 		if musicno < 4 then
-			love.audio.stop(music[musicno])
+			platform.stop(music[musicno])
 		end
-		love.audio.stop(gameover1)
-		love.audio.play(gameover1)
+		platform.stop(gameover1)
+		platform.play(gameover1)
 	
 		wallshapes[2]:destroy()
 		wallshapes[2] = nil
@@ -289,8 +289,8 @@ function endblockB()
 		linesscore = linesscore + 1
 		scorescore = linesscore * 100
 		
-		love.audio.stop(blockfall)
-		love.audio.play(blockfall)
+		platform.stop(blockfall)
+		platform.play(blockfall)
 		
 		game_addTetriB()
 	end

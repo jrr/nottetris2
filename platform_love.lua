@@ -18,3 +18,36 @@ end
 function platform.write(name, s)
 	love.filesystem.write(name, s)
 end
+
+--sounds, by path without extension: music is long and streamed, sounds are short effects
+function platform.newmusic(path)
+	return love.audio.newSource(path .. ".ogg", "stream")
+end
+
+function platform.newsound(path)
+	return love.audio.newSource(path .. ".ogg", "stream") --11 needs the type; stream was the default
+end
+
+function platform.play(sound)
+	love.audio.play(sound)
+end
+
+function platform.stop(sound)
+	love.audio.stop(sound)
+end
+
+function platform.pause(sound)
+	love.audio.pause(sound)
+end
+
+function platform.resume(sound)
+	sound:play() --11 has no love.audio.resume; play resumes a paused source
+end
+
+function platform.setvolume(sound, volume)
+	sound:setVolume(volume)
+end
+
+function platform.setlooping(sound, looping)
+	sound:setLooping(looping)
+end

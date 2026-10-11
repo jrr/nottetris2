@@ -297,8 +297,8 @@ function gameA_update(dt)
 			scoreaddtimer = 0
 		
 			if newlevelbeep then
-				love.audio.stop(newlevel)
-				love.audio.play(newlevel)
+				platform.stop(newlevel)
+				platform.play(newlevel)
 				newlevelbeep = false
 			end
 		end
@@ -919,11 +919,11 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 	
 		if removedlines then
 			if numberoflines >= 4 then
-				love.audio.stop(fourlineclear)
-				love.audio.play(fourlineclear)
+				platform.stop(fourlineclear)
+				platform.play(fourlineclear)
 			else
-				love.audio.stop(lineclear)
-				love.audio.play(lineclear)
+				platform.stop(lineclear)
+				platform.play(lineclear)
 			end
 			
 			--Possible scoring functions:
@@ -979,8 +979,8 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 				end
 			end
 		else
-			love.audio.stop(blockfall)
-			love.audio.play(blockfall)
+			platform.stop(blockfall)
+			platform.play(blockfall)
 		end
 		
 		return removedlines
@@ -1141,10 +1141,10 @@ function collideA(a, b, coll) --box2d callback. calls endblock.
 				if tetribodies[1]:getY() < losingY then
 					gamestate = "failingA"
 					if musicno < 4 then
-						love.audio.stop(music[musicno])
+						platform.stop(music[musicno])
 					end
-					love.audio.stop(gameover1)
-					love.audio.play(gameover1)
+					platform.stop(gameover1)
+					platform.play(gameover1)
 				
 					wallshapes[2]:destroy()
 					wallshapes[2] = nil

@@ -15,11 +15,11 @@ function rocket_load()
 	for i = 4, 1, -1 do
 		if scorescore >= rocketscores[i] then
 			if i < 4 then
-				love.audio.stop(musicrocket1to3)
-				love.audio.play(musicrocket1to3)
+				platform.stop(musicrocket1to3)
+				platform.play(musicrocket1to3)
 			else
-				love.audio.stop(musicrocket4)
-				love.audio.play(musicrocket4)
+				platform.stop(musicrocket4)
+				platform.play(musicrocket4)
 			end
 			rockettimer = platform.gettime()
 			gamestate = "rocket"..tostring(i)
