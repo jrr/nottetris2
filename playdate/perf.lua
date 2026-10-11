@@ -41,6 +41,10 @@ function playdate.update()
 			tostring(gamestate), frames*1000/(now - since), avg("physics"), avg("density"),
 			avg("update") - avg("physics") - avg("density"), avg("draw"), tetribodies and #tetribodies or 0, shapes,
 			pilekept, pilekept + piledrawn, math.floor(collectgarbage("count"))))
+		if scheduler.enabled and gamestate == "gameA" then
+			print(string.format("  scheduler: %d of the pile simulated, %d changes", scheduler_simulated(), scheduler.changes))
+			scheduler.changes = 0
+		end
 		totals, frames, since = {}, 0, now
 		pilekept, piledrawn = 0, 0
 	end

@@ -10,6 +10,9 @@ function game_load()
 	require "menu"
 	require "failed"
 	require "rocket"
+	require "scheduler"
+	
+	scheduler.enabled = platform.schedulephysics == true --simulate only part of the pile (scheduler.lua)
 	
 	vsync = true
 	hue = 0.08 --the color the art is tinted
@@ -486,6 +489,11 @@ function getrainbowcolor(i)
 end
 
 function game_keypressed( key )
+	if key == "f5" then
+		scheduler_toggle()
+		return
+	end
+	
 	if gamestate == nil then
 		if key == "return" then
 			gamestate = "title"

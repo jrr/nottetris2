@@ -4,6 +4,7 @@
 local gfx = playdate.graphics
 
 platform = {}
+platform.schedulephysics = true --simulate only part of the pile (scheduler.lua)
 
 local SCALE = 240/144 --the Game Boy's 144 lines on the Playdate's 240
 local OFFSETX = math.floor((400 - 160*SCALE)/2) --centered, for now

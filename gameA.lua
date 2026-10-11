@@ -327,6 +327,7 @@ function gameA_update(dt)
 	endblock = false
 
 	physics.update(world, dt)
+	scheduler_update(dt)
 
 	if endblock then
 		endblockA()
@@ -369,6 +370,7 @@ function getintersectX(shape, y) --returns left and right collision points to a 
 end
 
 function removeline(lineno) --Does all necessary things to clear a line. Refineshape and cutimage included.
+	scheduler_beforeclear(lineno)
 	upperline = (lineno - 1) * 32
 	lowerline = lineno * 32
 	globaline = lineno
