@@ -2,8 +2,10 @@
 # Builds the game for Playdate into playdate/build/nottetris2.pdx, which runs in the Simulator
 # and on the device. Needs the SDK and Arm's toolchain: `mise install` here, once (mise.toml).
 #
-#   playdate/build.sh          # build
-#   playdate/build.sh --sim    # build and run it in the Simulator
+#   playdate/build.sh           # build
+#   playdate/build.sh --sim     # build and run it in the Simulator
+#   playdate/build.sh --device  # build, copy it to a USB-connected Playdate, run it there and
+#                               # show its console output (until Ctrl-C)
 #
 # Source/ is put together here each time: this directory's Lua, the game's (its main.lua as
 # game.lua, since Playdate's own entry point is main.lua) and its art. The C builds then add
@@ -40,4 +42,38 @@ echo "built playdate/build/nottetris2.pdx"
 
 if [ "${1:-}" = --sim ]; then
 	exec "$PLAYDATE_SDK_PATH/bin/Playdate Simulator.app/Contents/MacOS/Playdate Simulator" "$PWD/build/nottetris2.pdx"
+fi
+
+if [ "${1:-}" = --device ]; then
+	waitfor() { # up to 30 seconds for a path to exist, or with !, not to
+		for _ in $(seq 60); do
+			if [ "$1" = "!" ]; then [ ! -e "$2" ] && return; else [ -e "$1" ] && return; fi
+			sleep 0.5
+		done
+		echo "timed out waiting for $*" >&2
+		exit 1
+	}
+	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1; }
+	volume=/Volumes/PLAYDATE
+	# the mount point shows up before the disk is mounted on it, so wait for a folder inside
+	if [ ! -d "$volume/Games" ]; then
+		port=${PLAYDATE_PORT:-$(findport)}
+		[ -n "$port" ] || { echo "No Playdate found. Connect it by USB and unlock it (or set PLAYDATE_PORT)." >&2; exit 1; }
+		pdutil "$port" datadisk
+		waitfor "$volume/Games"
+	fi
+	rm -rf "$volume/Games/nottetris2.pdx"
+	cp -R build/nottetris2.pdx "$volume/Games/"
+	diskutil eject "$volume" > /dev/null
+	waitfor ! "$volume"
+	# the serial port goes away while the disk is mounted and comes back once it's ejected
+	for _ in $(seq 60); do
+		port=${PLAYDATE_PORT:-$(findport)}
+		[ -n "$port" ] && [ -e "$port" ] && break
+		sleep 0.5
+	done
+	[ -n "$port" ] || { echo "timed out waiting for the Playdate's serial port; the game is in /Games on it" >&2; exit 1; }
+	sleep 1
+	pdutil "$port" run /Games/nottetris2.pdx
+	exec ./console.py
 fi
