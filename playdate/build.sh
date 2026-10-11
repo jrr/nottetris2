@@ -67,8 +67,9 @@ if [ "${1:-}" = --device ]; then
 		waitfor "$volume/Games"
 	fi
 	rm -rf "$volume/Games/nottetris2.pdx" "$volume/Games/._nottetris2.pdx"
-	cp -RX build/nottetris2.pdx "$volume/Games/" # -X: no ._ files for macOS's extended attributes
-	diff -rq build/nottetris2.pdx "$volume/Games/nottetris2.pdx" || { echo "the copy on the Playdate doesn't match" >&2; exit 1; }
+	cp -R build/nottetris2.pdx "$volume/Games/"
+	dot_clean -m "$volume/Games/nottetris2.pdx" # macOS's ._ files, which it makes on the Playdate's disk
+	diff -rq -x '._*' build/nottetris2.pdx "$volume/Games/nottetris2.pdx" || { echo "the copy on the Playdate doesn't match" >&2; exit 1; }
 	diskutil eject "$volume" > /dev/null
 	waitfor ! "$volume"
 	# the serial port goes away while the disk is mounted and comes back once it's ejected
