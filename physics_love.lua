@@ -7,7 +7,8 @@
 --  bodies: getX, getY, setY, getAngle, setAngle, getLinearVelocity, setLinearVelocity,
 --    getAngularVelocity, setAngularVelocity, getWorldCenter, applyForce(fx, fy, x, y),
 --    applyTorque, setLinearDamping, setBullet, resetMassData (mass from the shapes' density),
---    getMass, isAwake, getLocalPoint, getWorldPoint, destroy
+--    getMass, isAwake, setAwake(true), getType, setType("static"/"dynamic"), getLocalPoint,
+--    getWorldPoint, destroy
 --  shapes: setUserData, setFriction, setRestitution, setDensity, testPoint(x, y),
 --    destroy, setCategory(n) and setMask(n, ...): Box2D's collision categories, 1-16; a shape
 --    doesn't collide with shapes in the categories it masks
@@ -102,6 +103,26 @@ function physics.rowareas(shape, rowheight) --the first row it reaches (from 0, 
 		areas[#areas+1] = #band >= 6 and area(band) or 0
 	end
 	return first, table.unpack(areas)
+end
+
+function physics.gettop(body) --the smallest y of its shapes
+	local top = math.huge
+	for _, fixture in ipairs(body:getFixtures()) do
+		local _, y = fixture:getBoundingBox()
+		top = math.min(top, y)
+	end
+	return top
+end
+
+function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
+	local bodies = {}
+	for _, contact in ipairs(body:getContacts()) do
+		if contact:isTouching() then
+			local a, b = contact:getFixtures()
+			bodies[#bodies+1] = a:getBody() == body and b:getBody() or a:getBody()
+		end
+	end
+	return bodies
 end
 
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}

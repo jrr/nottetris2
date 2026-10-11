@@ -207,6 +207,48 @@ void nt_body_resetmass(cpBody *body) {
 
 double nt_body_getmass(cpBody *body) { return cpBodyGetMass(body); }
 int nt_body_isawake(cpBody *body) { return !cpBodyIsSleeping(body); }
+void nt_body_wake(cpBody *body) { cpBodyActivate(body); }
+int nt_body_isstatic(cpBody *body) { return cpBodyGetType(body) == CP_BODY_TYPE_STATIC; }
+
+void nt_body_setstatic(cpBody *body, int isstatic) {
+	/* Wake it first: cpBodySetType wakes it after marking it static, which wakes nothing, and a
+	 * sleeping body's shapes aren't where it then moves them from (a crash in cpBBTree). */
+	cpBodyActivate(body);
+	cpBodySetType(body, isstatic ? CP_BODY_TYPE_STATIC : CP_BODY_TYPE_DYNAMIC);
+}
+
+static void top(cpBody *body, cpShape *shape, void *data) {
+	cpFloat *y = data;
+	for (int i = 0; i < cpPolyShapeGetCount(shape); i++) {
+		cpFloat vy = cpBodyLocalToWorld(body, cpPolyShapeGetVert(shape, i)).y;
+		*y = vy < *y ? vy : *y;
+	}
+}
+
+double nt_body_gettop(cpBody *body) {
+	cpFloat y = INFINITY;
+	cpBodyEachShape(body, top, &y);
+	return y;
+}
+
+typedef struct {
+	int *ids, count, max;
+} touching;
+
+static void touchingshape(cpBody *body, cpArbiter *arb, void *data) {
+	touching *t = data;
+	CP_ARBITER_GET_SHAPES(arb, mine, other); /* each arbiter's first shape is the body's own */
+	(void)mine;
+	if (cpArbiterGetCount(arb) > 0 && t->count < t->max) {
+		t->ids[t->count++] = ((ntShape *)cpShapeGetUserData(other))->id;
+	}
+}
+
+int nt_body_touching(cpBody *body, int *ids, int max) {
+	touching t = {ids, 0, max};
+	cpBodyEachArbiter(body, touchingshape, &t);
+	return t.count;
+}
 void nt_body_tolocal(cpBody *body, double x, double y, double *out) { put(cpBodyWorldToLocal(body, cpv(x, y)), out); }
 void nt_body_toworld(cpBody *body, double x, double y, double *out) { put(cpBodyLocalToWorld(body, cpv(x, y)), out); }
 

@@ -61,6 +61,20 @@ function physics.rowareas(shape, rowheight) --the first row it reaches (from 0, 
 	return nt.shape_rowareas(check(shape), rowheight)
 end
 
+function physics.gettop(body) --the smallest y of its shapes
+	return nt.body_gettop(check(body))
+end
+
+function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
+	local bodies = {}
+	for _, id in ipairs({nt.body_touching(check(body))}) do
+		if shapes[id] then
+			bodies[#bodies+1] = shapes[id].body
+		end
+	end
+	return bodies
+end
+
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
 	return {nt.shape_getworldpoints(check(shape))}
 end
@@ -133,6 +147,18 @@ end
 
 function Body:isAwake() --false once it's been still a while, until something moves it
 	return nt.body_isawake(check(self))
+end
+
+function Body:setAwake(awake) --true only: wakes it, and what it touches
+	nt.body_wake(check(self))
+end
+
+function Body:getType()
+	return nt.body_isstatic(check(self)) and "static" or "dynamic"
+end
+
+function Body:setType(kind) --"static": doesn't move, and stops; "dynamic" again: mass from its shapes
+	nt.body_setstatic(check(self), kind == "static")
 end
 
 function Body:getLocalPoint(x, y)
