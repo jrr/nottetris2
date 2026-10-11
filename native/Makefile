@@ -7,9 +7,10 @@
 # chipmunk/src/<file>: the patched copy is made in build/patched/ and built
 # instead.
 #
-# Floats, as on Playdate, so both play alike.
+# Floats, as on Playdate, so both play alike. NDEBUG: without Chipmunk's
+# debug checks, and the notice it prints for each new world.
 CC ?= cc
-CFLAGS = -O2 -std=gnu11 -fPIC -ffp-contract=off -DCP_USE_DOUBLES=0 -DCP_USE_CGTYPES=0 -Ichipmunk/include
+CFLAGS = -O2 -std=gnu11 -fPIC -ffp-contract=off -DNDEBUG -DCP_USE_DOUBLES=0 -DCP_USE_CGTYPES=0 -Ichipmunk/include
 PATCHED = $(patsubst patches/%.patch,build/patched/%,$(wildcard patches/*.c.patch))
 CHIPMUNK = $(filter-out $(patsubst build/patched/%,chipmunk/src/%,$(PATCHED)),$(wildcard chipmunk/src/*.c))
 OBJECTS = $(patsubst %.c,build/%.o,nt_physics.c $(CHIPMUNK)) $(PATCHED:.c=.o)
