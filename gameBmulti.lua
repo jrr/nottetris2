@@ -25,7 +25,7 @@ function gameBmulti_load()
 	--nextpieces
 	nextpieceimgmp = {}
 	for i = 1, 7 do
-		nextpieceimgmp[i] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+		nextpieceimgmp[i] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	end
 	
 	difficulty_speed = 100
@@ -571,7 +571,7 @@ function game_addTetriBmultip2()
 end
 
 function createtetriBmultip1(i, uniqueid, x, y)
-	tetriimagesp1[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+	tetriimagesp1[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	tetrikindp1[uniqueid] = i
 	tetrishapesp1[uniqueid] = {}
 	if i == 1 then --I
@@ -636,7 +636,7 @@ function createtetriBmultip1(i, uniqueid, x, y)
 end
 
 function createtetriBmultip2(i, uniqueid, x, y)
-	tetriimagesp2[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", mpscale )
+	tetriimagesp2[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, mpscale )
 	tetrikindp2[uniqueid] = i
 	tetrishapesp2[uniqueid] = {}
 	if i == 1 then --I

@@ -64,8 +64,8 @@ end
 
 function createtetriA(i, uniqueid, x, y) --creates block, including body, shapes, image, imagedata and whatnot.
 
-	tetriimagedata[uniqueid] = newImageData( "graphics/pieces/"..i..".png", scale)
-	tetriimages[uniqueid] = padImagedata( tetriimagedata[uniqueid] )
+	tetriimagedata[uniqueid] = platform.newpiecepixels( "graphics/pieces/"..i, scale)
+	tetriimages[uniqueid] = platform.imagefrompixels( tetriimagedata[uniqueid] )
 	tetrikind[uniqueid] = i
 	tetrishapes[uniqueid] = {}
 	
@@ -548,8 +548,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						end
 						
 						--save old imagedata to local var first in case we create a new bodyid..
-						backupimagedata = love.image.newImageData( tetriimagedata[i-ioffset]:getWidth(), tetriimagedata[i-ioffset]:getHeight())
-						backupimagedata:paste(tetriimagedata[i-ioffset], 0, 0, 0, 0, tetriimagedata[i-ioffset]:getWidth(), tetriimagedata[i-ioffset]:getHeight() )
+						backupimagedata = platform.copypixels( tetriimagedata[i-ioffset] )
 						
 						--cut the image.
 						cutimage(i-ioffset, numberofgroups)
@@ -592,14 +591,12 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						tetribodies[highestbody()]:setBullet(true)
 						tetribodies[highestbody()]:setAngularVelocity(tetribodies[i-ioffset]:getAngularVelocity())
 						
-						tetriimagedata[highestbody()] = love.image.newImageData( backupimagedata:getWidth(), backupimagedata:getHeight())
-						tetriimagedata[highestbody()]:paste( backupimagedata, 0, 0, 0, 0, backupimagedata:getWidth(), backupimagedata:getHeight() )
-						tetriimages[highestbody()] = padImagedata( tetriimagedata[highestbody()] )
+						tetriimagedata[highestbody()] = platform.copypixels( backupimagedata )
+						tetriimages[highestbody()] = platform.imagefrompixels( tetriimagedata[highestbody()] )
 						tetrikind[highestbody()] = tetrikind[i-ioffset]
 						
-						debugimagedata = love.image.newImageData( backupimagedata:getWidth(), backupimagedata:getHeight())
-						debugimagedata:paste(backupimagedata, 0, 0, 0, 0, backupimagedata:getWidth(), backupimagedata:getHeight() )
-						debugimage = padImagedata( debugimagedata )
+						debugimagedata = platform.copypixels( backupimagedata )
+						debugimage = platform.imagefrompixels( debugimagedata )
 						
 						--cut the image
 						cutimage(highestbody(), numberofgroups)
@@ -631,8 +628,7 @@ end
 
 function cutimage(bodyid, numberofgroups) --cuts the image of a body based on its shapes (2nd argument might be obsolete)
 	
-	local width = tetriimagedata[bodyid]:getWidth()
-	local height = tetriimagedata[bodyid]:getHeight()
+	local width, height = platform.getpixelsize( tetriimagedata[bodyid] )
 	
 	--[[ This old method used the angle between the two cutting points and all the other points to determine if the point should be removed. 
 		 But it sometimes bugged out for reasons I couldn't figure out so I'm going for the less good looking easy approach. Boo :(
@@ -716,12 +712,12 @@ function cutimage(bodyid, numberofgroups) --cuts the image of a body based on it
 			end
 			
 			if deletepixel then
-				tetriimagedata[bodyid]:setPixel(x, y, 1, 1, 1, 0)
+				platform.erasepixel( tetriimagedata[bodyid], x, y )
 			end
 		end
 	end
 	
-	tetriimages[bodyid] = padImagedata( tetriimagedata[bodyid] )
+	tetriimages[bodyid] = platform.imagefrompixels( tetriimagedata[bodyid] )
 end
 
 function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape using the old coordinates and the cutting line; returns its points in world coordinates
@@ -899,7 +895,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 							table.insert(tetricutpos, tetribodies[i]:getY())
 							table.insert(tetricutang, tetribodies[i]:getAngle())
 							table.insert(tetricutkind, tetrikind[i])
-							table.insert(tetricutimg, padImagedata(tetriimagedata[i]))
+							table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
 						end
 					end
 					
@@ -1150,7 +1146,7 @@ function collideA(a, b, coll) --box2d callback. calls endblock.
 					tetrikind[highestbody()+1] = tetrikind[1]
 					
 					tetriimagedata[highestbody()+1] = tetriimagedata[1]
-					tetriimages[highestbody()+1] = padImagedata( tetriimagedata[highestbody()+1] )
+					tetriimages[highestbody()+1] = platform.imagefrompixels( tetriimagedata[highestbody()+1] )
 					
 					tetribodies[highestbody()+1] = tetribodies[1]
 					tetribodies[highestbody()]:setLinearDamping(0.5)

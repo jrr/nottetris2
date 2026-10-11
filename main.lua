@@ -267,7 +267,7 @@ function loadimages()
 	--nextpiece
 	nextpieceimg = {}
 	for i = 1, 7 do
-		nextpieceimg[i] = newPaddedImage( "graphics/pieces/"..i..".png", scale )
+		nextpieceimg[i] = platform.newpieceimage( "graphics/pieces/"..i, scale )
 	end
 	
 	--font--
@@ -509,7 +509,7 @@ function changescale(i)
 	platform.setmode( 160*i, 144*i, false, vsync, 16 )
 	nextpieceimg = {}
 	for j = 1, 7 do
-		nextpieceimg[j] = newPaddedImage( "graphics/pieces/"..j..".png", i )
+		nextpieceimg[j] = platform.newpieceimage( "graphics/pieces/"..j, i )
 	end
 	physicsscale = i/4
 end

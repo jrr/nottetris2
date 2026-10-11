@@ -54,7 +54,7 @@ end
 
 function createtetriB(i, uniqueid, x, y)
 
-	tetriimages[uniqueid] = newPaddedImage( "graphics/pieces/"..i..".png", scale )
+	tetriimages[uniqueid] = platform.newpieceimage( "graphics/pieces/"..i, scale )
 	tetrikind[uniqueid] = i
 	tetrishapes[uniqueid] = {}
 	

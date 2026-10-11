@@ -118,7 +118,7 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 end
 
 --images. These helpers are LÖVE only: they tint the art by the color option (hue), scale it, and pad it to powers of two for old graphics cards.
---Piece images still use them directly, until pieces are drawn from their physics shapes.
+local newImageData, newPaddedImage, padImagedata, newPaddedImageFont, scaleImagedata
 function newImageData(path, s)
 	local imagedata = love.image.newImageData( path )
 	
@@ -242,4 +242,32 @@ end
 
 function platform.newfont(path, glyphs) --an image font, tinted like the art
 	return newPaddedImageFont(path .. ".png", glyphs)
+end
+
+--pieces: images drawn rotated, so smoothly filtered, and scaled up when loaded
+function platform.newpieceimage(path, scale)
+	return newPaddedImage(path .. ".png", scale)
+end
+
+--the pixels of a piece's image, which line clears cut away; made into an image to draw
+function platform.newpiecepixels(path, scale)
+	return newImageData(path .. ".png", scale)
+end
+
+function platform.copypixels(pixels)
+	local copy = love.image.newImageData(pixels:getWidth(), pixels:getHeight())
+	copy:paste(pixels, 0, 0, 0, 0, pixels:getWidth(), pixels:getHeight())
+	return copy
+end
+
+function platform.getpixelsize(pixels)
+	return pixels:getWidth(), pixels:getHeight()
+end
+
+function platform.erasepixel(pixels, x, y) --make it transparent
+	pixels:setPixel(x, y, 1, 1, 1, 0)
+end
+
+function platform.imagefrompixels(pixels)
+	return padImagedata(pixels)
 end
