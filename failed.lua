@@ -69,7 +69,7 @@ end
 function failed_checkhighscores()
 	highscoreno = 0
 	selectblink = true
-	oldtime = love.timer.getTime()
+	oldtime = platform.gettime()
 	for i = 1, 3 do
 		if scorescore > highscore[i] then
 			if i == 1 then
@@ -87,7 +87,7 @@ function failed_checkhighscores()
 			highscore[i] = scorescore
 			cursorblink = true
 			love.audio.play(highscoreintro)
-			highscoremusicstart = love.timer.getTime()
+			highscoremusicstart = platform.gettime()
 			musicchanged = false
 			gamestate = "highscoreentry"
 			break

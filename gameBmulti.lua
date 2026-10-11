@@ -108,7 +108,7 @@ function gameBmulti_load()
 	-----------
 	
 	randomtable[1] = math.random(7)
-	starttimer = love.timer.getTime()
+	starttimer = platform.gettime()
 	--first piece! hooray.
 end
 
@@ -144,7 +144,7 @@ function gameBmulti_draw()
 		love.graphics.setColor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
-			timepassed = love.timer.getTime() - colorizetimer
+			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
 				love.graphics.setColor(table.unpack(p1color))
 			end
@@ -164,7 +164,7 @@ function gameBmulti_draw()
 		love.graphics.setColor(1, 1, 1)
 		--set color:
 		if gamestate == "failingBmulti" or gamestate == "failedBmulti" then
-			timepassed = love.timer.getTime() - colorizetimer
+			timepassed = platform.gettime() - colorizetimer
 			if v:getY() > 576 - (576*(timepassed/colorizeduration)) then
 				love.graphics.setColor(table.unpack(p2color))
 			end
@@ -305,7 +305,7 @@ function gameBmulti_update(dt)
 	end
 
 	updateworld(dt)
-	newtime = love.timer.getTime()
+	newtime = platform.gettime()
 	if gamestarted == false then
 		if newtime - starttimer > 3 then
 			if musicno < 4 then
@@ -401,7 +401,7 @@ function gameBmulti_update(dt)
 			end
 		end
 	elseif gamestate == "failingBmulti" then
-		timepassed = love.timer.getTime() - colorizetimer
+		timepassed = platform.gettime() - colorizetimer
 		if timepassed > colorizeduration then
 			gamestate = "failedBmulti"
 			
@@ -427,8 +427,8 @@ function gameBmulti_update(dt)
 		
 		if clearcheck then --RESULTS SCREEN INI!--
 			gamestate = "gameBmulti_results"
-			jumptimer = love.timer.getTime()
-			crytimer = love.timer.getTime()
+			jumptimer = platform.gettime()
+			crytimer = platform.gettime()
 			
 			love.audio.play(musicresults)
 			
@@ -464,9 +464,9 @@ function gameBmulti_update(dt)
 			jumpframe = true
 		end
 	elseif gamestate == "gameBmulti_results" then
-		jumptimepassed = love.timer.getTime() - jumptimer
+		jumptimepassed = platform.gettime() - jumptimer
 		if jumptimepassed > 2 then
-			jumptimer = love.timer.getTime()
+			jumptimer = platform.gettime()
 			jumpframe = true
 			if winner == 1 then
 				mariobody:setY(mariobody:getY()-1)
@@ -479,10 +479,10 @@ function gameBmulti_update(dt)
 			end
 		end
 		
-		crytimepassed = love.timer.getTime() - crytimer
+		crytimepassed = platform.gettime() - crytimer
 		if crytimepassed > 0.4 then
 			cryframe = not cryframe
-			crytimer = love.timer.getTime()
+			crytimer = platform.gettime()
 		end
 		
 		if winner == 1 then
@@ -766,7 +766,7 @@ function endblockp2()
 end
 
 function endgame()
-	colorizetimer = love.timer.getTime()
+	colorizetimer = platform.gettime()
 	gamestate = "failingBmulti"
 	
 	if musicno < 4 then

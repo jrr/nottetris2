@@ -20,7 +20,7 @@ function menu_load()
 	}
 	logotime = 0
 	bootsoundplayed = false
-	oldtime = love.timer.getTime()
+	oldtime = platform.gettime()
 end
 
 function menu_draw()
@@ -224,13 +224,13 @@ function menu_update(dt)
 		end
 		
 		if logotime >= logoduration + logodelay then
-			oldtime = love.timer.getTime()
+			oldtime = platform.gettime()
 			gamestate = "credits"
 		end
 	end
 
 	if gamestate == "credits" then
-		currenttime = love.timer.getTime()
+		currenttime = platform.gettime()
 		if currenttime - oldtime > creditsdelay then
 			gamestate = "title"
 			love.graphics.setBackgroundColor( 0, 0, 0)
@@ -239,7 +239,7 @@ function menu_update(dt)
 	end
 	
 	if gamestate == "menu" or gamestate == "multimenu" or gamestate == "options" then
-		currenttime = love.timer.getTime()
+		currenttime = platform.gettime()
 		if currenttime - oldtime > selectblinkrate then
 			selectblink = not selectblink
 			oldtime = currenttime
@@ -271,7 +271,7 @@ function menu_update(dt)
 	end
 	
 	if gamestate == "highscoreentry" then
-		currenttime = love.timer.getTime()
+		currenttime = platform.gettime()
 		if currenttime - oldtime > cursorblinkrate then
 			cursorblink = not cursorblink
 			oldtime = currenttime

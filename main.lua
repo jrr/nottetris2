@@ -1,4 +1,5 @@
 table.unpack = table.unpack or unpack --Lua 5.2 moved unpack into table; LÖVE's LuaJIT only has the global
+require "platform_love"
 
 function love.load()
 	--requires--
@@ -915,43 +916,43 @@ function love.keypressed( key )
 			if selection == 2 or selection == 4 or selection == 6 then
 				selection = selection - 1
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "right" then
 			if selection == 1 or selection == 3 or selection == 5 then
 				selection = selection + 1
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "up" then
 			if selection == 3 or selection == 4 or selection == 5 or selection == 6 then
 				selection = selection - 2
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 				if selection < 3 then
 					selection = gameno
 					selectblink = false
-					oldtime = love.timer.getTime()
+					oldtime = platform.gettime()
 				end
 			elseif selection == 1 or selection == 2 then
 				selection = musicno + 2
 				selectblink = false
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "down" then
 			if selection == 1 or selection == 2 or selection == 3 or selection == 4 then
 				selection = selection + 2
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 				if selection > 2 and selection < 5 then
 					selection = musicno + 2
 					selectblink = false
-					oldtime = love.timer.getTime()
+					oldtime = platform.gettime()
 				end
 			elseif selection == 5 or selection == 6 then
 				selection = gameno
 				selectblink = false
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		end
 		if selection > 2 and key ~= "escape" then
@@ -983,7 +984,7 @@ function love.keypressed( key )
 				optionsselection = 1
 			end
 			selectblink = true
-			oldtime = love.timer.getTime()
+			oldtime = platform.gettime()
 			
 		elseif key == "up" then
 			optionsselection = optionsselection - 1
@@ -991,7 +992,7 @@ function love.keypressed( key )
 				optionsselection = #optionschoices
 			end
 			selectblink = true
-			oldtime = love.timer.getTime()
+			oldtime = platform.gettime()
 			
 		elseif key == "left" then
 			if optionsselection == 1 then
@@ -1078,43 +1079,43 @@ function love.keypressed( key )
 			if selection == 2 or selection == 4 or selection == 6 then
 				selection = selection - 1
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "right" or key == "d" then
 			if selection == 1 or selection == 3 or selection == 5 then
 				selection = selection + 1
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "up" or key == "w" then
 			if selection == 3 or selection == 4 or selection == 5 or selection == 6 then
 				selection = selection - 2
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 				if selection < 3 then
 					selection = gameno
 					selectblink = false
-					oldtime = love.timer.getTime()
+					oldtime = platform.gettime()
 				end
 			elseif selection == 1 or selection == 2 then
 				selection = musicno + 2
 				selectblink = false
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		elseif key == "down" or key == "s" then
 			if selection == 1 or selection == 2 or selection == 3 or selection == 4 then
 				selection = selection + 2
 				selectblink = true
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 				if selection > 2 and selection < 5 then
 					selection = musicno + 2
 					selectblink = false
-					oldtime = love.timer.getTime()
+					oldtime = platform.gettime()
 				end
 			elseif selection == 5 or selection == 6 then
 				selection = gameno
 				selectblink = false
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 			end
 		end
 		if selection > 2 and key ~= "return" and key ~= "escape" then
@@ -1149,7 +1150,7 @@ function love.keypressed( key )
 		end
 		if gamestate == "gameA" or gamestate == "gameB" then
 			if key == "escape" then
-				oldtime = love.timer.getTime()
+				oldtime = platform.gettime()
 				gamestate = "menu"
 			end
 			

@@ -21,9 +21,9 @@ function rocket_load()
 				love.audio.stop(musicrocket4)
 				love.audio.play(musicrocket4)
 			end
-			rockettimer = love.timer.getTime()
+			rockettimer = platform.gettime()
 			gamestate = "rocket"..tostring(i)
-			currenttime = love.timer.getTime()
+			currenttime = platform.gettime()
 			timelapsed = currenttime - rockettimer
 			break
 		end
@@ -57,7 +57,7 @@ function rocket_draw()
 		love.graphics.setScissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
 	end
 	
-	currenttime = love.timer.getTime()
+	currenttime = platform.gettime()
 	timelapsed = currenttime - rockettimer
 	
 	--background
