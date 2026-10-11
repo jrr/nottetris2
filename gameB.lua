@@ -118,14 +118,6 @@ function createtetriB(i, uniqueid, x, y)
 end
 
 function gameB_draw()
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(fullscreenoffsetX, fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor(fullscreenoffsetX, fullscreenoffsetY, 160*scale, 144*scale)
-	end
-	
 	--background--
 	platform.draw(gamebackground, 0, 0, 0, scale)
 	---------------
@@ -178,13 +170,6 @@ function gameB_draw()
 	-----------------------------------------------
 	
 	
-	--FULLSCREEN OFFSET
-	if fullscreen then
-		platform.translate(-fullscreenoffsetX, -fullscreenoffsetY)
-		
-		--scissor
-		platform.setscissor()
-	end
 end
 	
 function gameB_update(dt)
