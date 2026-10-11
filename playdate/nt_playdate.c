@@ -156,6 +156,16 @@ static int shape_getworldpoints(lua_State *L) { /* x1, y1, x2, y2, ... */
 	return count*2;
 }
 
+static int shape_rowareas(lua_State *L) { /* first row, then the area in each */
+	double areas[NT_MAXROWS];
+	int first, count = nt_shape_rowareas(shape(1), number(2), &first, areas);
+	pd->lua->pushInt(first);
+	for (int i = 0; i < count; i++) {
+		pd->lua->pushFloat(areas[i]);
+	}
+	return count + 1;
+}
+
 static const struct {
 	const char *name;
 	lua_CFunction f;
@@ -192,6 +202,7 @@ static const struct {
 	{"nt.shape_testpoint", shape_testpoint},
 	{"nt.shape_raycast", shape_raycast},
 	{"nt.shape_getworldpoints", shape_getworldpoints},
+	{"nt.shape_rowareas", shape_rowareas},
 };
 
 static void check(int ok, const char *what, const char *err) {

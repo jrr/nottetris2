@@ -752,6 +752,15 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 	end
 end
 
+local function addlineareas(firstrow, ...) --a shape's area in each line it reaches
+	for n = 1, select("#", ...) do
+		local line = firstrow + n
+		if line >= 1 and line <= 18 then
+			linearea[line] = linearea[line] + select(n, ...)
+		end
+	end
+end
+
 function checklinedensity(active) --checks all 18 lines and, if active == true, calls removeline. Also does scoring, sounds and stuff.
 	--loop through every shape and add each area to a nax
 	
@@ -763,87 +772,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 	
 	for i = 2, #tetribodies do
 		for j, k in pairs(tetrishapes[i]) do
-			local coords = physics.getworldpoints(k)
-			--Get first and last involved line
-			local firstline = 19
-			local lastline =  0
-			
-			for point = 2, #coords, 2 do
-				if math.ceil(round(coords[point]) / 32) < firstline then
-					firstline = math.ceil(round(coords[point]) / 32)
-				elseif math.ceil(round(coords[point]) / 32) > lastline then
-					lastline = math.ceil(round(coords[point]) / 32)
-				end
-			end
-			
-			for line = firstline, lastline do
-				if line >= 1 and line <= 18 then
-					coords = physics.getworldpoints(k)
-					
-					if line > firstline then
-						local offset = 0
-					
-						repeat
-							leftx, rightx = getintersectX(tetrishapes[i][j], (line-1)*32+offset)
-							offset = offset + 1
-						until leftx ~= -1 or offset >= 32
-						
-						--remove all points above the line
-						local coi=2
-						local lastcutoff = nil
-						while coi <= #coords do
-							if coords[coi] <= (line-1)*32 then
-								table.remove(coords, coi)
-								table.remove(coords, coi-1)
-								lastcutoff = coi
-								coi=0
-							end
-							coi=coi+2
-						end
-						
-						--add points of top line (if points were cut off)
-						if lastcutoff then
-							table.insert(coords, lastcutoff-1,rightx)
-							table.insert(coords, lastcutoff,(line-1)*32)
-							
-							table.insert(coords, lastcutoff-1,leftx)
-							table.insert(coords, lastcutoff,(line-1)*32)
-						end
-					end
-					
-					if line < lastline then
-						local offset = 0
-						repeat
-							leftx, rightx = getintersectX(tetrishapes[i][j], (line)*32 - offset)
-							offset = offset + 1
-						until leftx ~= -1 or offset >= 32
-						
-						--remove all points below the line
-						local coi=2
-						local lastcutoff = nil
-						while coi <= #coords do
-							if coords[coi] >= (line)*32 then
-								table.remove(coords, coi)
-								table.remove(coords, coi-1)
-								lastcutoff = coi
-								coi=0
-							end
-							coi=coi+2
-						end
-						
-						--add points of bottom line (if points were cut off)
-						if lastcutoff then
-							table.insert(coords, lastcutoff-1,leftx)
-							table.insert(coords, lastcutoff,(line)*32)
-							
-							table.insert(coords, lastcutoff-1,rightx)
-							table.insert(coords, lastcutoff,(line)*32)
-						end
-					end
-					
-					linearea[line] = linearea[line] + polygonarea(coords)
-				end
-			end
+			addlineareas(physics.rowareas(k, 32))
 		end
 	end
 	

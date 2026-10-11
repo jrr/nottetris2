@@ -60,6 +60,50 @@ function physics.raycast(shape, x1, y1, x2, y2) --how far along the line from x1
 	return fraction
 end
 
+local function clip(points, line, below) --the part of a polygon {x1, y1, ...} on one side of a horizontal line
+	local out, n = {}, #points/2
+	for i = 1, n do
+		local ax, ay = points[i*2-1], points[i*2]
+		local j = i % n + 1
+		local bx, by = points[j*2-1], points[j*2]
+		local ain, bin
+		if below then ain, bin = ay >= line, by >= line else ain, bin = ay <= line, by <= line end
+		if ain then
+			out[#out+1], out[#out+2] = ax, ay
+		end
+		if ain ~= bin then
+			local t = (line - ay)/(by - ay)
+			out[#out+1], out[#out+2] = ax + t*(bx - ax), line
+		end
+	end
+	return out
+end
+
+local function area(points)
+	local sum, n = 0, #points/2
+	for i = 1, n do
+		local j = i % n + 1
+		sum = sum + points[i*2-1]*points[j*2] - points[j*2-1]*points[i*2]
+	end
+	return math.abs(sum)/2
+end
+
+function physics.rowareas(shape, rowheight) --the first row it reaches (from 0, at y 0), then its area in each row from there
+	local points = physics.getworldpoints(shape)
+	local ymin, ymax = points[2], points[2]
+	for i = 4, #points, 2 do
+		ymin, ymax = math.min(ymin, points[i]), math.max(ymax, points[i])
+	end
+	local first = math.floor(ymin/rowheight)
+	local last = math.max(first, math.ceil(ymax/rowheight) - 1)
+	local areas = {}
+	for row = first, last do
+		local band = clip(clip(points, row*rowheight, true), (row + 1)*rowheight, false)
+		areas[#areas+1] = #band >= 6 and area(band) or 0
+	end
+	return first, table.unpack(areas)
+end
+
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
 	return {shape:getBody():getWorldPoints(shape:getShape():getPoints())}
 end

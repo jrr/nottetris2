@@ -1,5 +1,6 @@
 /* The game's physics on Chipmunk: see nt_physics.h. */
 #include <stdlib.h>
+#include <math.h>
 #include "chipmunk/chipmunk_private.h"
 #include "nt_physics.h"
 
@@ -257,6 +258,61 @@ double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double 
 		return info.alpha;
 	}
 	return -1;
+}
+
+/* the part of a polygon on one side of a horizontal line: y >= line if below, else y <= line */
+static int clip(const double *in, int n, double line, int below, double *out) {
+	int count = 0;
+	for (int i = 0; i < n; i++) {
+		const double *a = in + i*2, *b = in + ((i + 1) % n)*2;
+		int ain = below ? a[1] >= line : a[1] <= line;
+		int bin = below ? b[1] >= line : b[1] <= line;
+		if (ain) {
+			out[count*2] = a[0];
+			out[count*2+1] = a[1];
+			count++;
+		}
+		if (ain != bin) {
+			double t = (line - a[1])/(b[1] - a[1]);
+			out[count*2] = a[0] + t*(b[0] - a[0]);
+			out[count*2+1] = line;
+			count++;
+		}
+	}
+	return count;
+}
+
+static double area(const double *p, int n) {
+	double sum = 0;
+	for (int i = 0; i < n; i++) {
+		const double *a = p + i*2, *b = p + ((i + 1) % n)*2;
+		sum += a[0]*b[1] - b[0]*a[1];
+	}
+	return sum < 0 ? -sum/2 : sum/2;
+}
+
+int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas) {
+	double points[NT_MAXPOINTS*2], top[(NT_MAXPOINTS+2)*2], band[(NT_MAXPOINTS+4)*2];
+	int n = nt_shape_getworldpoints(shape, points);
+	double ymin = points[1], ymax = points[1];
+	for (int i = 1; i < n; i++) {
+		ymin = points[i*2+1] < ymin ? points[i*2+1] : ymin;
+		ymax = points[i*2+1] > ymax ? points[i*2+1] : ymax;
+	}
+	int first = (int)floor(ymin/rowheight), last = (int)ceil(ymax/rowheight) - 1;
+	if (last < first) {
+		last = first;
+	}
+	if (last - first + 1 > NT_MAXROWS) {
+		last = first + NT_MAXROWS - 1;
+	}
+	for (int row = first; row <= last; row++) {
+		int m = clip(points, n, row*rowheight, 1, top);
+		m = clip(top, m, (row + 1)*rowheight, 0, band);
+		areas[row - first] = m >= 3 ? area(band, m) : 0;
+	}
+	*firstrow = first;
+	return last - first + 1;
 }
 
 int nt_shape_getworldpoints(cpShape *shape, double *out) {
