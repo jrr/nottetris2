@@ -592,11 +592,16 @@ function convexhull(coords)
 	return result
 end
 
---Shapes in LÖVE 0.7 had friction 0.5, restitution 0.1 and density 1. 0.8's fixtures
---have other defaults, so these set 0.7's values.
+--How much pieces bounce: they leave what they hit at this much of the speed they hit it with.
+--LÖVE 0.7's 0.1 was hardly visible on Chipmunk; 0.4 reaches the physics' limit on rising when
+--holding down (MAXRISE in physics_chipmunk.lua).
+local bounciness = 0.25
+
+--Shapes in LÖVE 0.7 had friction 0.5 and density 1. 0.8's fixtures have other defaults, so
+--these set 0.7's values.
 local function shapedefaults(shape)
 	shape:setFriction(0.5)
-	shape:setRestitution(0.1)
+	shape:setRestitution(bounciness)
 	return shape
 end
 
