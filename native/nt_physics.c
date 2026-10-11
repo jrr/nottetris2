@@ -5,6 +5,7 @@
 
 struct ntWorld {
 	cpSpace *space;
+	cpFloat maxrise; /* fastest a body may move up; 0 for no limit */
 	int *contacts; /* shape ids, two per pair */
 	int ncontacts, capacity;
 };
@@ -105,9 +106,22 @@ void nt_world_free(ntWorld *world) {
 	free(world);
 }
 
+void nt_world_setmaxrise(ntWorld *world, double speed) { world->maxrise = speed; }
+
+/* after the contacts have been solved, since they can throw a body up; bodies move by it in the next step */
+static void limitrise(cpBody *body, void *data) {
+	cpFloat maxrise = *(cpFloat *)data;
+	if (cpBodyGetType(body) == CP_BODY_TYPE_DYNAMIC && body->v.y < -maxrise) {
+		body->v.y = -maxrise;
+	}
+}
+
 void nt_world_step(ntWorld *world, double dt) {
 	world->ncontacts = 0;
 	cpSpaceStep(world->space, dt);
+	if (world->maxrise > 0.0f) {
+		cpSpaceEachBody(world->space, limitrise, &world->maxrise);
+	}
 }
 
 int nt_world_contacts(ntWorld *world, const int **pairs) {

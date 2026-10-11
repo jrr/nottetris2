@@ -19,6 +19,8 @@ typedef struct cpShape cpShape;
 
 ntWorld *nt_world_new(double gravityx, double gravityy);
 void nt_world_free(ntWorld *world); /* and every body and shape in it */
+/* the fastest a body may move up (against y), from then on; 0, the default, for no limit */
+void nt_world_setmaxrise(ntWorld *world, double speed);
 void nt_world_step(ntWorld *world, double dt);
 /* the shapes that began touching in the last step, as pairs of their ids:
  * returns how many pairs, and points *pairs at them until the next step */

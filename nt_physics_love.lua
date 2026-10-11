@@ -11,6 +11,7 @@ typedef struct cpShape cpShape;
 
 ntWorld *nt_world_new(double gravityx, double gravityy);
 void nt_world_free(ntWorld *world);
+void nt_world_setmaxrise(ntWorld *world, double speed);
 void nt_world_step(ntWorld *world, double dt);
 int nt_world_contacts(ntWorld *world, const int **pairs);
 
@@ -53,6 +54,10 @@ nt = {}
 
 function nt.world_new(gravityx, gravityy) --freed once nothing refers to it
 	return ffi.gc(lib.nt_world_new(gravityx, gravityy), lib.nt_world_free)
+end
+
+function nt.world_setmaxrise(world, speed)
+	lib.nt_world_setmaxrise(world, speed)
 end
 
 function nt.world_step(world, dt)

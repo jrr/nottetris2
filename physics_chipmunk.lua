@@ -3,6 +3,10 @@
 --methods listed there.
 physics = {}
 
+--The fastest anything moves up, in pixels a second: a bounce never throws a piece far (Box2D had no limit).
+--A landing at full speed (500, holding down) bounces up at about 50.
+local MAXRISE = 200
+
 local shapes = {} --by id, for reporting collisions
 local lastid = 0
 
@@ -16,7 +20,9 @@ local function check(object) --C would crash on what was destroyed; LÖVE gives 
 end
 
 function physics.newworld(gravityx, gravityy, collide) --collide(a, b) gets the user data of two shapes that began touching, after the update
-	return {p=nt.world_new(gravityx, gravityy), collide=collide}
+	local world = {p=nt.world_new(gravityx, gravityy), collide=collide}
+	nt.world_setmaxrise(world.p, MAXRISE)
+	return world
 end
 
 function physics.update(world, dt)
