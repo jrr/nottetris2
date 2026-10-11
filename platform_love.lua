@@ -51,3 +51,8 @@ end
 function platform.setlooping(sound, looping)
 	sound:setLooping(looping)
 end
+
+--keys, by LÖVE's names, which the game uses for its controls: Playdate maps its buttons onto them
+function platform.isdown(key) --held down right now
+	return love.keyboard.isDown(key)
+end
