@@ -26,12 +26,12 @@ function love.load()
 	
 	if fullscreen == false then
 		if scale ~= 5 then
-			setmode( 160*scale, 144*scale, false, vsync, 16 )
+			platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
 		end
 	else
-		setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
-		love.mouse.setVisible( false )
-		desktopwidth, desktopheight = love.graphics.getWidth(), love.graphics.getHeight()
+		platform.setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
+		platform.setmousevisible( false )
+		desktopwidth, desktopheight = platform.getdimensions()
 		saveoptions()
 		
 		suggestedscale = math.floor((desktopheight-50)/144)
@@ -573,23 +573,19 @@ function saveoptions()
 end
 
 function autosize()
-	desktopwidth, desktopheight = love.window.getDesktopDimensions()
-end
-
-function setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags (fsaa is msaa from 0.10)
-	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
+	desktopwidth, desktopheight = platform.getdesktopdimensions()
 end
 
 function togglefullscreen(fullscr)
 	fullscreen = fullscr
-	love.mouse.setVisible( not fullscreen )
+	platform.setmousevisible( not fullscreen )
 	if fullscr == false then
 		scale = suggestedscale
 		physicsscale = scale/4
-		setmode( 160*scale, 144*scale, false, vsync, 16 )
+		platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
 	else
-		setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
-		desktopwidth, desktopheight = love.graphics.getWidth(), love.graphics.getHeight()
+		platform.setmode( desktopwidth, desktopheight, true, vsync, 16 ) --0.8 draws nothing after setMode(0, 0, true)
+		desktopwidth, desktopheight = platform.getdimensions()
 		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
 		suggestedscale = math.min(math.floor((desktopheight-50)/144), math.floor((desktopwidth-10)/160))
 		if suggestedscale > 5 then
@@ -662,7 +658,7 @@ function savehighscores()
 end
 
 function changescale(i)
-	setmode( 160*i, 144*i, false, vsync, 16 )
+	platform.setmode( 160*i, 144*i, false, vsync, 16 )
 	nextpieceimg = {}
 	for j = 1, 7 do
 		nextpieceimg[j] = newPaddedImage( "graphics/pieces/"..j..".png", i )
@@ -886,7 +882,7 @@ function love.keypressed( key )
 				optionsselection = 1
 			end
 		elseif key == "escape" then
-			love.event.quit() --0.8 renamed the "q" event to "quit"
+			platform.quit()
 		elseif key == "left" and playerselection > 1 then
 			playerselection = playerselection - 1
 		elseif key == "right" and playerselection < 3 then
@@ -1170,7 +1166,7 @@ function love.keypressed( key )
 	elseif gamestate == "gameBmulti" and gamestarted == false then
 		if key == "escape" then
 			if not fullscreen then
-				setmode( 160*scale, 144*scale, false, vsync, 0 )
+				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
 			end
 			gamestate = "multimenu"
 			if musicno < 4 then
@@ -1180,7 +1176,7 @@ function love.keypressed( key )
 	elseif gamestate == "gameBmulti" and gamestarted == true then
 		if key == "escape" then
 			if not fullscreen then
-				setmode( 160*scale, 144*scale, false, vsync, 0 )
+				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
 			end
 			gamestate = "multimenu"
 		end
@@ -1205,7 +1201,7 @@ function love.keypressed( key )
 				platform.play(music[musicno])
 			end
 			if not fullscreen then
-				setmode( 160*scale, 144*scale, false, vsync, 0 )
+				platform.setmode( 160*scale, 144*scale, false, vsync, 0 )
 			end
 			gamestate = "multimenu"
 		end

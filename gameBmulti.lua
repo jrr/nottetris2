@@ -19,7 +19,7 @@ function gameBmulti_load()
 	mpfullscreenoffsetY = (desktopheight-144*mpscale)/2
 	
 	if not fullscreen then
-		setmode( 274*mpscale, 144*mpscale, fullscreen, vsync, 16 )
+		platform.setmode( 274*mpscale, 144*mpscale, fullscreen, vsync, 16 )
 	end
 	
 	--nextpieces

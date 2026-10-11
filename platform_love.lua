@@ -56,3 +56,24 @@ end
 function platform.isdown(key) --held down right now
 	return love.keyboard.isDown(key)
 end
+
+--the window
+function platform.setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode arguments; 0.9 takes a table of flags (fsaa is msaa from 0.10)
+	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
+end
+
+function platform.getdimensions() --the window's size
+	return love.graphics.getWidth(), love.graphics.getHeight()
+end
+
+function platform.getdesktopdimensions()
+	return love.window.getDesktopDimensions()
+end
+
+function platform.setmousevisible(visible)
+	love.mouse.setVisible(visible)
+end
+
+function platform.quit()
+	love.event.quit() --0.8 renamed the "q" event to "quit"
+end
