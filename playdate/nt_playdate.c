@@ -131,6 +131,7 @@ static int body_applytorque(lua_State *L) { nt_body_applytorque(body(1), number(
 static int body_setdamping(lua_State *L) { nt_body_setdamping(body(1), number(2)); return 0; }
 static int body_resetmass(lua_State *L) { nt_body_resetmass(body(1)); return 0; }
 static int body_getmass(lua_State *L) { pd->lua->pushFloat(nt_body_getmass(body(1))); return 1; }
+static int body_isawake(lua_State *L) { pd->lua->pushBool(nt_body_isawake(body(1))); return 1; }
 
 static int body_tolocal(lua_State *L) {
 	double out[2];
@@ -230,6 +231,7 @@ static const struct {
 	{"nt.body_setdamping", body_setdamping},
 	{"nt.body_resetmass", body_resetmass},
 	{"nt.body_getmass", body_getmass},
+	{"nt.body_isawake", body_isawake},
 	{"nt.body_tolocal", body_tolocal},
 	{"nt.body_toworld", body_toworld},
 	{"nt.shape_newpolygon", shape_newpolygon},

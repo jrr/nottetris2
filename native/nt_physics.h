@@ -43,6 +43,7 @@ void nt_body_applytorque(cpBody *body, double torque);
 void nt_body_setdamping(cpBody *body, double damping);
 void nt_body_resetmass(cpBody *body); /* from its shapes' densities */
 double nt_body_getmass(cpBody *body);
+int nt_body_isawake(cpBody *body); /* not asleep: Chipmunk puts bodies that have been still a while to sleep */
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 

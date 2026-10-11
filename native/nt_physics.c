@@ -206,6 +206,7 @@ void nt_body_resetmass(cpBody *body) {
 }
 
 double nt_body_getmass(cpBody *body) { return cpBodyGetMass(body); }
+int nt_body_isawake(cpBody *body) { return !cpBodyIsSleeping(body); }
 void nt_body_tolocal(cpBody *body, double x, double y, double *out) { put(cpBodyWorldToLocal(body, cpv(x, y)), out); }
 void nt_body_toworld(cpBody *body, double x, double y, double *out) { put(cpBodyLocalToWorld(body, cpv(x, y)), out); }
 

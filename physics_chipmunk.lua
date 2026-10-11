@@ -131,6 +131,10 @@ function Body:getMass()
 	return nt.body_getmass(check(self))
 end
 
+function Body:isAwake() --false once it's been still a while, until something moves it
+	return nt.body_isawake(check(self))
+end
+
 function Body:getLocalPoint(x, y)
 	return nt.body_tolocal(check(self), x, y)
 end
