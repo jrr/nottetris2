@@ -23,10 +23,14 @@ scheduler = {
 	depthWeight = 5, --taken off per row below the live rows
 
 	changes = 0, --switches made, for perf.lua
+	freezes = 0, --freezes made: each frozen piece has its number, so a later freeze can be told apart
 	budget = 0, --changes earned but not yet made
 }
 
-local info = setmetatable({}, {__mode = "k"}) --body -> bookkeeping, forgotten with the body
+--Body -> bookkeeping, forgotten with the body. Only the scheduler freezes pieces, so it knows which
+--are frozen and, as they don't move, where their tops are, without asking each frame. frozen is false
+--or the freeze's number (scheduler_frozen).
+local info = setmetatable({}, {__mode = "k"})
 
 local function infoFor(body)
 	local i = info[body]
@@ -50,6 +54,7 @@ end
 local function wake(body)
 	local i = infoFor(body)
 	body:setType("dynamic")
+	i.frozen, i.top = false, nil
 	i.idle, i.awake, i.bump = 0, 0, 0
 	i.wakeX, i.wakeY, i.wakeAngle = body:getX(), body:getY(), body:getAngle()
 	scheduler.changes = scheduler.changes + 1
@@ -61,6 +66,8 @@ local function freeze(body)
 	i.moved = math.sqrt((body:getX() - i.wakeX)^2 + (body:getY() - i.wakeY)^2) + math.abs(body:getAngle() - i.wakeAngle) * 16
 	i.age = 0
 	body:setType("static")
+	scheduler.freezes = scheduler.freezes + 1
+	i.frozen, i.top = scheduler.freezes, physics.gettop(body)
 	scheduler.changes = scheduler.changes + 1
 end
 
@@ -102,9 +109,10 @@ function scheduler_update(dt) --after each physics step in game A
 	local tops, frozen = {}, {}
 	local pileTop = math.huge
 	for _, body in ipairs(bodies) do
-		tops[body] = physics.gettop(body)
+		local i = infoFor(body)
+		frozen[body] = i.frozen
+		tops[body] = i.top or physics.gettop(body)
 		pileTop = math.min(pileTop, tops[body])
-		frozen[body] = body:getType() == "static"
 	end
 	local liveY = pileTop + scheduler.liveRows * 32
 
@@ -181,6 +189,13 @@ function scheduler_beforeclear(lineno)
 			wake(body)
 		end
 	end
+end
+
+--Whether a piece is frozen, so that it can't have moved: nil if not, and if so a number that's the
+--same for as long as it stays frozen.
+function scheduler_frozen(body)
+	local i = info[body]
+	return i and i.frozen or nil
 end
 
 function scheduler_simulated() --pile pieces that are dynamic, for perf.lua

@@ -80,6 +80,10 @@ function physics.getworldpoints(shape) --a polygon's points in world coordinates
 end
 
 --bodies
+function Body:getPosition()
+	return nt.body_getposition(check(self))
+end
+
 function Body:getX()
 	return (nt.body_getposition(check(self)))
 end

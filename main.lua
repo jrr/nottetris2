@@ -438,14 +438,18 @@ function drawpieces() --tetribodies, with the pile kept drawn where the platform
 		pile, pilebodies = {}, tetribodies
 		platform.clearpile()
 	end
-	--first what leaves the pile, so it's patched before it's drawn
+	--first what leaves the pile, so it's patched before it's drawn. A piece the scheduler has frozen
+	--can't have moved: there's nothing to look up.
 	local seen, poses = {}, {}
 	for i, v in pairs(tetribodies) do
-		local x, y, angle = v:getX(), v:getY(), v:getAngle()
-		seen[v], poses[v] = true, {x, y, angle}
-		if pile[v] and distance(pile[v], x, y, angle) > MOVED then
-			pile[v] = nil
-			platform.unpile(v)
+		seen[v] = true
+		if not (pile[v] and scheduler_frozen(v)) then
+			local x, y, angle = v:getX(), v:getY(), v:getAngle()
+			poses[v] = {x, y, angle}
+			if pile[v] and distance(pile[v], x, y, angle) > MOVED then
+				pile[v] = nil
+				platform.unpile(v)
+			end
 		end
 	end
 	for v in pairs(pile) do
