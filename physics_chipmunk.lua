@@ -65,6 +65,10 @@ function physics.gettop(body) --the smallest y of its shapes
 	return nt.body_gettop(check(body))
 end
 
+function physics.setcollides(body, collides) --false: it collides with nothing
+	nt.body_setcollides(check(body), collides)
+end
+
 function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
 	local bodies = {}
 	for _, id in ipairs({nt.body_touching(check(body))}) do

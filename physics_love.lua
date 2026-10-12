@@ -114,6 +114,13 @@ function physics.gettop(body) --the smallest y of its shapes
 	return top
 end
 
+function physics.setcollides(body, collides) --false: it collides with nothing
+	for _, fixture in ipairs(body:getFixtures()) do
+		local category, _, group = fixture:getFilterData()
+		fixture:setFilterData(category, collides and 0xFFFF or 0, group)
+	end
+end
+
 function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
 	local bodies = {}
 	for _, contact in ipairs(body:getContacts()) do

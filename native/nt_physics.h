@@ -48,6 +48,7 @@ void nt_body_wake(cpBody *body);
 int nt_body_isstatic(cpBody *body);
 void nt_body_setstatic(cpBody *body, int isstatic); /* static: doesn't move, and stops; dynamic again: mass from its shapes */
 double nt_body_gettop(cpBody *body); /* the smallest y of its shapes */
+void nt_body_setcollides(cpBody *body, int collides); /* off: its shapes collide with nothing */
 /* the ids of the shapes of other bodies its shapes are touching: how many (up to max), into ids */
 int nt_body_touching(cpBody *body, int *ids, int max);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);

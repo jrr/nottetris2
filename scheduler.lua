@@ -15,6 +15,8 @@ scheduler = {
 	maxTurn = 1, --...or seconds it's been awake, if it's slow right now (landings jolt the whole pile,
 	             --so with pieces landing often, nothing stays idle for long)
 	bumpSpeed = 20, --px/s; a piece moving this fast bumps the frozen pieces it touches
+	releaseSpeed = 6, --rows/s the pile is let go at when the game is lost, from the bottom up
+	goneY = 648, --a piece that's entirely past this has fallen out (failing waits for this)
 
 	--a frozen piece's claim to be woken next
 	ageWeight = 30, --per second since it was frozen
@@ -100,10 +102,11 @@ function scheduler_update(dt) --after each physics step in game A
 	if not scheduler.enabled then
 		return
 	end
-	if gamestate ~= "gameA" then --the floor goes away when failing; let everything fall
-		wakeAll()
+	if gamestate ~= "gameA" then
+		scheduler_failing(dt)
 		return
 	end
+	scheduler.releaseY = nil
 
 	local bodies = pileBodies()
 	local tops, frozen = {}, {}
@@ -175,6 +178,35 @@ function scheduler_update(dt) --after each physics step in game A
 	elseif idlest and deepAwake >= scheduler.maxAwake then
 		freeze(idlest)
 		scheduler.budget = scheduler.budget - 1
+	end
+end
+
+--When the game is lost the floor goes and the pile falls out. All of it falling at once is slow, so
+--it's frozen and let go a row at a time from the bottom, each row falling clear of the next; and what's
+--fallen out of sight is frozen, colliding with nothing.
+function scheduler_failing(dt)
+	if not scheduler.releaseY then
+		scheduler.releaseY = 18*32 --the bottom of the field
+		for _, body in ipairs(pileBodies()) do
+			if body:getType() == "dynamic" then
+				freeze(body)
+			end
+		end
+	end
+	scheduler.releaseY = scheduler.releaseY - scheduler.releaseSpeed * 32 * dt
+	for _, body in pairs(tetribodies) do
+		local i = type(body) == "table" and infoFor(body)
+		local top = i and (i.top or physics.gettop(body))
+		if not top then
+			--the piece being cut in a line clear isn't a body
+		elseif i.frozen then
+			if top > scheduler.releaseY and top < scheduler.goneY then
+				wake(body)
+			end
+		elseif top > scheduler.goneY and body:getY() >= scheduler.goneY then --failing checks where bodies are, not their shapes
+			physics.setcollides(body, false) --or it'd be a floor for what falls after it
+			freeze(body)
+		end
 	end
 end
 

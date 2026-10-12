@@ -221,6 +221,9 @@ void nt_body_setstatic(cpBody *body, int isstatic) {
 		cpBodyActivate(body);
 	}
 	cpBodySetType(body, isstatic ? CP_BODY_TYPE_STATIC : CP_BODY_TYPE_DYNAMIC);
+	if (isstatic) { /* where it is now, if it was moved since the last step */
+		cpSpaceReindexShapesForBody(cpBodyGetSpace(body), body);
+	}
 }
 
 static void top(cpBody *body, cpShape *shape, void *data) {
@@ -229,6 +232,13 @@ static void top(cpBody *body, cpShape *shape, void *data) {
 		cpFloat vy = cpBodyLocalToWorld(body, cpPolyShapeGetVert(shape, i)).y;
 		*y = vy < *y ? vy : *y;
 	}
+}
+
+static void setfilter(cpBody *body, cpShape *shape, void *filter) { cpShapeSetFilter(shape, *(cpShapeFilter *)filter); }
+
+void nt_body_setcollides(cpBody *body, int collides) {
+	cpShapeFilter filter = collides ? CP_SHAPE_FILTER_ALL : CP_SHAPE_FILTER_NONE;
+	cpBodyEachShape(body, setfilter, &filter);
 }
 
 double nt_body_gettop(cpBody *body) {

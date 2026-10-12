@@ -136,6 +136,7 @@ static int body_wake(lua_State *L) { nt_body_wake(body(1)); return 0; }
 static int body_isstatic(lua_State *L) { pd->lua->pushBool(nt_body_isstatic(body(1))); return 1; }
 static int body_setstatic(lua_State *L) { nt_body_setstatic(body(1), pd->lua->getArgBool(2)); return 0; }
 static int body_gettop(lua_State *L) { pd->lua->pushFloat(nt_body_gettop(body(1))); return 1; }
+static int body_setcollides(lua_State *L) { nt_body_setcollides(body(1), pd->lua->getArgBool(2)); return 0; }
 
 static int body_touching(lua_State *L) { /* the ids of the shapes it's touching, up to 16 */
 	int ids[16];
@@ -249,6 +250,7 @@ static const struct {
 	{"nt.body_isstatic", body_isstatic},
 	{"nt.body_setstatic", body_setstatic},
 	{"nt.body_gettop", body_gettop},
+	{"nt.body_setcollides", body_setcollides},
 	{"nt.body_touching", body_touching},
 	{"nt.body_tolocal", body_tolocal},
 	{"nt.body_toworld", body_toworld},

@@ -36,6 +36,7 @@ void nt_body_wake(cpBody *body);
 int nt_body_isstatic(cpBody *body);
 void nt_body_setstatic(cpBody *body, int isstatic);
 double nt_body_gettop(cpBody *body);
+void nt_body_setcollides(cpBody *body, int collides);
 int nt_body_touching(cpBody *body, int *ids, int max);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
@@ -167,6 +168,10 @@ end
 
 function nt.body_gettop(body)
 	return lib.nt_body_gettop(body)
+end
+
+function nt.body_setcollides(body, collides)
+	lib.nt_body_setcollides(body, collides and 1 or 0)
 end
 
 function nt.body_touching(body) --the ids of the shapes it's touching, up to 16
