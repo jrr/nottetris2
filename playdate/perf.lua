@@ -1,6 +1,7 @@
 --Where the time goes, on the console every two seconds: frames a second, and milliseconds a frame
---in the physics step, the line fullness check (checklinedensity), the rest of the update and
---drawing; and how many pieces joined and left the pile. Imported after the game, which it wraps.
+--in the physics step, the line fullness check (checklinedensity), the scheduler, the rest of the
+--update and drawing (and the pieces' share of it); and how many pieces joined and left the pile.
+--Imported after the game, which it wraps.
 local ms = playdate.getCurrentTimeMilliseconds
 local totals, frames, since = {}, 0, ms()
 local joined, left = 0, 0
@@ -20,8 +21,10 @@ end
 
 physics.update = timed("physics", physics.update)
 checklinedensity = timed("density", checklinedensity)
+scheduler_update = timed("scheduler", scheduler_update)
 game_update = timed("update", game_update)
 game_draw = timed("draw", game_draw)
+drawpieces = timed("pieces", drawpieces)
 
 local update = playdate.update
 function playdate.update()
@@ -34,9 +37,9 @@ function playdate.update()
 			for _ in pairs(s) do shapes = shapes + 1 end
 		end
 		local function avg(name) return (totals[name] or 0)/frames end
-		print(string.format("%s %.1f fps | ms/frame: physics %.0f, density %.0f, other update %.0f, draw %.0f | pieces %d, shapes %d, pile joined %d left %d, mem %dk",
-			tostring(gamestate), frames*1000/(now - since), avg("physics"), avg("density"),
-			avg("update") - avg("physics") - avg("density"), avg("draw"), tetribodies and #tetribodies or 0, shapes,
+		print(string.format("%s %.1f fps | ms/frame: physics %.0f, density %.0f, scheduler %.0f, other update %.0f, draw %.0f (pieces %.0f) | pieces %d, shapes %d, pile joined %d left %d, mem %dk",
+			tostring(gamestate), frames*1000/(now - since), avg("physics"), avg("density"), avg("scheduler"),
+			avg("update") - avg("physics") - avg("density") - avg("scheduler"), avg("draw"), avg("pieces"), tetribodies and #tetribodies or 0, shapes,
 			joined, left, math.floor(collectgarbage("count"))))
 		if scheduler.enabled and gamestate == "gameA" then
 			print(string.format("  scheduler: %d of the pile simulated, %d changes", scheduler_simulated(), scheduler.changes))
