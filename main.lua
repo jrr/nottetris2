@@ -115,7 +115,7 @@ function game_load()
 	lineclearblinks = 7 --i
 	linecleartreshold = 8.1 --in blocks
 	densityupdateinterval = 1/30 --in seconds
-	nextpiecerotspeed = 1 --rad per seconnd
+	nextpiecerotspeed = platform.stillpreview and 0 or 1 --rad per seconnd
 	minfps = 1/50 --dt doesn't go higher than this
 	scoreaddtime = 0.5
 	startdelaytime = 0
