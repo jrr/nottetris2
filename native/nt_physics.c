@@ -211,9 +211,15 @@ void nt_body_wake(cpBody *body) { cpBodyActivate(body); }
 int nt_body_isstatic(cpBody *body) { return cpBodyGetType(body) == CP_BODY_TYPE_STATIC; }
 
 void nt_body_setstatic(cpBody *body, int isstatic) {
-	/* Wake it first: cpBodySetType wakes it after marking it static, which wakes nothing, and a
-	 * sleeping body's shapes aren't where it then moves them from (a crash in cpBBTree). */
-	cpBodyActivate(body);
+	/* Wake it first, or what's asleep against it: cpBodySetType wakes neither. A sleeping body's
+	 * shapes aren't where cpBodySetType moves them from (a crash in cpBBTree), and a static body
+	 * keeps the contacts of what sleeps on it, which, once it's dynamic, tangle the contact graph
+	 * (a hang). */
+	if (cpBodyGetType(body) == CP_BODY_TYPE_STATIC) {
+		cpBodyActivateStatic(body, NULL);
+	} else {
+		cpBodyActivate(body);
+	}
 	cpBodySetType(body, isstatic ? CP_BODY_TYPE_STATIC : CP_BODY_TYPE_DYNAMIC);
 }
 
