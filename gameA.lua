@@ -128,6 +128,17 @@ function createtetriA(i, uniqueid, x, y) --creates block, including body, shapes
 	end
 end
 
+--the line density counter, as gameA_draw last worked it out (a bar a line: shade, width)
+local metercolors, meterwidths = {}, {}
+
+local function drawmeter()
+	for i = 1, 18 do
+		local color = metercolors[i]
+		platform.setcolor(color/255, color/255, color/255)
+		platform.rectangle("fill", 0, (i-1)*8*scale, meterwidths[i], 8*scale)
+	end
+end
+
 function gameA_draw()
 	--background--
 	platform.draw(gamebackgroundcutoff, 0, 0, 0, scale, scale)
@@ -189,6 +200,7 @@ function gameA_draw()
 	
 	
 	--line density counter
+	local key = 0
 	for i = 1, 18 do
 		local fullness = linearea[i]/1024/linecleartreshold
 		if fullness > 1 then
@@ -202,9 +214,11 @@ function gameA_draw()
 			color = 235-(fullness/1)*180
 		end
 		
-		platform.setcolor(color/255, color/255, color/255)
-		platform.rectangle("fill", 0, (i-1)*8*scale, math.floor(6*scale*fullness), 8*scale)
+		metercolors[i], meterwidths[i] = color, math.floor(6*scale*fullness)
+		--what shows: the width, and the shade as a 1-bit screen dithers it
+		key = (key*131 + meterwidths[i]*17 + math.floor(color/16)) % 2147483647
 	end
+	platform.drawcached("meter", 6*scale, 18*8*scale, key, drawmeter)
 	
 	platform.setcolor(1, 1, 1)
 	
