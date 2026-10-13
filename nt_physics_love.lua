@@ -31,6 +31,7 @@ void nt_body_applytorque(cpBody *body, double torque);
 void nt_body_setdamping(cpBody *body, double damping);
 void nt_body_resetmass(cpBody *body);
 double nt_body_getmass(cpBody *body);
+int nt_body_isawake(cpBody *body);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 
@@ -139,6 +140,10 @@ end
 
 function nt.body_getmass(body)
 	return lib.nt_body_getmass(body)
+end
+
+function nt.body_isawake(body)
+	return lib.nt_body_isawake(body) ~= 0
 end
 
 function nt.body_tolocal(body, x, y)

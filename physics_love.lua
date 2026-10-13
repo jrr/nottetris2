@@ -7,7 +7,7 @@
 --  bodies: getX, getY, setY, getAngle, setAngle, getLinearVelocity, setLinearVelocity,
 --    getAngularVelocity, setAngularVelocity, getWorldCenter, applyForce(fx, fy, x, y),
 --    applyTorque, setLinearDamping, setBullet, resetMassData (mass from the shapes' density),
---    getMass, getLocalPoint, getWorldPoint, destroy
+--    getMass, isAwake, getLocalPoint, getWorldPoint, destroy
 --  shapes: setUserData, setFriction, setRestitution, setDensity, testPoint(x, y),
 --    destroy, setCategory(n) and setMask(n, ...): Box2D's collision categories, 1-16; a shape
 --    doesn't collide with shapes in the categories it masks

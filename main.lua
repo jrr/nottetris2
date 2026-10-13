@@ -405,6 +405,43 @@ function newpolygonshape(body, ...)
 	return shapedefaults(physics.newpolygon(body, table.unpack(convexhull({...}))))
 end
 
+--The pieces the physics has put to sleep, other than the falling one, are the pile. It only
+--changes when one falls asleep, wakes or goes, so a platform can keep it drawn (platform.startpile).
+local asleep = setmetatable({}, {__mode="k"}) --by body, as of the last frame
+local pilesize, pileversion = 0, 0
+
+local function updatepile() --returns a number that changes when the pile does
+	local changed, size = false, 0
+	for i, v in pairs(tetribodies) do
+		local sleeping = i ~= 1 and not v:isAwake()
+		if sleeping then
+			size = size + 1
+		end
+		if (asleep[v] or false) ~= sleeping then
+			asleep[v] = sleeping
+			changed = true
+		end
+	end
+	if changed or size ~= pilesize then
+		pilesize = size
+		pileversion = pileversion + 1
+	end
+	return pileversion
+end
+
+function drawpieces() --tetribodies, with the pile as the platform keeps it
+	if pause then
+		return
+	end
+	local kept = platform.startpile(updatepile())
+	for i, v in pairs(tetribodies) do
+		if not (kept and asleep[v]) then
+			platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale, asleep[v])
+		end
+	end
+	platform.endpile()
+end
+
 function piecepolygons(shapes) --where a piece's shapes are on the screen: {{x1, y1, x2, y2, ...}, ...}
 	local polygons = {}
 	for _, shape in pairs(shapes) do

@@ -136,7 +136,7 @@ local function setcolor()
 	end
 end
 
-function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as its polygons
+local function drawpolygons(polygons)
 	for _, points in ipairs(polygons) do
 		gfx.setColor(gfx.kColorBlack)
 		gfx.fillPolygon(table.unpack(points))
@@ -144,6 +144,42 @@ function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as
 		gfx.drawPolygon(table.unpack(points))
 	end
 	setcolor()
+end
+
+--The pile, kept in an image the size of the game's screen while its version stays the same.
+--While it's redrawn, the moving pieces wait, to go on top of it.
+local pile = gfx.image.new(math.ceil(160*SCALE), 240)
+local pileversion, redrawing, moving = nil, false, {}
+
+function platform.startpile(version)
+	if version == pileversion then
+		pile:draw(0, 0)
+		return true
+	end
+	pileversion, redrawing = version, true
+	pile:clear(gfx.kColorClear)
+	gfx.pushContext(pile)
+	return false
+end
+
+function platform.drawpiece(image, polygons, x, y, angle, originx, originy, inpile) --as its polygons
+	if redrawing and not inpile then
+		moving[#moving+1] = polygons
+	else
+		drawpolygons(polygons)
+	end
+end
+
+function platform.endpile()
+	if redrawing then
+		gfx.popContext()
+		redrawing = false
+		pile:draw(0, 0)
+		for i, polygons in ipairs(moving) do
+			drawpolygons(polygons)
+			moving[i] = nil
+		end
+	end
 end
 
 function platform.print(text, x, y)

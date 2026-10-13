@@ -134,11 +134,7 @@ function gameA_draw()
 	---------------
 	--tetrishapes--
 	if cuttingtimer == lineclearduration then
-		for i,v in pairs(tetribodies) do
-			if pause == false then
-				platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
-			end
-		end
+		drawpieces()
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
