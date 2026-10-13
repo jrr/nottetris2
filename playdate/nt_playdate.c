@@ -86,7 +86,7 @@ static int world_schedule(lua_State *L) { /* the id of the body changed (or 0), 
 
 static int world_lineareas(lua_State *L) { /* the pile's area in each line */
 	cpBody *falling = pd->lua->getArgType(2, NULL) == kTypeNil ? NULL : body(2);
-	double areas[NT_LINES];
+	ntReal areas[NT_LINES];
 	nt_world_lineareas(world(1), falling, number(3), areas);
 	for (int line = 0; line < NT_LINES; line++) {
 		pd->lua->pushFloat(areas[line]);
@@ -229,7 +229,7 @@ static int shape_raycast(lua_State *L) { /* 0-1, or nil if it misses */
 }
 
 static int shape_getworldpoints(lua_State *L) { /* x1, y1, x2, y2, ... */
-	double out[NT_MAXPOINTS*2];
+	ntReal out[NT_MAXPOINTS*2];
 	int count = nt_shape_getworldpoints(shape(1), out);
 	for (int i = 0; i < count*2; i++) {
 		pd->lua->pushFloat(out[i]);
@@ -242,12 +242,12 @@ static int shape_getworldpoints(lua_State *L) { /* x1, y1, x2, y2, ... */
 static int body_draw(lua_State *L) {
 	cpShape *shapes[16];
 	int count = nt_body_getshapes(body(1), shapes, 16);
-	double scale = number(2);
+	ntReal scale = number(2);
 	for (int i = 0; i < count; i++) {
-		double points[NT_MAXPOINTS*2];
+		ntReal points[NT_MAXPOINTS*2];
 		int n = nt_shape_getworldpoints(shapes[i], points), coords[NT_MAXPOINTS*2];
 		for (int j = 0; j < n*2; j++) {
-			coords[j] = (int)floor(points[j]*scale);
+			coords[j] = (int)NT_FLOOR(points[j]*scale);
 		}
 		pd->graphics->fillPolygon(n, coords, kColorBlack, kPolygonFillNonZero);
 		for (int j = 0; j < n; j++) {
@@ -259,7 +259,7 @@ static int body_draw(lua_State *L) {
 }
 
 static int shape_rowareas(lua_State *L) { /* first row, then the area in each */
-	double areas[NT_MAXROWS];
+	ntReal areas[NT_MAXROWS];
 	int first, count = nt_shape_rowareas(shape(1), number(2), &first, areas);
 	pd->lua->pushInt(first);
 	for (int i = 0; i < count; i++) {
