@@ -1,2 +1,4 @@
 native/build/
 native/nt_physics.so
+playdate/Source/
+playdate/build/

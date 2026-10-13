@@ -83,8 +83,17 @@ function platform.setmode(width, height, fullscr, vsync, fsaa) --0.8's setMode a
 	love.window.setMode(width, height, {fullscreen=fullscr, vsync=vsync, msaa=fsaa})
 end
 
-function platform.getdesktopdimensions()
-	return love.window.getDesktopDimensions()
+function platform.setupscreen(vsync) --returns the scale to draw at: the window as big as fits on the screen, up to 5 times the Game Boy's
+	local width, height = love.window.getDesktopDimensions()
+	local scale = math.min(math.floor((height-50)/144), math.floor((width-10)/160), 5)
+	if scale ~= 5 then
+		platform.setmode( 160*scale, 144*scale, false, vsync, 16 )
+	end
+	return scale
+end
+
+function platform.randomseed()
+	math.randomseed(os.time())
 end
 
 function platform.quit()
@@ -94,6 +103,10 @@ end
 --drawing, with LÖVE's arguments; colors are 0-1 (11 takes colors as 0-1)
 function platform.draw(...) --image, x, y, rotation, scale x, scale y, origin x, origin y
 	love.graphics.draw(...)
+end
+
+function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --a piece: its image turned by angle about its origin at x, y, and the same as polygons, for platforms that draw those instead
+	love.graphics.draw(image, x, y, angle, 1, 1, originx, originy)
 end
 
 function platform.print(...) --text, x, y, rotation, scale x, scale y, in the current font

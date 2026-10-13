@@ -27,9 +27,9 @@ end
 
 function physics.update(world, dt)
 	nt.world_step(world.p, dt)
-	local contacts = nt.world_contacts(world.p)
-	for i = 1, #contacts, 2 do
-		local a, b = shapes[contacts[i]], shapes[contacts[i+1]] --nil if an earlier callback destroyed it
+	for i = 1, nt.world_contactcount(world.p) do
+		local a, b = nt.world_contact(world.p, i)
+		a, b = shapes[a], shapes[b] --nil if an earlier callback destroyed it
 		world.collide(a and a.userdata, b and b.userdata)
 	end
 end
@@ -46,7 +46,7 @@ end
 
 function physics.newpolygon(body, ...) --x1, y1, x2, y2, ...: convex, at most 8 points
 	lastid = lastid + 1
-	local shape = setmetatable({p=nt.shape_newpolygon(check(body), {...}, lastid), id=lastid, body=body, categories=1, mask=0xFFFF}, Shape)
+	local shape = setmetatable({p=nt.shape_newpolygon(check(body), lastid, ...), id=lastid, body=body, categories=1, mask=0xFFFF}, Shape)
 	shapes[lastid] = shape
 	body.shapes[shape] = true
 	return shape
@@ -58,7 +58,7 @@ function physics.raycast(shape, x1, y1, x2, y2) --how far along the line from x1
 end
 
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
-	return nt.shape_getworldpoints(check(shape))
+	return {nt.shape_getworldpoints(check(shape))}
 end
 
 --bodies

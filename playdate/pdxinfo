@@ -1,0 +1,6 @@
+name=Not Tetris 2
+author=Maurice Guégan, ported by jrr
+description=Tetris where the pieces are physical objects.
+bundleID=com.jrr.nottetris2
+version=0.1
+buildNumber=1

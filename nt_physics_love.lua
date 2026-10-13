@@ -1,7 +1,7 @@
 --nt_physics.c, the game's physics on Chipmunk, on LÖVE: `make -C native` builds it as a library
 --(the harness does that before the game plays), and LuaJIT's FFI calls it. This makes the global
---nt that physics_chipmunk.lua uses: the C functions, taking and returning Lua values. On Playdate,
---C registers the same functions.
+--nt that physics_chipmunk.lua uses: the C functions, taking and returning plain Lua values (no
+--tables, which Playdate's C API can't make). On Playdate, playdate/nt_playdate.c registers the same.
 local ffi = require "ffi"
 
 ffi.cdef[[
@@ -64,12 +64,12 @@ function nt.world_step(world, dt)
 	lib.nt_world_step(world, dt)
 end
 
-function nt.world_contacts(world) --{a1, b1, a2, b2, ...}: shape ids
-	local t = {}
-	for i = 0, lib.nt_world_contacts(world, contacts)*2-1 do
-		t[i+1] = contacts[0][i]
-	end
-	return t
+function nt.world_contactcount(world) --how many pairs of shapes began touching in the last step
+	return lib.nt_world_contacts(world, contacts)
+end
+
+function nt.world_contact(world, i) --the ids of the shapes in pair i (from 1), after world_contactcount
+	return contacts[0][i*2-2], contacts[0][i*2-1]
 end
 
 function nt.body_new(world, x, y, dynamic)
@@ -149,10 +149,10 @@ function nt.body_toworld(body, x, y)
 	return out[0], out[1]
 end
 
-function nt.shape_newpolygon(body, points, id) --points: {x1, y1, x2, y2, ...}
-	local count = math.min(#points/2, MAXPOINTS)
+function nt.shape_newpolygon(body, id, ...) --x1, y1, x2, y2, ...
+	local count = math.min(select("#", ...)/2, MAXPOINTS)
 	for i = 1, count*2 do
-		out[i-1] = points[i]
+		out[i-1] = (select(i, ...))
 	end
 	return lib.nt_shape_newpolygon(body, count, out, id)
 end
@@ -188,10 +188,11 @@ function nt.shape_raycast(shape, x1, y1, x2, y2) --0-1, or nil if it misses
 	end
 end
 
-function nt.shape_getworldpoints(shape) --{x1, y1, x2, y2, ...}
+function nt.shape_getworldpoints(shape) --x1, y1, x2, y2, ...
+	local n = lib.nt_shape_getworldpoints(shape, out)*2
 	local t = {}
-	for i = 0, lib.nt_shape_getworldpoints(shape, out)*2-1 do
-		t[i+1] = out[i]
+	for i = 1, n do
+		t[i] = out[i-1]
 	end
-	return t
+	return unpack(t, 1, n)
 end

@@ -136,13 +136,13 @@ function gameA_draw()
 	if cuttingtimer == lineclearduration then
 		for i,v in pairs(tetribodies) do
 			if pause == false then
-				platform.draw( tetriimages[i], v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), 1, 1, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+				platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 			end
 		end
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
-				platform.draw( tetricutimg[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], 1, 1, piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
+				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
 			end
 		end
 		
@@ -864,6 +864,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 					tetricutang = {}
 					tetricutkind = {}
 					tetricutimg = {}
+					tetricutpolygons = {}
 					
 					for i, v in pairs(tetribodies) do -- = 2, #tetribodies do
 						if tetribodies[i].getX then
@@ -872,6 +873,7 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 							table.insert(tetricutang, tetribodies[i]:getAngle())
 							table.insert(tetricutkind, tetrikind[i])
 							table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
+							table.insert(tetricutpolygons, piecepolygons(tetrishapes[i]))
 						end
 					end
 					
