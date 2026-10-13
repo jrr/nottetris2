@@ -84,6 +84,16 @@ static int world_schedule(lua_State *L) { /* the id of the body changed (or 0), 
 	return 2;
 }
 
+static int world_lineareas(lua_State *L) { /* the pile's area in each line */
+	cpBody *falling = pd->lua->getArgType(2, NULL) == kTypeNil ? NULL : body(2);
+	double areas[NT_LINES];
+	nt_world_lineareas(world(1), falling, number(3), areas);
+	for (int line = 0; line < NT_LINES; line++) {
+		pd->lua->pushFloat(areas[line]);
+	}
+	return NT_LINES;
+}
+
 static int world_setiterations(lua_State *L) { nt_world_setiterations(world(1), pd->lua->getArgInt(2)); return 0; }
 static int world_step(lua_State *L) { nt_world_step(world(1), number(2)); return 0; }
 
@@ -267,6 +277,7 @@ static const struct {
 	{"nt.world_setiterations", world_setiterations},
 	{"nt.world_setschedule", world_setschedule},
 	{"nt.world_schedule", world_schedule},
+	{"nt.world_lineareas", world_lineareas},
 	{"nt.world_step", world_step},
 	{"nt.world_contactcount", world_contactcount},
 	{"nt.world_contact", world_contact},

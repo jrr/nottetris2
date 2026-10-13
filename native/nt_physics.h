@@ -13,6 +13,7 @@
 
 #define NT_MAXPOINTS 8 /* points in a polygon */
 #define NT_MAXROWS 8 /* rows a shape can reach across, for nt_shape_rowareas */
+#define NT_LINES 18 /* the field's lines, for nt_world_lineareas */
 
 typedef struct ntWorld ntWorld;
 typedef struct cpBody cpBody;
@@ -42,6 +43,10 @@ void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
 /* After a step: the scheduler's bookkeeping, and at most one change. Returns the id of the body it
  * froze or woke, or 0; *frozen says which (its freeze's number, or 0). falling may be NULL. */
 int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
+/* The pile's area in each of the field's lines (rows of rowheight from y 0), into out[NT_LINES]: what
+ * gameA.lua's checklinedensity adds up from nt_shape_rowareas, kept for each body while it's frozen
+ * or hasn't moved. The pile as for nt_world_schedule. */
+void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out);
 /* the shapes that began touching in the last step, as pairs of their ids:
  * returns how many pairs, and points *pairs at them until the next step */
 int nt_world_contacts(ntWorld *world, const int **pairs);

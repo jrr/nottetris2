@@ -21,6 +21,7 @@ typedef struct {
 } ntSchedule;
 void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
 int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
+void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out);
 
 cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic, int id);
 void nt_body_free(cpBody *body);
@@ -92,6 +93,17 @@ local frozen = ffi.new("int[1]")
 function nt.world_schedule(world, falling, dt) --the id of the body changed (or 0), and its freeze's number (or 0)
 	local id = lib.nt_world_schedule(world, falling, dt, frozen)
 	return id, frozen[0]
+end
+
+local LINES = 18 --NT_LINES
+local lineareas = ffi.new("double[?]", LINES)
+function nt.world_lineareas(world, falling, rowheight) --the pile's area in each line
+	lib.nt_world_lineareas(world, falling, rowheight, lineareas)
+	local areas = {}
+	for line = 1, LINES do
+		areas[line] = lineareas[line - 1]
+	end
+	return unpack(areas)
 end
 
 function nt.world_setiterations(world, iterations)

@@ -97,6 +97,13 @@ function physics.schedule(world, falling, dt) --falling: the piece not in the pi
 	end
 end
 
+--The pile's area in each line of the field (rows of rowheight from y 0): the same as adding up
+--physics.rowareas for every shape in the pile, in one call, with each body's kept while it's frozen
+--or still. The pile as for physics.schedule.
+function physics.lineareas(world, falling, rowheight)
+	return nt.world_lineareas(world.p, falling and check(falling), rowheight)
+end
+
 function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
 	local bodies = {}
 	for _, id in ipairs({nt.body_touching(check(body))}) do

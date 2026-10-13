@@ -26,6 +26,12 @@ typedef struct {
 	cpFloat moved; /* how far it settled on its last turn */
 	cpVect wakepos;
 	cpFloat wakeangle;
+	/* its area in each line, for nt_world_lineareas, while areasok and it's frozen as it was then
+	 * (areasfrozen) or where it was then */
+	int areasok, areasfrozen;
+	cpVect areaspos;
+	cpFloat areasangle;
+	double areas[NT_LINES];
 } ntBody;
 
 typedef struct {
@@ -59,7 +65,15 @@ static void collectshape(cpBody *body, cpShape *shape, void *l) { push(l, shape)
 static void collectspaceshape(cpShape *shape, void *l) { push(l, shape); }
 static void collectbody(cpBody *body, void *l) { push(l, body); }
 
+static void shapeschanged(cpBody *body) { /* its line areas are out of date */
+	ntBody *b = cpBodyGetUserData(body);
+	if (b) {
+		b->areasok = 0;
+	}
+}
+
 static void freeshape(cpShape *shape) {
+	shapeschanged(cpShapeGetBody(shape));
 	free(cpShapeGetUserData(shape));
 	cpSpaceRemoveShape(cpShapeGetSpace(shape), shape);
 	cpShapeFree(shape);
@@ -269,6 +283,47 @@ static int inpile(cpBody *body, cpBody *falling) { /* the pile: dynamic, or froz
 	return body != falling && b && (cpBodyGetType(body) == CP_BODY_TYPE_DYNAMIC || b->frozen);
 }
 
+/* the line areas */
+void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out) {
+	for (int line = 0; line < NT_LINES; line++) {
+		out[line] = 0;
+	}
+	list all = {0};
+	cpSpaceEachBody(world->space, collectbody, &all);
+	for (int i = 0; i < all.count; i++) {
+		cpBody *body = all.items[i];
+		if (!inpile(body, falling)) {
+			continue;
+		}
+		ntBody *b = cpBodyGetUserData(body);
+		cpVect pos = cpBodyGetPosition(body);
+		cpFloat angle = cpBodyGetAngle(body);
+		int same = b->areasok && (b->frozen ? b->frozen == b->areasfrozen : cpveql(pos, b->areaspos) && angle == b->areasangle);
+		if (!same) {
+			for (int line = 0; line < NT_LINES; line++) {
+				b->areas[line] = 0;
+			}
+			CP_BODY_FOREACH_SHAPE(body, shape) {
+				double areas[NT_MAXROWS];
+				int first, count = nt_shape_rowareas(shape, rowheight, &first, areas);
+				for (int k = 0; k < count; k++) {
+					if (first + k >= 0 && first + k < NT_LINES) {
+						b->areas[first + k] += areas[k];
+					}
+				}
+			}
+			b->areasok = 1;
+			b->areasfrozen = b->frozen;
+			b->areaspos = pos;
+			b->areasangle = angle;
+		}
+		for (int line = 0; line < NT_LINES; line++) {
+			out[line] += b->areas[line];
+		}
+	}
+	free(all.items);
+}
+
 /* the scheduler */
 void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule) { world->schedule = *schedule; }
 
@@ -453,6 +508,7 @@ cpShape *nt_shape_newpolygon(cpBody *body, int count, const double *points, int 
 		verts[i] = cpv(points[i*2], points[i*2+1]);
 	}
 	cpShape *shape = cpPolyShapeNew(body, count, verts, cpTransformIdentity, 0.0f);
+	shapeschanged(body);
 	ntShape *data = calloc(1, sizeof(ntShape));
 	data->id = id;
 	data->density = 1.0f;

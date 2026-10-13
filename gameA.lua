@@ -335,7 +335,10 @@ function gameA_update(dt)
 
 	
 	--DENSITY UPDATE TIMER
-	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration then
+	--(not in the scheduler's end scene: nothing can be cleared, and the meter keeps how full the lines
+	--were when the game was lost, which beats paying for every piece moving at once)
+	local endscene = gamestate == "failingA" and scheduler.enabled
+	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration and not endscene then
 		checklinedensity(false) --once, however many intervals have passed: more would only find the same, and make a slow frame slower
 		while densityupdatetimer >= densityupdateinterval do
 			densityupdatetimer = densityupdatetimer - densityupdateinterval
@@ -795,8 +798,13 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 		linearea[i] = 0
 	end
 	
-	for i = 2, #tetribodies do
-		addlineareas(tetribodies[i], tetrishapes[i])
+	if scheduler.enabled then --in one call into C, which keeps each piece's areas: cheaper on Playdate
+		local falling = type(tetribodies[1]) == "table" and tetribodies[1] or nil
+		linearea = {physics.lineareas(world, falling, 32)}
+	else
+		for i = 2, #tetribodies do
+			addlineareas(tetribodies[i], tetrishapes[i])
+		end
 	end
 	
 	if active then
