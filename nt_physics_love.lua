@@ -32,6 +32,11 @@ void nt_body_setdamping(cpBody *body, double damping);
 void nt_body_resetmass(cpBody *body);
 double nt_body_getmass(cpBody *body);
 int nt_body_isawake(cpBody *body);
+void nt_body_wake(cpBody *body);
+int nt_body_isstatic(cpBody *body);
+void nt_body_setstatic(cpBody *body, int isstatic);
+double nt_body_gettop(cpBody *body);
+int nt_body_touching(cpBody *body, int *ids, int max);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 
@@ -52,6 +57,8 @@ local lib = ffi.load(love.filesystem.getSource() .. "/native/nt_physics.so")
 local out = ffi.new("double[?]", MAXPOINTS*2)
 local contacts = ffi.new("const int *[1]")
 local firstrow = ffi.new("int[1]")
+local MAXTOUCHING = 16
+local ids = ffi.new("int[?]", MAXTOUCHING)
 
 nt = {}
 
@@ -144,6 +151,31 @@ end
 
 function nt.body_isawake(body)
 	return lib.nt_body_isawake(body) ~= 0
+end
+
+function nt.body_wake(body)
+	lib.nt_body_wake(body)
+end
+
+function nt.body_isstatic(body)
+	return lib.nt_body_isstatic(body) ~= 0
+end
+
+function nt.body_setstatic(body, isstatic)
+	lib.nt_body_setstatic(body, isstatic and 1 or 0)
+end
+
+function nt.body_gettop(body)
+	return lib.nt_body_gettop(body)
+end
+
+function nt.body_touching(body) --the ids of the shapes it's touching, up to 16
+	local n = lib.nt_body_touching(body, ids, MAXTOUCHING)
+	local t = {}
+	for i = 1, n do
+		t[i] = ids[i-1]
+	end
+	return unpack(t, 1, n)
 end
 
 function nt.body_tolocal(body, x, y)
