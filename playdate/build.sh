@@ -25,7 +25,7 @@ rm -rf Source
 mkdir -p Source build
 cp main.lua platform_playdate.lua perf.lua pdxinfo Source/
 cp ../main.lua Source/game.lua
-for f in gameA gameB menu failed rocket physics_chipmunk; do
+for f in gameA gameB menu failed rocket scheduler physics_chipmunk; do
 	cp ../$f.lua Source/
 done
 cp -R ../graphics Source/
@@ -57,7 +57,7 @@ if [ "${1:-}" = --device ]; then
 		echo "timed out waiting for $*" >&2
 		exit 1
 	}
-	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1; }
+	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1 || true; } # none found isn't a failure here
 	volume=/Volumes/PLAYDATE
 	# the mount point shows up before the disk is mounted on it, so wait for a folder inside
 	if [ ! -d "$volume/Games" ]; then

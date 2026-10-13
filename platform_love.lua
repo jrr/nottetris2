@@ -105,20 +105,13 @@ function platform.draw(...) --image, x, y, rotation, scale x, scale y, origin x,
 	love.graphics.draw(...)
 end
 
-function platform.drawpiece(image, polygons, x, y, angle, originx, originy, inpile) --a piece: its image turned by angle about its origin at x, y, and the same as polygons, for platforms that draw those instead; inpile: part of the pile (startpile)
+function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --a piece: its image turned by angle about its origin at x, y, and the same as polygons, for platforms that draw those instead
 	love.graphics.draw(image, x, y, angle, 1, 1, originx, originy)
 end
+--(a platform can instead have platform.drawbody(body, scale), to draw a moving piece from its body)
 
---The pile of pieces that aren't moving, for platforms that keep it drawn rather than draw its
---pieces each frame: startpile(version) returns true if it has the pile of that version, which
---the game then doesn't draw; else the game draws the pile's pieces (drawpiece's inpile), until
---endpile. LÖVE draws every piece each frame.
-function platform.startpile(version)
-	return false
-end
-
-function platform.endpile()
-end
+--LÖVE draws every piece each frame; platforms with platform.keepspile keep the pieces that have
+--stopped moving drawn instead (clearpile, pilepiece, unpile, drawpile)
 
 function platform.print(...) --text, x, y, rotation, scale x, scale y, in the current font
 	love.graphics.print(...)

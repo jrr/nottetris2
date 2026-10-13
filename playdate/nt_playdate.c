@@ -8,6 +8,7 @@
  * memory of a shape just freed, whose Lua object Lua hasn't collected yet: the new body would come
  * back as that nt.Shape. So bodies and shapes go to Lua by handles, which are only freed when Lua
  * collects their objects, and which empty when what they point to is freed. */
+#include <math.h>
 #include "pd_api.h"
 #include "nt_physics.h"
 
@@ -68,6 +69,32 @@ static int push2(double *out) {
 static int world_gc(lua_State *L) { nt_world_free(world(1)); return 0; }
 static int world_new(lua_State *L) { pd->lua->pushObject(nt_world_new(number(1), number(2)), WORLD, 0); return 1; }
 static int world_setmaxrise(lua_State *L) { nt_world_setmaxrise(world(1), number(2)); return 0; }
+static int world_setschedule(lua_State *L) { /* the numbers in ntSchedule, in order */
+	ntSchedule s = {number(2), number(3), number(4), number(5), number(6), number(7), number(8),
+		number(9), number(10), number(11), number(12)};
+	nt_world_setschedule(world(1), &s);
+	return 0;
+}
+
+static int world_schedule(lua_State *L) { /* the id of the body changed (or 0), and its freeze's number (or 0) */
+	cpBody *falling = pd->lua->getArgType(2, NULL) == kTypeNil ? NULL : body(2);
+	int frozen, id = nt_world_schedule(world(1), falling, number(3), &frozen);
+	pd->lua->pushInt(id);
+	pd->lua->pushInt(frozen);
+	return 2;
+}
+
+static int world_lineareas(lua_State *L) { /* the pile's area in each line */
+	cpBody *falling = pd->lua->getArgType(2, NULL) == kTypeNil ? NULL : body(2);
+	double areas[NT_LINES];
+	nt_world_lineareas(world(1), falling, number(3), areas);
+	for (int line = 0; line < NT_LINES; line++) {
+		pd->lua->pushFloat(areas[line]);
+	}
+	return NT_LINES;
+}
+
+static int world_setiterations(lua_State *L) { nt_world_setiterations(world(1), pd->lua->getArgInt(2)); return 0; }
 static int world_step(lua_State *L) { nt_world_step(world(1), number(2)); return 0; }
 
 static int world_contactcount(lua_State *L) {
@@ -86,7 +113,7 @@ static int world_contact(lua_State *L) {
 }
 
 static int body_new(lua_State *L) {
-	push(nt_body_new(world(1), number(2), number(3), pd->lua->getArgBool(4)), BODY);
+	push(nt_body_new(world(1), number(2), number(3), pd->lua->getArgBool(4), pd->lua->getArgInt(5)), BODY);
 	return 1;
 }
 
@@ -134,8 +161,9 @@ static int body_getmass(lua_State *L) { pd->lua->pushFloat(nt_body_getmass(body(
 static int body_isawake(lua_State *L) { pd->lua->pushBool(nt_body_isawake(body(1))); return 1; }
 static int body_wake(lua_State *L) { nt_body_wake(body(1)); return 0; }
 static int body_isstatic(lua_State *L) { pd->lua->pushBool(nt_body_isstatic(body(1))); return 1; }
-static int body_setstatic(lua_State *L) { nt_body_setstatic(body(1), pd->lua->getArgBool(2)); return 0; }
+static int body_setstatic(lua_State *L) { pd->lua->pushInt(nt_body_setstatic(body(1), pd->lua->getArgBool(2))); return 1; }
 static int body_gettop(lua_State *L) { pd->lua->pushFloat(nt_body_gettop(body(1))); return 1; }
+static int body_setcollides(lua_State *L) { nt_body_setcollides(body(1), pd->lua->getArgBool(2)); return 0; }
 
 static int body_touching(lua_State *L) { /* the ids of the shapes it's touching, up to 16 */
 	int ids[16];
@@ -209,6 +237,27 @@ static int shape_getworldpoints(lua_State *L) { /* x1, y1, x2, y2, ... */
 	return count*2;
 }
 
+/* A body's shapes, each a black polygon outlined in white, at scale: what platform_playdate.lua drew
+ * from points in tables, which cost more to make on the Playdate than the drawing. */
+static int body_draw(lua_State *L) {
+	cpShape *shapes[16];
+	int count = nt_body_getshapes(body(1), shapes, 16);
+	double scale = number(2);
+	for (int i = 0; i < count; i++) {
+		double points[NT_MAXPOINTS*2];
+		int n = nt_shape_getworldpoints(shapes[i], points), coords[NT_MAXPOINTS*2];
+		for (int j = 0; j < n*2; j++) {
+			coords[j] = (int)floor(points[j]*scale);
+		}
+		pd->graphics->fillPolygon(n, coords, kColorBlack, kPolygonFillNonZero);
+		for (int j = 0; j < n; j++) {
+			int k = (j + 1) % n;
+			pd->graphics->drawLine(coords[j*2], coords[j*2+1], coords[k*2], coords[k*2+1], 1, kColorWhite);
+		}
+	}
+	return 0;
+}
+
 static int shape_rowareas(lua_State *L) { /* first row, then the area in each */
 	double areas[NT_MAXROWS];
 	int first, count = nt_shape_rowareas(shape(1), number(2), &first, areas);
@@ -225,6 +274,10 @@ static const struct {
 } functions[] = {
 	{"nt.world_new", world_new},
 	{"nt.world_setmaxrise", world_setmaxrise},
+	{"nt.world_setiterations", world_setiterations},
+	{"nt.world_setschedule", world_setschedule},
+	{"nt.world_schedule", world_schedule},
+	{"nt.world_lineareas", world_lineareas},
 	{"nt.world_step", world_step},
 	{"nt.world_contactcount", world_contactcount},
 	{"nt.world_contact", world_contact},
@@ -249,6 +302,7 @@ static const struct {
 	{"nt.body_isstatic", body_isstatic},
 	{"nt.body_setstatic", body_setstatic},
 	{"nt.body_gettop", body_gettop},
+	{"nt.body_setcollides", body_setcollides},
 	{"nt.body_touching", body_touching},
 	{"nt.body_tolocal", body_tolocal},
 	{"nt.body_toworld", body_toworld},
@@ -262,6 +316,7 @@ static const struct {
 	{"nt.shape_raycast", shape_raycast},
 	{"nt.shape_getworldpoints", shape_getworldpoints},
 	{"nt.shape_rowareas", shape_rowareas},
+	{"nt.body_draw", body_draw},
 };
 
 static void check(int ok, const char *what, const char *err) {

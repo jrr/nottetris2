@@ -327,6 +327,7 @@ function gameA_update(dt)
 	endblock = false
 
 	physics.update(world, dt)
+	scheduler_update(dt)
 
 	if endblock then
 		endblockA()
@@ -334,7 +335,10 @@ function gameA_update(dt)
 
 	
 	--DENSITY UPDATE TIMER
-	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration then
+	--(not in the scheduler's end scene: nothing can be cleared, and the meter keeps how full the lines
+	--were when the game was lost, which beats paying for every piece moving at once)
+	local endscene = gamestate == "failingA" and scheduler.enabled
+	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration and not endscene then
 		checklinedensity(false) --once, however many intervals have passed: more would only find the same, and make a slow frame slower
 		while densityupdatetimer >= densityupdateinterval do
 			densityupdatetimer = densityupdatetimer - densityupdateinterval
@@ -368,7 +372,13 @@ function getintersectX(shape, y) --returns left and right collision points to a 
 	end
 end
 
+--Each piece's area in the lines it reaches, kept while it stays where it was with the same shapes:
+--most of the pile is still from one check to the next.
+local pieceareas = setmetatable({}, {__mode = "k"}) --body -> {x=, y=, angle=, shapes=, [line] = area}
+
 function removeline(lineno) --Does all necessary things to clear a line. Refineshape and cutimage included.
+	pieceareas = setmetatable({}, {__mode = "k"}) --cutting changes pieces' shapes
+	scheduler_beforeclear(lineno)
 	upperline = (lineno - 1) * 32
 	lowerline = lineno * 32
 	globaline = lineno
@@ -748,11 +758,33 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 	end
 end
 
-local function addlineareas(firstrow, ...) --a shape's area in each line it reaches
+local function addshapeareas(areas, firstrow, ...) --a shape's area in each line it reaches
 	for n = 1, select("#", ...) do
 		local line = firstrow + n
 		if line >= 1 and line <= 18 then
-			linearea[line] = linearea[line] + select(n, ...)
+			areas[line] = (areas[line] or 0) + select(n, ...)
+		end
+	end
+end
+
+local function addlineareas(body, shapes) --into linearea, from pieceareas
+	local c = pieceareas[body]
+	local frozen = scheduler_frozen(body) --the same while it can't have moved
+	if not (c and frozen and c.frozen == frozen and c.shapes == shapes) then
+		local x, y = body:getPosition()
+		local angle = body:getAngle()
+		if not c or c.x ~= x or c.y ~= y or c.angle ~= angle or c.shapes ~= shapes then
+			c = {x=x, y=y, angle=angle, shapes=shapes}
+			for _, shape in pairs(shapes) do
+				addshapeareas(c, physics.rowareas(shape, 32))
+			end
+			pieceareas[body] = c
+		end
+		c.frozen = frozen
+	end
+	for line = 1, 18 do
+		if c[line] then
+			linearea[line] = linearea[line] + c[line]
 		end
 	end
 end
@@ -766,9 +798,12 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 		linearea[i] = 0
 	end
 	
-	for i = 2, #tetribodies do
-		for j, k in pairs(tetrishapes[i]) do
-			addlineareas(physics.rowareas(k, 32))
+	if scheduler.enabled then --in one call into C, which keeps each piece's areas: cheaper on Playdate
+		local falling = type(tetribodies[1]) == "table" and tetribodies[1] or nil
+		linearea = {physics.lineareas(world, falling, 32)}
+	else
+		for i = 2, #tetribodies do
+			addlineareas(tetribodies[i], tetrishapes[i])
 		end
 	end
 	

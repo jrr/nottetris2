@@ -13,6 +13,7 @@
 
 #define NT_MAXPOINTS 8 /* points in a polygon */
 #define NT_MAXROWS 8 /* rows a shape can reach across, for nt_shape_rowareas */
+#define NT_LINES 18 /* the field's lines, for nt_world_lineareas */
 
 typedef struct ntWorld ntWorld;
 typedef struct cpBody cpBody;
@@ -22,12 +23,35 @@ ntWorld *nt_world_new(double gravityx, double gravityy);
 void nt_world_free(ntWorld *world); /* and every body and shape in it */
 /* the fastest a body may move up (against y), from then on; 0, the default, for no limit */
 void nt_world_setmaxrise(ntWorld *world, double speed);
+void nt_world_setiterations(ntWorld *world, int iterations); /* the solver's passes a step: more is stiffer and slower */
 void nt_world_step(ntWorld *world, double dt);
+
+/* The scheduler (scheduler.lua): simulates only part of the pile, freezing (making static) pieces
+ * that have settled deep in it and letting them take turns being simulated again. The pile is every
+ * body that's dynamic or that it froze, but the falling piece. Settings, as scheduler.lua has them: */
+typedef struct {
+	double liveRows; /* pieces reaching within this many rows (of 32) of the top of the pile are never frozen */
+	double maxAwake; /* deep pieces simulated at once, unless more are still moving */
+	double changesPerSecond; /* switches between static and dynamic, at most one a step */
+	double idleSpeed; /* a piece slower than this, hardly turning, is idle */
+	double idleTime; /* seconds a deep piece must be idle before it can be frozen... */
+	double maxTurn; /* ...or seconds it's been awake, if it's slow right now */
+	double bumpSpeed; /* a piece this fast bumps the frozen pieces it touches */
+	double ageWeight, bumpWeight, movedWeight, depthWeight; /* a frozen piece's claim to be woken next */
+} ntSchedule;
+void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
+/* After a step: the scheduler's bookkeeping, and at most one change. Returns the id of the body it
+ * froze or woke, or 0; *frozen says which (its freeze's number, or 0). falling may be NULL. */
+int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
+/* The pile's area in each of the field's lines (rows of rowheight from y 0), into out[NT_LINES]: what
+ * gameA.lua's checklinedensity adds up from nt_shape_rowareas, kept for each body while it's frozen
+ * or hasn't moved. The pile as for nt_world_schedule. */
+void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out);
 /* the shapes that began touching in the last step, as pairs of their ids:
  * returns how many pairs, and points *pairs at them until the next step */
 int nt_world_contacts(ntWorld *world, const int **pairs);
 
-cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic);
+cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic, int id); /* id: the game's, for nt_world_schedule */
 void nt_body_free(cpBody *body); /* and its shapes */
 void nt_body_getposition(cpBody *body, double *out); /* the body's origin: out[0], out[1] */
 void nt_body_setposition(cpBody *body, double x, double y);
@@ -46,10 +70,14 @@ double nt_body_getmass(cpBody *body);
 int nt_body_isawake(cpBody *body); /* not asleep: Chipmunk puts bodies that have been still a while to sleep */
 void nt_body_wake(cpBody *body);
 int nt_body_isstatic(cpBody *body);
-void nt_body_setstatic(cpBody *body, int isstatic); /* static: doesn't move, and stops; dynamic again: mass from its shapes */
+/* static: doesn't move, and stops; dynamic again: mass from its shapes. Returns the freeze's number
+ * (each freeze has its own), or 0 */
+int nt_body_setstatic(cpBody *body, int isstatic);
 double nt_body_gettop(cpBody *body); /* the smallest y of its shapes */
+void nt_body_setcollides(cpBody *body, int collides); /* off: its shapes collide with nothing */
 /* the ids of the shapes of other bodies its shapes are touching: how many (up to max), into ids */
 int nt_body_touching(cpBody *body, int *ids, int max);
+int nt_body_getshapes(cpBody *body, cpShape **out, int max); /* how many, up to max */
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 
