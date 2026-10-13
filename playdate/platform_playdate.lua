@@ -203,6 +203,10 @@ function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as
 	drawpolygons(polygons)
 end
 
+function platform.drawbody(body, scale) --a piece by its body's shapes, in C: no tables of points to make
+	nt.body_draw(body.p, scale)
+end
+
 function platform.print(text, x, y)
 	if whitetext then
 		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)

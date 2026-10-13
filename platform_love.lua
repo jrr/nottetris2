@@ -108,6 +108,7 @@ end
 function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --a piece: its image turned by angle about its origin at x, y, and the same as polygons, for platforms that draw those instead
 	love.graphics.draw(image, x, y, angle, 1, 1, originx, originy)
 end
+--(a platform can instead have platform.drawbody(body, scale), to draw a moving piece from its body)
 
 --LÖVE draws every piece each frame; platforms with platform.keepspile keep the pieces that have
 --stopped moving drawn instead (clearpile, pilepiece, unpile, drawpile)

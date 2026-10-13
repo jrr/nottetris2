@@ -421,6 +421,10 @@ local function distance(pose, x, y, angle) --in screen pixels; turning counts at
 end
 
 local function drawpiece(i, v, x, y, angle)
+	if platform.drawbody then
+		platform.drawbody(v, physicsscale)
+		return
+	end
 	platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), x*physicsscale, y*physicsscale, angle, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
 end
 

@@ -51,6 +51,7 @@ double nt_body_gettop(cpBody *body); /* the smallest y of its shapes */
 void nt_body_setcollides(cpBody *body, int collides); /* off: its shapes collide with nothing */
 /* the ids of the shapes of other bodies its shapes are touching: how many (up to max), into ids */
 int nt_body_touching(cpBody *body, int *ids, int max);
+int nt_body_getshapes(cpBody *body, cpShape **out, int max); /* how many, up to max */
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 

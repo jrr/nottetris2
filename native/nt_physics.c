@@ -260,6 +260,24 @@ static void touchingshape(cpBody *body, cpArbiter *arb, void *data) {
 	}
 }
 
+typedef struct {
+	cpShape **out;
+	int count, max;
+} shapelist;
+
+static void listshape(cpBody *body, cpShape *shape, void *data) {
+	shapelist *l = data;
+	if (l->count < l->max) {
+		l->out[l->count++] = shape;
+	}
+}
+
+int nt_body_getshapes(cpBody *body, cpShape **out, int max) {
+	shapelist l = {out, 0, max};
+	cpBodyEachShape(body, listshape, &l);
+	return l.count;
+}
+
 int nt_body_touching(cpBody *body, int *ids, int max) {
 	touching t = {ids, 0, max};
 	cpBodyEachArbiter(body, touchingshape, &t);
