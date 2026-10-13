@@ -57,6 +57,10 @@ function physics.raycast(shape, x1, y1, x2, y2) --how far along the line from x1
 	return nt.shape_raycast(check(shape), x1, y1, x2, y2)
 end
 
+function physics.rowareas(shape, rowheight) --the first row it reaches (from 0, at y 0), then its area in each row from there
+	return nt.shape_rowareas(check(shape), rowheight)
+end
+
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
 	return {nt.shape_getworldpoints(check(shape))}
 end

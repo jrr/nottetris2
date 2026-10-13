@@ -43,12 +43,14 @@ void nt_shape_setfilter(cpShape *shape, unsigned categories, unsigned mask);
 int nt_shape_testpoint(cpShape *shape, double x, double y);
 double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double y2);
 int nt_shape_getworldpoints(cpShape *shape, double *out);
+int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas);
 ]]
 
 local MAXPOINTS = 8 --NT_MAXPOINTS
 local lib = ffi.load(love.filesystem.getSource() .. "/native/nt_physics.so")
 local out = ffi.new("double[?]", MAXPOINTS*2)
 local contacts = ffi.new("const int *[1]")
+local firstrow = ffi.new("int[1]")
 
 nt = {}
 
@@ -186,6 +188,18 @@ function nt.shape_raycast(shape, x1, y1, x2, y2) --0-1, or nil if it misses
 	if fraction >= 0 then
 		return fraction
 	end
+end
+
+function nt.shape_rowareas(shape, rowheight) --the first row's number (from 0), then the shape's area in each row from there
+	local n = lib.nt_shape_rowareas(shape, rowheight, firstrow, out)
+	if n == 1 then
+		return firstrow[0], out[0]
+	end
+	local t = {}
+	for i = 1, n do
+		t[i] = out[i-1]
+	end
+	return firstrow[0], unpack(t, 1, n)
 end
 
 function nt.shape_getworldpoints(shape) --x1, y1, x2, y2, ...

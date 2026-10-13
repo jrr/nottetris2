@@ -12,6 +12,7 @@
 #define NT_PHYSICS_H
 
 #define NT_MAXPOINTS 8 /* points in a polygon */
+#define NT_MAXROWS 8 /* rows a shape can reach across, for nt_shape_rowareas */
 
 typedef struct ntWorld ntWorld;
 typedef struct cpBody cpBody;
@@ -58,5 +59,8 @@ int nt_shape_testpoint(cpShape *shape, double x, double y);
 /* how far along the line from x1, y1 to x2, y2 it first meets the shape (0-1), or -1 */
 double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double y2);
 int nt_shape_getworldpoints(cpShape *shape, double *out); /* how many points, into out[2*NT_MAXPOINTS] */
+/* how much of the shape is in each of the rows of the given height it reaches: returns how many
+ * rows, into areas[NT_MAXROWS], and the first row's number (from 0, at y 0) into *firstrow */
+int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas);
 
 #endif
