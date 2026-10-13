@@ -1,7 +1,7 @@
 --Where the time goes, on the console every two seconds: frames a second, and milliseconds a frame
 --in the physics step, the line fullness check (checklinedensity), the scheduler, the rest of the
 --update and drawing (and the pieces' share of it); and how many pieces joined and left the pile.
---Imported after the game, which it wraps.
+--Imported after the game, which it wraps. The frame rate shows on the screen as well.
 local ms = playdate.getCurrentTimeMilliseconds
 local totals, frames, since = {}, 0, ms()
 local joined, left = 0, 0
@@ -29,6 +29,11 @@ drawpieces = timed("pieces", drawpieces)
 local update = playdate.update
 function playdate.update()
 	update()
+	local gfx = playdate.graphics
+	local ox, oy = gfx.getDrawOffset()
+	gfx.setDrawOffset(0, 0)
+	playdate.drawFPS(2, 2) --on the screen too, top left
+	gfx.setDrawOffset(ox, oy)
 	frames = frames + 1
 	local now = ms()
 	if now - since >= 2000 then
