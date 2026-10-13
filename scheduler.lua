@@ -116,8 +116,9 @@ function scheduler_update(dt) --after each physics step in game A
 end
 
 --When the game is lost the floor goes and the pile falls out. All of it falling at once is slow, so
---it's frozen and let go a row at a time from the bottom, each row falling clear of the next; and what's
---fallen out of sight is frozen, colliding with nothing.
+--it's frozen and let go a row at a time from the bottom, each row falling clear of the next, and
+--colliding with nothing: pieces falling together seldom touch, and solving their contacts was most
+--of the physics. What's fallen out of sight is frozen again.
 function scheduler_failing(dt)
 	if not scheduler.releaseY then
 		scheduler.releaseY = 18*32 --the bottom of the field
@@ -136,9 +137,10 @@ function scheduler_failing(dt)
 		elseif i.frozen then
 			if top > scheduler.releaseY and top < scheduler.goneY then
 				wake(body)
+				physics.setcollides(body, false)
 			end
 		elseif top > scheduler.goneY and body:getY() >= scheduler.goneY then --failing checks where bodies are, not their shapes
-			physics.setcollides(body, false) --or it'd be a floor for what falls after it
+			physics.setcollides(body, false) --(the piece that lost the game still collides till now)
 			freeze(body)
 		end
 	end
