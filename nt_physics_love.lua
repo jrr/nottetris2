@@ -12,10 +12,18 @@ typedef struct cpShape cpShape;
 ntWorld *nt_world_new(double gravityx, double gravityy);
 void nt_world_free(ntWorld *world);
 void nt_world_setmaxrise(ntWorld *world, double speed);
+void nt_world_setiterations(ntWorld *world, int iterations);
 void nt_world_step(ntWorld *world, double dt);
 int nt_world_contacts(ntWorld *world, const int **pairs);
+typedef struct {
+	double liveRows, maxAwake, changesPerSecond, idleSpeed, idleTime, maxTurn, bumpSpeed;
+	double ageWeight, bumpWeight, movedWeight, depthWeight;
+} ntSchedule;
+void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
+int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
+void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out);
 
-cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic);
+cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic, int id);
 void nt_body_free(cpBody *body);
 void nt_body_getposition(cpBody *body, double *out);
 void nt_body_setposition(cpBody *body, double x, double y);
@@ -31,6 +39,13 @@ void nt_body_applytorque(cpBody *body, double torque);
 void nt_body_setdamping(cpBody *body, double damping);
 void nt_body_resetmass(cpBody *body);
 double nt_body_getmass(cpBody *body);
+int nt_body_isawake(cpBody *body);
+void nt_body_wake(cpBody *body);
+int nt_body_isstatic(cpBody *body);
+int nt_body_setstatic(cpBody *body, int isstatic);
+double nt_body_gettop(cpBody *body);
+void nt_body_setcollides(cpBody *body, int collides);
+int nt_body_touching(cpBody *body, int *ids, int max);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 
@@ -43,12 +58,16 @@ void nt_shape_setfilter(cpShape *shape, unsigned categories, unsigned mask);
 int nt_shape_testpoint(cpShape *shape, double x, double y);
 double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double y2);
 int nt_shape_getworldpoints(cpShape *shape, double *out);
+int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas);
 ]]
 
 local MAXPOINTS = 8 --NT_MAXPOINTS
 local lib = ffi.load(love.filesystem.getSource() .. "/native/nt_physics.so")
 local out = ffi.new("double[?]", MAXPOINTS*2)
 local contacts = ffi.new("const int *[1]")
+local firstrow = ffi.new("int[1]")
+local MAXTOUCHING = 16
+local ids = ffi.new("int[?]", MAXTOUCHING)
 
 nt = {}
 
@@ -58,6 +77,37 @@ end
 
 function nt.world_setmaxrise(world, speed)
 	lib.nt_world_setmaxrise(world, speed)
+end
+
+local schedule = ffi.new("ntSchedule")
+function nt.world_setschedule(world, ...) --the numbers in ntSchedule, in order
+	local fields = {"liveRows", "maxAwake", "changesPerSecond", "idleSpeed", "idleTime", "maxTurn", "bumpSpeed",
+		"ageWeight", "bumpWeight", "movedWeight", "depthWeight"}
+	for i, field in ipairs(fields) do
+		schedule[field] = select(i, ...)
+	end
+	lib.nt_world_setschedule(world, schedule)
+end
+
+local frozen = ffi.new("int[1]")
+function nt.world_schedule(world, falling, dt) --the id of the body changed (or 0), and its freeze's number (or 0)
+	local id = lib.nt_world_schedule(world, falling, dt, frozen)
+	return id, frozen[0]
+end
+
+local LINES = 18 --NT_LINES
+local lineareas = ffi.new("double[?]", LINES)
+function nt.world_lineareas(world, falling, rowheight) --the pile's area in each line
+	lib.nt_world_lineareas(world, falling, rowheight, lineareas)
+	local areas = {}
+	for line = 1, LINES do
+		areas[line] = lineareas[line - 1]
+	end
+	return unpack(areas)
+end
+
+function nt.world_setiterations(world, iterations)
+	lib.nt_world_setiterations(world, iterations)
 end
 
 function nt.world_step(world, dt)
@@ -72,8 +122,8 @@ function nt.world_contact(world, i) --the ids of the shapes in pair i (from 1), 
 	return contacts[0][i*2-2], contacts[0][i*2-1]
 end
 
-function nt.body_new(world, x, y, dynamic)
-	return lib.nt_body_new(world, x, y, dynamic and 1 or 0)
+function nt.body_new(world, x, y, dynamic, id)
+	return lib.nt_body_new(world, x, y, dynamic and 1 or 0, id)
 end
 
 function nt.body_free(body)
@@ -139,6 +189,39 @@ function nt.body_getmass(body)
 	return lib.nt_body_getmass(body)
 end
 
+function nt.body_isawake(body)
+	return lib.nt_body_isawake(body) ~= 0
+end
+
+function nt.body_wake(body)
+	lib.nt_body_wake(body)
+end
+
+function nt.body_isstatic(body)
+	return lib.nt_body_isstatic(body) ~= 0
+end
+
+function nt.body_setstatic(body, isstatic) --the freeze's number, or 0
+	return lib.nt_body_setstatic(body, isstatic and 1 or 0)
+end
+
+function nt.body_gettop(body)
+	return lib.nt_body_gettop(body)
+end
+
+function nt.body_setcollides(body, collides)
+	lib.nt_body_setcollides(body, collides and 1 or 0)
+end
+
+function nt.body_touching(body) --the ids of the shapes it's touching, up to 16
+	local n = lib.nt_body_touching(body, ids, MAXTOUCHING)
+	local t = {}
+	for i = 1, n do
+		t[i] = ids[i-1]
+	end
+	return unpack(t, 1, n)
+end
+
 function nt.body_tolocal(body, x, y)
 	lib.nt_body_tolocal(body, x, y, out)
 	return out[0], out[1]
@@ -186,6 +269,18 @@ function nt.shape_raycast(shape, x1, y1, x2, y2) --0-1, or nil if it misses
 	if fraction >= 0 then
 		return fraction
 	end
+end
+
+function nt.shape_rowareas(shape, rowheight) --the first row's number (from 0), then the shape's area in each row from there
+	local n = lib.nt_shape_rowareas(shape, rowheight, firstrow, out)
+	if n == 1 then
+		return firstrow[0], out[0]
+	end
+	local t = {}
+	for i = 1, n do
+		t[i] = out[i-1]
+	end
+	return firstrow[0], unpack(t, 1, n)
 end
 
 function nt.shape_getworldpoints(shape) --x1, y1, x2, y2, ...

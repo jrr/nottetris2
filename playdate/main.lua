@@ -10,6 +10,7 @@ import "gameB"
 import "menu"
 import "failed"
 import "rocket"
+import "scheduler"
 
 game_load()
 import "perf"

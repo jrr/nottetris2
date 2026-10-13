@@ -134,11 +134,7 @@ function gameA_draw()
 	---------------
 	--tetrishapes--
 	if cuttingtimer == lineclearduration then
-		for i,v in pairs(tetribodies) do
-			if pause == false then
-				platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), v:getX()*physicsscale, v:getY()*physicsscale, v:getAngle(), piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
-			end
-		end
+		drawpieces()
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
@@ -331,6 +327,7 @@ function gameA_update(dt)
 	endblock = false
 
 	physics.update(world, dt)
+	scheduler_update(dt)
 
 	if endblock then
 		endblockA()
@@ -338,9 +335,12 @@ function gameA_update(dt)
 
 	
 	--DENSITY UPDATE TIMER
-	if densityupdatetimer >= densityupdateinterval then
-		while densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration do
-			checklinedensity(false)
+	--(not in the scheduler's end scene: nothing can be cleared, and the meter keeps how full the lines
+	--were when the game was lost, which beats paying for every piece moving at once)
+	local endscene = gamestate == "failingA" and scheduler.enabled
+	if densityupdatetimer >= densityupdateinterval and cuttingtimer == lineclearduration and not endscene then
+		checklinedensity(false) --once, however many intervals have passed: more would only find the same, and make a slow frame slower
+		while densityupdatetimer >= densityupdateinterval do
 			densityupdatetimer = densityupdatetimer - densityupdateinterval
 		end
 	end
@@ -372,7 +372,13 @@ function getintersectX(shape, y) --returns left and right collision points to a 
 	end
 end
 
+--Each piece's area in the lines it reaches, kept while it stays where it was with the same shapes:
+--most of the pile is still from one check to the next.
+local pieceareas = setmetatable({}, {__mode = "k"}) --body -> {x=, y=, angle=, shapes=, [line] = area}
+
 function removeline(lineno) --Does all necessary things to clear a line. Refineshape and cutimage included.
+	pieceareas = setmetatable({}, {__mode = "k"}) --cutting changes pieces' shapes
+	scheduler_beforeclear(lineno)
 	upperline = (lineno - 1) * 32
 	lowerline = lineno * 32
 	globaline = lineno
@@ -752,6 +758,37 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 	end
 end
 
+local function addshapeareas(areas, firstrow, ...) --a shape's area in each line it reaches
+	for n = 1, select("#", ...) do
+		local line = firstrow + n
+		if line >= 1 and line <= 18 then
+			areas[line] = (areas[line] or 0) + select(n, ...)
+		end
+	end
+end
+
+local function addlineareas(body, shapes) --into linearea, from pieceareas
+	local c = pieceareas[body]
+	local frozen = scheduler_frozen(body) --the same while it can't have moved
+	if not (c and frozen and c.frozen == frozen and c.shapes == shapes) then
+		local x, y = body:getPosition()
+		local angle = body:getAngle()
+		if not c or c.x ~= x or c.y ~= y or c.angle ~= angle or c.shapes ~= shapes then
+			c = {x=x, y=y, angle=angle, shapes=shapes}
+			for _, shape in pairs(shapes) do
+				addshapeareas(c, physics.rowareas(shape, 32))
+			end
+			pieceareas[body] = c
+		end
+		c.frozen = frozen
+	end
+	for line = 1, 18 do
+		if c[line] then
+			linearea[line] = linearea[line] + c[line]
+		end
+	end
+end
+
 function checklinedensity(active) --checks all 18 lines and, if active == true, calls removeline. Also does scoring, sounds and stuff.
 	--loop through every shape and add each area to a nax
 	
@@ -761,89 +798,12 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 		linearea[i] = 0
 	end
 	
-	for i = 2, #tetribodies do
-		for j, k in pairs(tetrishapes[i]) do
-			local coords = physics.getworldpoints(k)
-			--Get first and last involved line
-			local firstline = 19
-			local lastline =  0
-			
-			for point = 2, #coords, 2 do
-				if math.ceil(round(coords[point]) / 32) < firstline then
-					firstline = math.ceil(round(coords[point]) / 32)
-				elseif math.ceil(round(coords[point]) / 32) > lastline then
-					lastline = math.ceil(round(coords[point]) / 32)
-				end
-			end
-			
-			for line = firstline, lastline do
-				if line >= 1 and line <= 18 then
-					coords = physics.getworldpoints(k)
-					
-					if line > firstline then
-						local offset = 0
-					
-						repeat
-							leftx, rightx = getintersectX(tetrishapes[i][j], (line-1)*32+offset)
-							offset = offset + 1
-						until leftx ~= -1 or offset >= 32
-						
-						--remove all points above the line
-						local coi=2
-						local lastcutoff = nil
-						while coi <= #coords do
-							if coords[coi] <= (line-1)*32 then
-								table.remove(coords, coi)
-								table.remove(coords, coi-1)
-								lastcutoff = coi
-								coi=0
-							end
-							coi=coi+2
-						end
-						
-						--add points of top line (if points were cut off)
-						if lastcutoff then
-							table.insert(coords, lastcutoff-1,rightx)
-							table.insert(coords, lastcutoff,(line-1)*32)
-							
-							table.insert(coords, lastcutoff-1,leftx)
-							table.insert(coords, lastcutoff,(line-1)*32)
-						end
-					end
-					
-					if line < lastline then
-						local offset = 0
-						repeat
-							leftx, rightx = getintersectX(tetrishapes[i][j], (line)*32 - offset)
-							offset = offset + 1
-						until leftx ~= -1 or offset >= 32
-						
-						--remove all points below the line
-						local coi=2
-						local lastcutoff = nil
-						while coi <= #coords do
-							if coords[coi] >= (line)*32 then
-								table.remove(coords, coi)
-								table.remove(coords, coi-1)
-								lastcutoff = coi
-								coi=0
-							end
-							coi=coi+2
-						end
-						
-						--add points of bottom line (if points were cut off)
-						if lastcutoff then
-							table.insert(coords, lastcutoff-1,leftx)
-							table.insert(coords, lastcutoff,(line)*32)
-							
-							table.insert(coords, lastcutoff-1,rightx)
-							table.insert(coords, lastcutoff,(line)*32)
-						end
-					end
-					
-					linearea[line] = linearea[line] + polygonarea(coords)
-				end
-			end
+	if scheduler.enabled then --in one call into C, which keeps each piece's areas: cheaper on Playdate
+		local falling = type(tetribodies[1]) == "table" and tetribodies[1] or nil
+		linearea = {physics.lineareas(world, falling, 32)}
+	else
+		for i = 2, #tetribodies do
+			addlineareas(tetribodies[i], tetrishapes[i])
 		end
 	end
 	

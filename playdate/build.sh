@@ -25,7 +25,7 @@ rm -rf Source
 mkdir -p Source build
 cp main.lua platform_playdate.lua perf.lua pdxinfo Source/
 cp ../main.lua Source/game.lua
-for f in gameA gameB menu failed rocket physics_chipmunk; do
+for f in gameA gameB menu failed rocket scheduler physics_chipmunk; do
 	cp ../$f.lua Source/
 done
 cp -R ../graphics Source/
@@ -49,15 +49,15 @@ if [ "${1:-}" = --sim ]; then
 fi
 
 if [ "${1:-}" = --device ]; then
-	waitfor() { # up to 30 seconds for a path to exist, or with !, not to
-		for _ in $(seq 60); do
+	waitfor() { # up to a minute for a path to exist, or with !, not to
+		for _ in $(seq 120); do
 			if [ "$1" = "!" ]; then [ ! -e "$2" ] && return; else [ -e "$1" ] && return; fi
 			sleep 0.5
 		done
 		echo "timed out waiting for $*" >&2
 		exit 1
 	}
-	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1; }
+	findport() { ls /dev/cu.usbmodemPD* 2> /dev/null | head -1 || true; } # none found isn't a failure here
 	volume=/Volumes/PLAYDATE
 	# the mount point shows up before the disk is mounted on it, so wait for a folder inside
 	if [ ! -d "$volume/Games" ]; then
@@ -66,8 +66,10 @@ if [ "${1:-}" = --device ]; then
 		pdutil "$port" datadisk
 		waitfor "$volume/Games"
 	fi
-	rm -rf "$volume/Games/nottetris2.pdx"
+	rm -rf "$volume/Games/nottetris2.pdx" "$volume/Games/._nottetris2.pdx"
 	cp -R build/nottetris2.pdx "$volume/Games/"
+	dot_clean -m "$volume/Games/nottetris2.pdx" # macOS's ._ files, which it makes on the Playdate's disk
+	diff -rq -x '._*' build/nottetris2.pdx "$volume/Games/nottetris2.pdx" || { echo "the copy on the Playdate doesn't match" >&2; exit 1; }
 	diskutil eject "$volume" > /dev/null
 	waitfor ! "$volume"
 	# the serial port goes away while the disk is mounted and comes back once it's ejected

@@ -9,6 +9,8 @@ local MAXRISE = 200
 
 local shapes = {} --by id, for reporting collisions
 local lastid = 0
+local bodies = setmetatable({}, {__mode = "v"}) --by id, for physics.schedule
+local lastbodyid = 0
 
 local Body = {}
 Body.__index = Body
@@ -22,6 +24,9 @@ end
 function physics.newworld(gravityx, gravityy, collide) --collide(a, b) gets the user data of two shapes that began touching, after the update
 	local world = {p=nt.world_new(gravityx, gravityy), collide=collide}
 	nt.world_setmaxrise(world.p, MAXRISE)
+	if platform.physicsiterations then --fewer, where speed matters more
+		nt.world_setiterations(world.p, platform.physicsiterations)
+	end
 	return world
 end
 
@@ -35,7 +40,10 @@ function physics.update(world, dt)
 end
 
 function physics.newbody(world, x, y, kind) --kind is "dynamic" or "static"
-	return setmetatable({p=nt.body_new(world.p, x, y, kind == "dynamic"), world=world, shapes={}}, Body)
+	lastbodyid = lastbodyid + 1
+	local body = setmetatable({p=nt.body_new(world.p, x, y, kind == "dynamic", lastbodyid), world=world, shapes={}}, Body)
+	bodies[lastbodyid] = body
+	return body
 end
 
 --shapes, attached to a body, with density 1; points are in the body's coordinates
@@ -57,11 +65,64 @@ function physics.raycast(shape, x1, y1, x2, y2) --how far along the line from x1
 	return nt.shape_raycast(check(shape), x1, y1, x2, y2)
 end
 
+function physics.rowareas(shape, rowheight) --the first row it reaches (from 0, at y 0), then its area in each row from there
+	return nt.shape_rowareas(check(shape), rowheight)
+end
+
+function physics.gettop(body) --the smallest y of its shapes
+	return nt.body_gettop(check(body))
+end
+
+function physics.setcollides(body, collides) --false: it collides with nothing
+	nt.body_setcollides(check(body), collides)
+end
+
+--The scheduler (scheduler.lua), in C: its settings, then after each step its bookkeeping and at most
+--one change, which it returns: the body it froze or woke, and true if it froze it.
+local SCHEDULE = {"liveRows", "maxAwake", "changesPerSecond", "idleSpeed", "idleTime", "maxTurn", "bumpSpeed",
+	"ageWeight", "bumpWeight", "movedWeight", "depthWeight"}
+
+function physics.setschedule(world, settings)
+	local values = {}
+	for i, name in ipairs(SCHEDULE) do
+		values[i] = settings[name]
+	end
+	nt.world_setschedule(world.p, table.unpack(values))
+end
+
+function physics.schedule(world, falling, dt) --falling: the piece not in the pile, or nil
+	local id, frozen = nt.world_schedule(world.p, falling and check(falling), dt)
+	if id ~= 0 then
+		return bodies[id], frozen ~= 0
+	end
+end
+
+--The pile's area in each line of the field (rows of rowheight from y 0): the same as adding up
+--physics.rowareas for every shape in the pile, in one call, with each body's kept while it's frozen
+--or still. The pile as for physics.schedule.
+function physics.lineareas(world, falling, rowheight)
+	return nt.world_lineareas(world.p, falling and check(falling), rowheight)
+end
+
+function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
+	local bodies = {}
+	for _, id in ipairs({nt.body_touching(check(body))}) do
+		if shapes[id] then
+			bodies[#bodies+1] = shapes[id].body
+		end
+	end
+	return bodies
+end
+
 function physics.getworldpoints(shape) --a polygon's points in world coordinates: {x1, y1, x2, y2, ...}
 	return {nt.shape_getworldpoints(check(shape))}
 end
 
 --bodies
+function Body:getPosition()
+	return nt.body_getposition(check(self))
+end
+
 function Body:getX()
 	return (nt.body_getposition(check(self)))
 end
@@ -125,6 +186,22 @@ end
 
 function Body:getMass()
 	return nt.body_getmass(check(self))
+end
+
+function Body:isAwake() --false once it's been still a while, until something moves it
+	return nt.body_isawake(check(self))
+end
+
+function Body:setAwake(awake) --true only: wakes it, and what it touches
+	nt.body_wake(check(self))
+end
+
+function Body:getType()
+	return nt.body_isstatic(check(self)) and "static" or "dynamic"
+end
+
+function Body:setType(kind) --"static": doesn't move, and stops; "dynamic" again: mass from its shapes
+	nt.body_setstatic(check(self), kind == "static")
 end
 
 function Body:getLocalPoint(x, y)
