@@ -22,6 +22,9 @@ end
 function physics.newworld(gravityx, gravityy, collide) --collide(a, b) gets the user data of two shapes that began touching, after the update
 	local world = {p=nt.world_new(gravityx, gravityy), collide=collide}
 	nt.world_setmaxrise(world.p, MAXRISE)
+	if platform.physicsiterations then --fewer, where speed matters more
+		nt.world_setiterations(world.p, platform.physicsiterations)
+	end
 	return world
 end
 

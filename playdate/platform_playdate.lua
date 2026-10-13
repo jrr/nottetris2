@@ -5,6 +5,8 @@ local gfx = playdate.graphics
 
 platform = {}
 platform.schedulephysics = true --simulate only part of the pile (scheduler.lua)
+platform.maxstep = 1/30 --the longest step the game takes a frame: the game's 1/50 is slow motion at 30 fps
+platform.physicsiterations = 5 --Chipmunk's solver passes a step: fewer than the game's 10, for speed
 platform.stillpreview = true --the next piece doesn't spin: turning a bitmap each frame is slow here
 
 local SCALE = 240/144 --the Game Boy's 144 lines on the Playdate's 240

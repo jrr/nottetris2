@@ -69,6 +69,7 @@ static int push2(double *out) {
 static int world_gc(lua_State *L) { nt_world_free(world(1)); return 0; }
 static int world_new(lua_State *L) { pd->lua->pushObject(nt_world_new(number(1), number(2)), WORLD, 0); return 1; }
 static int world_setmaxrise(lua_State *L) { nt_world_setmaxrise(world(1), number(2)); return 0; }
+static int world_setiterations(lua_State *L) { nt_world_setiterations(world(1), pd->lua->getArgInt(2)); return 0; }
 static int world_step(lua_State *L) { nt_world_step(world(1), number(2)); return 0; }
 
 static int world_contactcount(lua_State *L) {
@@ -248,6 +249,7 @@ static const struct {
 } functions[] = {
 	{"nt.world_new", world_new},
 	{"nt.world_setmaxrise", world_setmaxrise},
+	{"nt.world_setiterations", world_setiterations},
 	{"nt.world_step", world_step},
 	{"nt.world_contactcount", world_contactcount},
 	{"nt.world_contact", world_contact},

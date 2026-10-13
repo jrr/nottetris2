@@ -7,7 +7,7 @@
 
 scheduler = {
 	enabled = false,
-	liveRows = 2, --pieces reaching within this many rows of the top of the pile are never frozen
+	liveRows = 1, --pieces reaching within this many rows of the top of the pile are never frozen
 	maxAwake = 3, --deep pieces simulated at once, unless more are still moving
 	changesPerSecond = 30, --switches between static and dynamic
 	idleSpeed = 2, --px/s; a piece slower than this (and hardly turning) is idle

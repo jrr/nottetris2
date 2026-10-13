@@ -12,6 +12,7 @@ typedef struct cpShape cpShape;
 ntWorld *nt_world_new(double gravityx, double gravityy);
 void nt_world_free(ntWorld *world);
 void nt_world_setmaxrise(ntWorld *world, double speed);
+void nt_world_setiterations(ntWorld *world, int iterations);
 void nt_world_step(ntWorld *world, double dt);
 int nt_world_contacts(ntWorld *world, const int **pairs);
 
@@ -69,6 +70,10 @@ end
 
 function nt.world_setmaxrise(world, speed)
 	lib.nt_world_setmaxrise(world, speed)
+end
+
+function nt.world_setiterations(world, iterations)
+	lib.nt_world_setiterations(world, iterations)
 end
 
 function nt.world_step(world, dt)

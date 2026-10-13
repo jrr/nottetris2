@@ -108,6 +108,7 @@ void nt_world_free(ntWorld *world) {
 }
 
 void nt_world_setmaxrise(ntWorld *world, double speed) { world->maxrise = speed; }
+void nt_world_setiterations(ntWorld *world, int iterations) { cpSpaceSetIterations(world->space, iterations); }
 
 /* after the contacts have been solved, since they can throw a body up; bodies move by it in the next step */
 static void limitrise(cpBody *body, void *data) {
