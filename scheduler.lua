@@ -2,6 +2,9 @@
 --Pieces near the top of the pile and anything moving stay dynamic; the rest are frozen (static) and
 --take turns being dynamic again, the ones most likely to move first. Changes are paced in time, one
 --a frame at the Playdate's 30 frames a second, since each costs about a millisecond there.
+--The pass over the pile each frame is in C (physics.schedule: nt_world_schedule in nt_physics.c),
+--as on Playdate each call from Lua into C costs, and it needs several for every piece; the settings
+--are here, and so are the end of the game and line clears.
 --On where platform.schedulephysics says (Playdate); F5 turns it on and off.
 --From the prototype on the physics-scheduler branch; see pd-box2dbench's NOTES.md.
 
@@ -26,18 +29,16 @@ scheduler = {
 
 	changes = 0, --switches made, for perf.lua
 	freezes = 0, --freezes made: each frozen piece has its number, so a later freeze can be told apart
-	budget = 0, --changes earned but not yet made
 }
 
---Body -> bookkeeping, forgotten with the body. Only the scheduler freezes pieces, so it knows which
---are frozen and, as they don't move, where their tops are, without asking each frame. frozen is false
---or the freeze's number (scheduler_frozen).
+--Body -> what the game needs to know without asking C each frame: whether it's frozen (false, or
+--the freeze's number: scheduler_frozen) and, as frozen pieces don't move, where its top is.
 local info = setmetatable({}, {__mode = "k"})
 
 local function infoFor(body)
 	local i = info[body]
 	if not i then
-		i = {idle = 0, awake = 0, age = 0, bump = 0, moved = 0, wakeX = body:getX(), wakeY = body:getY(), wakeAngle = body:getAngle()}
+		i = {frozen = false}
 		info[body] = i
 	end
 	return i
@@ -53,24 +54,25 @@ local function pileBodies()
 	return bodies
 end
 
-local function wake(body)
+local function changed(body, frozen) --after C or this file froze or woke it
 	local i = infoFor(body)
-	body:setType("dynamic")
-	i.frozen, i.top = false, nil
-	i.idle, i.awake, i.bump = 0, 0, 0
-	i.wakeX, i.wakeY, i.wakeAngle = body:getX(), body:getY(), body:getAngle()
+	if frozen then
+		scheduler.freezes = scheduler.freezes + 1
+		i.frozen, i.top = scheduler.freezes, physics.gettop(body)
+	else
+		i.frozen, i.top = false, nil
+	end
 	scheduler.changes = scheduler.changes + 1
 end
 
+local function wake(body)
+	body:setType("dynamic")
+	changed(body, false)
+end
+
 local function freeze(body)
-	local i = infoFor(body)
-	--how far it settled on its turn; turning counts at a block's half-width
-	i.moved = math.sqrt((body:getX() - i.wakeX)^2 + (body:getY() - i.wakeY)^2) + math.abs(body:getAngle() - i.wakeAngle) * 16
-	i.age = 0
 	body:setType("static")
-	scheduler.freezes = scheduler.freezes + 1
-	i.frozen, i.top = scheduler.freezes, physics.gettop(body)
-	scheduler.changes = scheduler.changes + 1
+	changed(body, true)
 end
 
 local function wakeAll()
@@ -81,16 +83,11 @@ local function wakeAll()
 	end
 end
 
-local function bumpTouching(body, speed, frozen)
-	for _, other in ipairs(physics.touching(body)) do
-		if frozen[other] then
-			local i = infoFor(other)
-			i.bump = i.bump + speed / scheduler.bumpSpeed
-		end
-	end
-end
-
 function scheduler_toggle()
+	if not physics.schedule then
+		print("[scheduler] needs Chipmunk's physics")
+		return
+	end
 	scheduler.enabled = not scheduler.enabled
 	if not scheduler.enabled and tetribodies then
 		wakeAll()
@@ -107,77 +104,14 @@ function scheduler_update(dt) --after each physics step in game A
 		return
 	end
 	scheduler.releaseY = nil
-
-	local bodies = pileBodies()
-	local tops, frozen = {}, {}
-	local pileTop = math.huge
-	for _, body in ipairs(bodies) do
-		local i = infoFor(body)
-		frozen[body] = i.frozen
-		tops[body] = i.top or physics.gettop(body)
-		pileTop = math.min(pileTop, tops[body])
+	if scheduler.world ~= world then --a new game
+		physics.setschedule(world, scheduler)
+		scheduler.world = world
 	end
-	local liveY = pileTop + scheduler.liveRows * 32
-
-	--bookkeeping, and bumps from anything moving (the falling piece included)
-	if type(tetribodies[1]) == "table" then
-		local vx, vy = tetribodies[1]:getLinearVelocity()
-		bumpTouching(tetribodies[1], math.sqrt(vx*vx + vy*vy), frozen)
-	end
-	for _, body in ipairs(bodies) do
-		local i = infoFor(body)
-		if not frozen[body] then
-			local vx, vy = body:getLinearVelocity()
-			local speed = math.sqrt(vx*vx + vy*vy)
-			i.awake = i.awake + dt
-			i.slow = speed < scheduler.idleSpeed and math.abs(body:getAngularVelocity()) < 0.05
-			if i.slow then
-				i.idle = i.idle + dt
-			else
-				i.idle = 0
-			end
-			if speed > scheduler.bumpSpeed then
-				bumpTouching(body, speed, frozen)
-			end
-		else
-			i.age = i.age + dt
-		end
-	end
-
-	--changes come at changesPerSecond, at most one a frame (the budget doesn't build up beyond that)
-	scheduler.budget = math.min(scheduler.budget + dt * scheduler.changesPerSecond, 1)
-	if scheduler.budget < 1 then
-		return
-	end
-
-	--one change: a frozen piece in the live rows first, then a deep one if there's room, otherwise
-	--freeze the deep piece that's been idle longest
-	local bestFrozen, bestScore, deepAwake, idlest = nil, -math.huge, 0, nil
-	for _, body in ipairs(bodies) do
-		local i = info[body]
-		local live = tops[body] < liveY
-		if frozen[body] then
-			local score = live and math.huge
-				or i.age * scheduler.ageWeight + i.bump * scheduler.bumpWeight + i.moved * scheduler.movedWeight
-				- (tops[body] - liveY) / 32 * scheduler.depthWeight
-			if score > bestScore then
-				bestFrozen, bestScore = body, score
-			end
-		elseif not live then
-			deepAwake = deepAwake + 1
-			local done = i.idle >= scheduler.idleTime or (i.slow and i.awake >= scheduler.maxTurn)
-			if done and (not idlest or i.idle + i.awake > info[idlest].idle + info[idlest].awake) then
-				idlest = body
-			end
-		end
-	end
-
-	if bestFrozen and (bestScore == math.huge or deepAwake < scheduler.maxAwake) then
-		wake(bestFrozen)
-		scheduler.budget = scheduler.budget - 1
-	elseif idlest and deepAwake >= scheduler.maxAwake then
-		freeze(idlest)
-		scheduler.budget = scheduler.budget - 1
+	local falling = type(tetribodies[1]) == "table" and tetribodies[1] or nil
+	local body, frozen = physics.schedule(world, falling, dt)
+	if body then
+		changed(body, frozen)
 	end
 end
 

@@ -15,8 +15,14 @@ void nt_world_setmaxrise(ntWorld *world, double speed);
 void nt_world_setiterations(ntWorld *world, int iterations);
 void nt_world_step(ntWorld *world, double dt);
 int nt_world_contacts(ntWorld *world, const int **pairs);
+typedef struct {
+	double liveRows, maxAwake, changesPerSecond, idleSpeed, idleTime, maxTurn, bumpSpeed;
+	double ageWeight, bumpWeight, movedWeight, depthWeight;
+} ntSchedule;
+void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
+int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
 
-cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic);
+cpBody *nt_body_new(ntWorld *world, double x, double y, int dynamic, int id);
 void nt_body_free(cpBody *body);
 void nt_body_getposition(cpBody *body, double *out);
 void nt_body_setposition(cpBody *body, double x, double y);
@@ -35,7 +41,7 @@ double nt_body_getmass(cpBody *body);
 int nt_body_isawake(cpBody *body);
 void nt_body_wake(cpBody *body);
 int nt_body_isstatic(cpBody *body);
-void nt_body_setstatic(cpBody *body, int isstatic);
+int nt_body_setstatic(cpBody *body, int isstatic);
 double nt_body_gettop(cpBody *body);
 void nt_body_setcollides(cpBody *body, int collides);
 int nt_body_touching(cpBody *body, int *ids, int max);
@@ -72,6 +78,22 @@ function nt.world_setmaxrise(world, speed)
 	lib.nt_world_setmaxrise(world, speed)
 end
 
+local schedule = ffi.new("ntSchedule")
+function nt.world_setschedule(world, ...) --the numbers in ntSchedule, in order
+	local fields = {"liveRows", "maxAwake", "changesPerSecond", "idleSpeed", "idleTime", "maxTurn", "bumpSpeed",
+		"ageWeight", "bumpWeight", "movedWeight", "depthWeight"}
+	for i, field in ipairs(fields) do
+		schedule[field] = select(i, ...)
+	end
+	lib.nt_world_setschedule(world, schedule)
+end
+
+local frozen = ffi.new("int[1]")
+function nt.world_schedule(world, falling, dt) --the id of the body changed (or 0), and its freeze's number (or 0)
+	local id = lib.nt_world_schedule(world, falling, dt, frozen)
+	return id, frozen[0]
+end
+
 function nt.world_setiterations(world, iterations)
 	lib.nt_world_setiterations(world, iterations)
 end
@@ -88,8 +110,8 @@ function nt.world_contact(world, i) --the ids of the shapes in pair i (from 1), 
 	return contacts[0][i*2-2], contacts[0][i*2-1]
 end
 
-function nt.body_new(world, x, y, dynamic)
-	return lib.nt_body_new(world, x, y, dynamic and 1 or 0)
+function nt.body_new(world, x, y, dynamic, id)
+	return lib.nt_body_new(world, x, y, dynamic and 1 or 0, id)
 end
 
 function nt.body_free(body)
@@ -167,8 +189,8 @@ function nt.body_isstatic(body)
 	return lib.nt_body_isstatic(body) ~= 0
 end
 
-function nt.body_setstatic(body, isstatic)
-	lib.nt_body_setstatic(body, isstatic and 1 or 0)
+function nt.body_setstatic(body, isstatic) --the freeze's number, or 0
+	return lib.nt_body_setstatic(body, isstatic and 1 or 0)
 end
 
 function nt.body_gettop(body)

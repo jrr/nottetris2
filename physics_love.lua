@@ -12,6 +12,8 @@
 --  shapes: setUserData, setFriction, setRestitution, setDensity, testPoint(x, y),
 --    destroy, setCategory(n) and setMask(n, ...): Box2D's collision categories, 1-16; a shape
 --    doesn't collide with shapes in the categories it masks
+--(physics_chipmunk.lua also has physics.setschedule and physics.schedule, for scheduler.lua, which
+--needs Chipmunk)
 physics = {}
 
 --LÖVE 0.7 collected contacts during world:update and only then called the collision

@@ -9,6 +9,8 @@ local MAXRISE = 200
 
 local shapes = {} --by id, for reporting collisions
 local lastid = 0
+local bodies = setmetatable({}, {__mode = "v"}) --by id, for physics.schedule
+local lastbodyid = 0
 
 local Body = {}
 Body.__index = Body
@@ -38,7 +40,10 @@ function physics.update(world, dt)
 end
 
 function physics.newbody(world, x, y, kind) --kind is "dynamic" or "static"
-	return setmetatable({p=nt.body_new(world.p, x, y, kind == "dynamic"), world=world, shapes={}}, Body)
+	lastbodyid = lastbodyid + 1
+	local body = setmetatable({p=nt.body_new(world.p, x, y, kind == "dynamic", lastbodyid), world=world, shapes={}}, Body)
+	bodies[lastbodyid] = body
+	return body
 end
 
 --shapes, attached to a body, with density 1; points are in the body's coordinates
@@ -70,6 +75,26 @@ end
 
 function physics.setcollides(body, collides) --false: it collides with nothing
 	nt.body_setcollides(check(body), collides)
+end
+
+--The scheduler (scheduler.lua), in C: its settings, then after each step its bookkeeping and at most
+--one change, which it returns: the body it froze or woke, and true if it froze it.
+local SCHEDULE = {"liveRows", "maxAwake", "changesPerSecond", "idleSpeed", "idleTime", "maxTurn", "bumpSpeed",
+	"ageWeight", "bumpWeight", "movedWeight", "depthWeight"}
+
+function physics.setschedule(world, settings)
+	local values = {}
+	for i, name in ipairs(SCHEDULE) do
+		values[i] = settings[name]
+	end
+	nt.world_setschedule(world.p, table.unpack(values))
+end
+
+function physics.schedule(world, falling, dt) --falling: the piece not in the pile, or nil
+	local id, frozen = nt.world_schedule(world.p, falling and check(falling), dt)
+	if id ~= 0 then
+		return bodies[id], frozen ~= 0
+	end
 end
 
 function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
