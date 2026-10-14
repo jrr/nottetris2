@@ -605,6 +605,19 @@ int nt_shape_rowareas(cpShape *shape, ntReal rowheight, int *firstrow, ntReal *a
 	return last - first + 1;
 }
 
+int nt_shape_getscreenpoints(cpShape *shape, ntReal scale, int *out) {
+	cpBody *body = cpShapeGetBody(shape);
+	cpVect origin = cpBodyGetPosition(body);
+	int ox = (int)NT_FLOOR(origin.x*scale), oy = (int)NT_FLOOR(origin.y*scale);
+	int count = cpPolyShapeGetCount(shape);
+	for (int i = 0; i < count; i++) {
+		cpVect v = cpvsub(cpBodyLocalToWorld(body, cpPolyShapeGetVert(shape, i)), origin);
+		out[i*2] = ox + (int)NT_FLOOR(v.x*scale + 0.5f);
+		out[i*2+1] = oy + (int)NT_FLOOR(v.y*scale + 0.5f);
+	}
+	return count;
+}
+
 int nt_shape_getworldpoints(cpShape *shape, ntReal *out) {
 	cpBody *body = cpShapeGetBody(shape);
 	int count = cpPolyShapeGetCount(shape);

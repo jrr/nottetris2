@@ -59,6 +59,7 @@ void nt_shape_setfilter(cpShape *shape, unsigned categories, unsigned mask);
 int nt_shape_testpoint(cpShape *shape, double x, double y);
 double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double y2);
 int nt_shape_getworldpoints(cpShape *shape, double *out);
+int nt_shape_getscreenpoints(cpShape *shape, double scale, int *out);
 int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas);
 ]]
 
@@ -282,6 +283,16 @@ function nt.shape_rowareas(shape, rowheight) --the first row's number (from 0), 
 		t[i] = out[i-1]
 	end
 	return firstrow[0], unpack(t, 1, n)
+end
+
+local screenpoints = ffi.new("int[?]", MAXPOINTS*2)
+function nt.shape_screenpoints(shape, scale) --x1, y1, x2, y2, ... in whole pixels
+	local n = lib.nt_shape_getscreenpoints(shape, scale, screenpoints)*2
+	local t = {}
+	for i = 1, n do
+		t[i] = screenpoints[i-1]
+	end
+	return unpack(t, 1, n)
 end
 
 function nt.shape_getworldpoints(shape) --x1, y1, x2, y2, ...

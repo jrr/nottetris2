@@ -5,7 +5,8 @@ local gfx = playdate.graphics
 
 platform = {}
 platform.schedulephysics = true --simulate only part of the pile (scheduler.lua)
-platform.maxstep = 1/30 --the longest step the game takes a frame: the game's 1/50 is slow motion at 30 fps
+local REFRESHRATE = 40 --frames a second we aim for (the Playdate's default is 30, its most 50)
+platform.maxstep = 1/30 --the longest step the game takes a frame: the game's 1/50 is slow motion below 50 fps
 platform.physicsiterations = 5 --Chipmunk's solver passes a step: fewer than the game's 10, for speed
 platform.stillpreview = true --the next piece doesn't spin: turning a bitmap each frame is slow here
 
@@ -58,6 +59,7 @@ end
 
 function platform.setupscreen(vsync) --returns the scale to draw at
 	gfx.setDrawOffset(OFFSETX, 0)
+	playdate.display.setRefreshRate(REFRESHRATE)
 	playdate.resetElapsedTime()
 	return SCALE
 end
@@ -140,12 +142,117 @@ local function setcolor()
 	end
 end
 
-local function drawpolygons(polygons)
+--Each kind of piece's fill: 8 rows of 8 pixels, # black and . white. Each block starts it at one of
+--its corners (its shape's first point), so every block looks the same, and it moves with the piece
+--(it doesn't turn with it); or with fixed, it's lined up with the screen instead.
+local PATTERNS = {
+	{ --1, I: very light, a sprinkle of dots
+		"#...#...",
+		"........",
+		"..#...#.",
+		"........",
+		"#...#...",
+		"........",
+		"..#...#.",
+		"........",
+	},
+	{ --2, J: dark, a fine white grid (the mirror L is light)
+		"########",
+		".#.#.#.#",
+		"########",
+		".#.#.#.#",
+		"########",
+		".#.#.#.#",
+		"########",
+		".#.#.#.#",
+	},
+	{ --3, L: light
+		"#.#.#.#.",
+		".#...#..",
+		"#.#.#.#.",
+		"...#...#",
+		"#.#.#.#.",
+		".#...#..",
+		"#.#.#.#.",
+		"...#...#",
+	},
+	{ --4, O: checks, fixed to the screen: a pixel's move would turn them over, so they'd shimmer
+		fixed = true,
+		"#.#.#.#.",
+		".#.#.#.#",
+		"#.#.#.#.",
+		".#.#.#.#",
+		"#.#.#.#.",
+		".#.#.#.#",
+		"#.#.#.#.",
+		".#.#.#.#",
+	},
+	{ --5, S: light, with fine lines like / (the mirror Z is dark, with lines like \)
+		"...#...#",
+		"..#...#.",
+		".#...#..",
+		"#...#...",
+		"...#...#",
+		"..#...#.",
+		".#...#..",
+		"#...#...",
+	},
+	{ --6, T: mid-dark
+		"###.###.",
+		".#.#.#.#",
+		"#.###.##",
+		".#.#.#.#",
+		"###.###.",
+		".#.#.#.#",
+		"#.###.##",
+		".#.#.#.#",
+	},
+	{ --7, Z: dark, with fine white lines like \
+		"#.###.##",
+		"##.###.#",
+		"###.###.",
+		".###.###",
+		"#.###.##",
+		"##.###.#",
+		"###.###.",
+		".###.###",
+	},
+}
+local patterns = {} --kind -> its 8 rows as numbers, for gfx.setPattern: bits set for white
+for kind, rows in ipairs(PATTERNS) do
+	patterns[kind] = {}
+	for r, row in ipairs(rows) do
+		local bits = 0
+		for c = 1, 8 do
+			bits = bits*2 + (row:sub(c, c) == "." and 1 or 0)
+		end
+		patterns[kind][r] = bits
+	end
+	patterns[kind].fixed = rows.fixed
+	nt.setpattern(kind, rows.fixed == true, table.unpack(patterns[kind]))
+end
+
+--Polygons filled with a kind's pattern, each starting it at its first point (or lined up with the
+--screen, if it's fixed), outlined in black. Patterns line up with the corner of what's drawn into:
+--gridx is where that is on the screen, 0 for the screen itself and OFFSETX for the pile's image;
+--either way the points are drawn OFFSETX across.
+local function drawpolygons(polygons, kind, gridx)
+	local pattern = patterns[kind]
 	for _, points in ipairs(polygons) do
-		gfx.setColor(gfx.kColorBlack)
-		gfx.fillPolygon(table.unpack(points))
-		gfx.setColor(gfx.kColorWhite)
-		gfx.drawPolygon(table.unpack(points))
+		if #points >= 6 then --a polygon: 3 points or more
+			if pattern then
+				local x, y = -gridx, 0 --the screen's corner, in the grid
+				if not pattern.fixed then
+					x, y = points[1] + OFFSETX - gridx, points[2]
+				end
+				gfx.setPattern(pattern, (-x) % 8, (-y) % 8) --it turns left and up
+			else
+				gfx.setColor(gfx.kColorBlack)
+			end
+			gfx.fillPolygon(table.unpack(points))
+			gfx.setColor(gfx.kColorBlack)
+			gfx.drawPolygon(table.unpack(points))
+		end
 	end
 	setcolor()
 end
@@ -155,14 +262,14 @@ end
 --redrawn from the pieces still there).
 platform.keepspile = true
 local pileimage = gfx.image.new(math.ceil(160*SCALE), 240)
-local pile = {} --key -> {polygons, x1, y1, x2, y2}
+local pile = {} --key -> {polygons, x1, y1, x2, y2, kind}
 
 function platform.clearpile()
 	pile = {}
 	pileimage:clear(gfx.kColorClear)
 end
 
-function platform.pilepiece(key, polygons) --into the pile, and onto the screen this frame
+function platform.pilepiece(key, polygons, kind) --into the pile, and onto the screen this frame
 	local x1, y1, x2, y2 = math.huge, math.huge, -math.huge, -math.huge
 	for _, points in ipairs(polygons) do
 		for i = 1, #points, 2 do
@@ -170,11 +277,11 @@ function platform.pilepiece(key, polygons) --into the pile, and onto the screen 
 			y1, y2 = math.min(y1, points[i+1]), math.max(y2, points[i+1])
 		end
 	end
-	pile[key] = {polygons, math.floor(x1) - 1, math.floor(y1) - 1, math.ceil(x2) + 1, math.ceil(y2) + 1}
+	pile[key] = {polygons, math.floor(x1) - 1, math.floor(y1) - 1, math.ceil(x2) + 1, math.ceil(y2) + 1, kind}
 	gfx.pushContext(pileimage)
-	drawpolygons(polygons)
+	drawpolygons(polygons, kind, OFFSETX)
 	gfx.popContext()
-	drawpolygons(polygons)
+	drawpolygons(polygons, kind, 0)
 end
 
 function platform.unpile(key) --out of the pile: redraw the area it covered
@@ -190,7 +297,7 @@ function platform.unpile(key) --out of the pile: redraw the area it covered
 	gfx.fillRect(x1, y1, x2 - x1, y2 - y1)
 	for _, q in pairs(pile) do
 		if q[2] < x2 and q[4] > x1 and q[3] < y2 and q[5] > y1 then
-			drawpolygons(q[1])
+			drawpolygons(q[1], q[6], OFFSETX)
 		end
 	end
 	gfx.clearClipRect()
@@ -223,12 +330,34 @@ function platform.drawcached(name, width, height, key, draw)
 	c.image:draw(0, 0)
 end
 
-function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as its polygons
-	drawpolygons(polygons)
+function platform.drawpiece(image, polygons, x, y, angle, originx, originy, kind) --as its polygons
+	drawpolygons(polygons, kind, 0)
 end
 
-function platform.drawbody(body, scale) --a piece by its body's shapes, in C: no tables of points to make
-	nt.body_draw(body.p, scale)
+--The next piece, in the box at the side: its blocks where graphics/pieces/<kind>.png has them, the
+--image's top left at x, y: blocks of 8 (at scale), after a 1 pixel border, in columns and rows.
+local PREVIEWBLOCKS = {
+	{{0, 0}, {1, 0}, {2, 0}, {3, 0}}, --I
+	{{0, 0}, {1, 0}, {2, 0}, {2, 1}}, --J
+	{{0, 0}, {1, 0}, {2, 0}, {0, 1}}, --L
+	{{0, 0}, {1, 0}, {0, 1}, {1, 1}}, --O
+	{{1, 0}, {2, 0}, {0, 1}, {1, 1}}, --S
+	{{0, 0}, {1, 0}, {2, 0}, {1, 1}}, --T
+	{{0, 0}, {1, 0}, {1, 1}, {2, 1}}, --Z
+}
+
+function platform.drawpreview(kind, x, y, scale)
+	local polygons = {}
+	for _, b in ipairs(PREVIEWBLOCKS[kind] or {}) do
+		local x1, y1 = math.floor(x + (1 + b[1]*8)*scale), math.floor(y + (1 + b[2]*8)*scale)
+		local x2, y2 = math.floor(x + (1 + (b[1] + 1)*8)*scale), math.floor(y + (1 + (b[2] + 1)*8)*scale)
+		polygons[#polygons+1] = {x1, y1, x2, y1, x2, y2, x1, y2}
+	end
+	drawpolygons(polygons, kind, 0)
+end
+
+function platform.drawbody(body, scale, kind) --a piece by its body's shapes, in C: no tables of points to make
+	nt.body_draw(body.p, scale, kind, OFFSETX, 0)
 end
 
 function platform.print(text, x, y)

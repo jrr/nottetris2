@@ -237,22 +237,65 @@ static int shape_getworldpoints(lua_State *L) { /* x1, y1, x2, y2, ... */
 	return count*2;
 }
 
-/* A body's shapes, each a black polygon outlined in white, at scale: what platform_playdate.lua drew
- * from points in tables, which cost more to make on the Playdate than the drawing. */
+/* each kind of piece's pattern, as platform_playdate.lua gives it: 8 rows, bits set for white, and
+ * whether it's fixed to the screen rather than starting at each block's corner */
+#define NT_KINDS 8 /* kinds of piece, 1-7 */
+static uint8_t patterns[NT_KINDS][8];
+static int fixed[NT_KINDS];
+
+static int setpattern(lua_State *L) { /* kind, fixed, then the 8 rows */
+	int kind = pd->lua->getArgInt(1);
+	if (kind >= 0 && kind < NT_KINDS) {
+		fixed[kind] = pd->lua->getArgBool(2);
+		for (int r = 0; r < 8; r++) {
+			patterns[kind][r] = pd->lua->getArgInt(3 + r);
+		}
+	}
+	return 0;
+}
+
+static int shape_screenpoints(lua_State *L) { /* x1, y1, x2, y2, ...: nt_shape_getscreenpoints */
+	int out[NT_MAXPOINTS*2];
+	int count = nt_shape_getscreenpoints(shape(1), number(2), out);
+	for (int i = 0; i < count*2; i++) {
+		pd->lua->pushInt(out[i]);
+	}
+	return count*2;
+}
+
+/* A body's shapes at scale, each a polygon filled with its kind's pattern and outlined in black:
+ * what platform_playdate.lua drew from points in tables, which cost more to make on the Playdate
+ * than the drawing. Points are nt_shape_getscreenpoints, as platform_playdate.lua's are for the
+ * pile. Each shape's pattern starts at its first point, so that every block of a piece looks the
+ * same and the pattern moves with it, unless the pattern is fixed to the screen. offsetx, offsety
+ * is the draw offset, which the C API doesn't tell: patterns line up with the screen. */
 static int body_draw(lua_State *L) {
 	cpShape *shapes[16];
 	int count = nt_body_getshapes(body(1), shapes, 16);
 	ntReal scale = number(2);
+	int kind = pd->lua->getArgInt(3), offsetx = pd->lua->getArgInt(4), offsety = pd->lua->getArgInt(5);
+	int known = kind >= 0 && kind < NT_KINDS;
 	for (int i = 0; i < count; i++) {
-		ntReal points[NT_MAXPOINTS*2];
-		int n = nt_shape_getworldpoints(shapes[i], points), coords[NT_MAXPOINTS*2];
-		for (int j = 0; j < n*2; j++) {
-			coords[j] = (int)NT_FLOOR(points[j]*scale);
+		int coords[NT_MAXPOINTS*2];
+		int n = nt_shape_getscreenpoints(shapes[i], scale, coords);
+		if (n < 3) {
+			continue; /* not a polygon: nothing to draw */
 		}
-		pd->graphics->fillPolygon(n, coords, kColorBlack, kPolygonFillNonZero);
+		int dx = 0, dy = 0;
+		if (known && !fixed[kind]) {
+			dx = (coords[0] + offsetx) & 7;
+			dy = (coords[1] + offsety) & 7;
+		}
+		LCDPattern pattern;
+		for (int r = 0; r < 8; r++) {
+			uint8_t row = known ? patterns[kind][(r - dy) & 7] : 0;
+			pattern[r] = (uint8_t)((row >> dx) | (row << (8 - dx))); /* moved right dx */
+			pattern[8 + r] = 0xFF; /* opaque */
+		}
+		pd->graphics->fillPolygon(n, coords, (LCDColor)pattern, kPolygonFillNonZero);
 		for (int j = 0; j < n; j++) {
 			int k = (j + 1) % n;
-			pd->graphics->drawLine(coords[j*2], coords[j*2+1], coords[k*2], coords[k*2+1], 1, kColorWhite);
+			pd->graphics->drawLine(coords[j*2], coords[j*2+1], coords[k*2], coords[k*2+1], 1, kColorBlack);
 		}
 	}
 	return 0;
@@ -317,6 +360,8 @@ static const struct {
 	{"nt.shape_getworldpoints", shape_getworldpoints},
 	{"nt.shape_rowareas", shape_rowareas},
 	{"nt.body_draw", body_draw},
+	{"nt.setpattern", setpattern},
+	{"nt.shape_screenpoints", shape_screenpoints},
 };
 
 static void check(int ok, const char *what, const char *err) {

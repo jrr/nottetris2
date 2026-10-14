@@ -149,7 +149,7 @@ function gameA_draw()
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
-				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
+				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale, tetricutkind[i])
 			end
 		end
 		
@@ -176,7 +176,11 @@ function gameA_draw()
 	platform.setcolor(1, 1, 1)
 	--Next piece
 	if pause == false then
-		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		if platform.drawpreview then --as its blocks, where the image's top left would be
+			platform.drawpreview(nextpiece, (136 - piececenterpreview[nextpiece][1])*scale, (120 - piececenterpreview[nextpiece][2])*scale, scale)
+		else
+			platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		end
 	end
 	
 	----------------
@@ -762,7 +766,10 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 		--create the new shape
 		if #coords/2 >= 3 and #coords/2 <= 8 then --shape still has 3 or more points, and not over 8.
 			if largeenough(coords) then
-				return convexhull(coords)
+				local hull = convexhull(coords)
+				if #hull >= 6 then --corners nearly in a line can leave only two, a sliver with no area
+					return hull
+				end
 			end
 		else
 			print("#coords")

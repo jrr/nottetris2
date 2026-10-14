@@ -118,6 +118,12 @@ function physics.getworldpoints(shape) --a polygon's points in world coordinates
 	return {nt.shape_getworldpoints(check(shape))}
 end
 
+--A polygon's points on the screen at scale, in whole pixels, so that a piece moves a pixel at a time
+--all together and keeps its shape: {x1, y1, x2, y2, ...} (nt_shape_getscreenpoints)
+function physics.getscreenpoints(shape, scale)
+	return {nt.shape_screenpoints(check(shape), scale)}
+end
+
 --bodies
 function Body:getPosition()
 	return nt.body_getposition(check(self))
