@@ -762,7 +762,10 @@ function refineshape(line, mult, bodyid, body, shapeid, shape) --refines a shape
 		--create the new shape
 		if #coords/2 >= 3 and #coords/2 <= 8 then --shape still has 3 or more points, and not over 8.
 			if largeenough(coords) then
-				return convexhull(coords)
+				local hull = convexhull(coords)
+				if #hull >= 6 then --corners nearly in a line can leave only two, a sliver with no area
+					return hull
+				end
 			end
 		else
 			print("#coords")
