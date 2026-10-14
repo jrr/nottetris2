@@ -4,6 +4,7 @@
 --tables, which Playdate's C API can't make). On Playdate, playdate/nt_playdate.c registers the same.
 local ffi = require "ffi"
 
+--(ntReal, nt_physics.h's type for the game's own arithmetic, is double here: NT_FLOAT is for Playdate)
 ffi.cdef[[
 typedef struct ntWorld ntWorld;
 typedef struct cpBody cpBody;

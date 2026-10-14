@@ -201,6 +201,28 @@ function platform.drawpile()
 	pileimage:draw(0, 0)
 end
 
+--Drawings kept in images: drawn again when their key changes, but no more than 10 times a second.
+local caches = {}
+local CACHEDELAY = 100 --ms
+
+function platform.drawcached(name, width, height, key, draw)
+	local c = caches[name]
+	if not c then
+		c = {image = gfx.image.new(math.ceil(width), math.ceil(height))}
+		caches[name] = c
+	end
+	local now = playdate.getCurrentTimeMilliseconds()
+	if c.key ~= key and (not c.time or now - c.time >= CACHEDELAY) then
+		c.image:clear(gfx.kColorClear)
+		gfx.pushContext(c.image)
+		draw()
+		gfx.popContext()
+		setcolor()
+		c.key, c.time = key, now
+	end
+	c.image:draw(0, 0)
+end
+
 function platform.drawpiece(image, polygons, x, y, angle, originx, originy) --as its polygons
 	drawpolygons(polygons)
 end

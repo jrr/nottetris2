@@ -45,7 +45,7 @@ else()
 endif()
 
 target_include_directories(${TARGET} PRIVATE ${NATIVE} ${NATIVE}/chipmunk/include)
-target_compile_definitions(${TARGET} PRIVATE NDEBUG CP_USE_DOUBLES=0 CP_USE_CGTYPES=0)
+target_compile_definitions(${TARGET} PRIVATE NDEBUG CP_USE_DOUBLES=0 CP_USE_CGTYPES=0 NT_FLOAT)
 target_compile_options(${TARGET} PRIVATE -Wno-double-promotion)
 
 include(${SDK}/C_API/buildsupport/playdate_game.cmake)

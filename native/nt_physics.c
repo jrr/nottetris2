@@ -31,7 +31,7 @@ typedef struct {
 	int areasok, areasfrozen;
 	cpVect areaspos;
 	cpFloat areasangle;
-	double areas[NT_LINES];
+	ntReal areas[NT_LINES];
 } ntBody;
 
 typedef struct {
@@ -284,7 +284,7 @@ static int inpile(cpBody *body, cpBody *falling) { /* the pile: dynamic, or froz
 }
 
 /* the line areas */
-void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out) {
+void nt_world_lineareas(ntWorld *world, cpBody *falling, ntReal rowheight, ntReal *out) {
 	for (int line = 0; line < NT_LINES; line++) {
 		out[line] = 0;
 	}
@@ -304,7 +304,7 @@ void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, doubl
 				b->areas[line] = 0;
 			}
 			CP_BODY_FOREACH_SHAPE(body, shape) {
-				double areas[NT_MAXROWS];
+				ntReal areas[NT_MAXROWS];
 				int first, count = nt_shape_rowareas(shape, rowheight, &first, areas);
 				for (int k = 0; k < count; k++) {
 					if (first + k >= 0 && first + k < NT_LINES) {
@@ -349,7 +349,7 @@ static void bumpfrom(cpBody *body, cpFloat speed, const ntSchedule *s) {
 	cpBodyEachArbiter(body, bumpfrozen, &knock);
 }
 
-int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen) {
+int nt_world_schedule(ntWorld *world, cpBody *falling, ntReal dt, int *frozen) {
 	const ntSchedule *s = &world->schedule;
 	*frozen = 0;
 	list all = {0};
@@ -551,10 +551,10 @@ double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double 
 }
 
 /* the part of a polygon on one side of a horizontal line: y >= line if below, else y <= line */
-static int clip(const double *in, int n, double line, int below, double *out) {
+static int clip(const ntReal *in, int n, ntReal line, int below, ntReal *out) {
 	int count = 0;
 	for (int i = 0; i < n; i++) {
-		const double *a = in + i*2, *b = in + ((i + 1) % n)*2;
+		const ntReal *a = in + i*2, *b = in + ((i + 1) % n)*2;
 		int ain = below ? a[1] >= line : a[1] <= line;
 		int bin = below ? b[1] >= line : b[1] <= line;
 		if (ain) {
@@ -563,7 +563,7 @@ static int clip(const double *in, int n, double line, int below, double *out) {
 			count++;
 		}
 		if (ain != bin) {
-			double t = (line - a[1])/(b[1] - a[1]);
+			ntReal t = (line - a[1])/(b[1] - a[1]);
 			out[count*2] = a[0] + t*(b[0] - a[0]);
 			out[count*2+1] = line;
 			count++;
@@ -572,24 +572,24 @@ static int clip(const double *in, int n, double line, int below, double *out) {
 	return count;
 }
 
-static double area(const double *p, int n) {
-	double sum = 0;
+static ntReal area(const ntReal *p, int n) {
+	ntReal sum = 0;
 	for (int i = 0; i < n; i++) {
-		const double *a = p + i*2, *b = p + ((i + 1) % n)*2;
+		const ntReal *a = p + i*2, *b = p + ((i + 1) % n)*2;
 		sum += a[0]*b[1] - b[0]*a[1];
 	}
 	return sum < 0 ? -sum/2 : sum/2;
 }
 
-int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas) {
-	double points[NT_MAXPOINTS*2], top[(NT_MAXPOINTS+2)*2], band[(NT_MAXPOINTS+4)*2];
+int nt_shape_rowareas(cpShape *shape, ntReal rowheight, int *firstrow, ntReal *areas) {
+	ntReal points[NT_MAXPOINTS*2], top[(NT_MAXPOINTS+2)*2], band[(NT_MAXPOINTS+4)*2];
 	int n = nt_shape_getworldpoints(shape, points);
-	double ymin = points[1], ymax = points[1];
+	ntReal ymin = points[1], ymax = points[1];
 	for (int i = 1; i < n; i++) {
 		ymin = points[i*2+1] < ymin ? points[i*2+1] : ymin;
 		ymax = points[i*2+1] > ymax ? points[i*2+1] : ymax;
 	}
-	int first = (int)floor(ymin/rowheight), last = (int)ceil(ymax/rowheight) - 1;
+	int first = (int)NT_FLOOR(ymin/rowheight), last = (int)NT_CEIL(ymax/rowheight) - 1;
 	if (last < first) {
 		last = first;
 	}
@@ -605,11 +605,13 @@ int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *a
 	return last - first + 1;
 }
 
-int nt_shape_getworldpoints(cpShape *shape, double *out) {
+int nt_shape_getworldpoints(cpShape *shape, ntReal *out) {
 	cpBody *body = cpShapeGetBody(shape);
 	int count = cpPolyShapeGetCount(shape);
 	for (int i = 0; i < count; i++) {
-		put(cpBodyLocalToWorld(body, cpPolyShapeGetVert(shape, i)), out + i*2);
+		cpVect v = cpBodyLocalToWorld(body, cpPolyShapeGetVert(shape, i));
+		out[i*2] = v.x;
+		out[i*2+1] = v.y;
 	}
 	return count;
 }

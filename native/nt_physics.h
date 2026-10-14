@@ -15,6 +15,19 @@
 #define NT_MAXROWS 8 /* rows a shape can reach across, for nt_shape_rowareas */
 #define NT_LINES 18 /* the field's lines, for nt_world_lineareas */
 
+/* The type of the game's own arithmetic here (row areas, line areas, the scheduler): double, which
+ * LÖVE's baselines were made with, or float where NT_FLOAT is defined: the Playdate, whose processor
+ * does only floats, and doubles in software. */
+#ifdef NT_FLOAT
+typedef float ntReal;
+#define NT_FLOOR floorf
+#define NT_CEIL ceilf
+#else
+typedef double ntReal;
+#define NT_FLOOR floor
+#define NT_CEIL ceil
+#endif
+
 typedef struct ntWorld ntWorld;
 typedef struct cpBody cpBody;
 typedef struct cpShape cpShape;
@@ -30,23 +43,23 @@ void nt_world_step(ntWorld *world, double dt);
  * that have settled deep in it and letting them take turns being simulated again. The pile is every
  * body that's dynamic or that it froze, but the falling piece. Settings, as scheduler.lua has them: */
 typedef struct {
-	double liveRows; /* pieces reaching within this many rows (of 32) of the top of the pile are never frozen */
-	double maxAwake; /* deep pieces simulated at once, unless more are still moving */
-	double changesPerSecond; /* switches between static and dynamic, at most one a step */
-	double idleSpeed; /* a piece slower than this, hardly turning, is idle */
-	double idleTime; /* seconds a deep piece must be idle before it can be frozen... */
-	double maxTurn; /* ...or seconds it's been awake, if it's slow right now */
-	double bumpSpeed; /* a piece this fast bumps the frozen pieces it touches */
-	double ageWeight, bumpWeight, movedWeight, depthWeight; /* a frozen piece's claim to be woken next */
+	ntReal liveRows; /* pieces reaching within this many rows (of 32) of the top of the pile are never frozen */
+	ntReal maxAwake; /* deep pieces simulated at once, unless more are still moving */
+	ntReal changesPerSecond; /* switches between static and dynamic, at most one a step */
+	ntReal idleSpeed; /* a piece slower than this, hardly turning, is idle */
+	ntReal idleTime; /* seconds a deep piece must be idle before it can be frozen... */
+	ntReal maxTurn; /* ...or seconds it's been awake, if it's slow right now */
+	ntReal bumpSpeed; /* a piece this fast bumps the frozen pieces it touches */
+	ntReal ageWeight, bumpWeight, movedWeight, depthWeight; /* a frozen piece's claim to be woken next */
 } ntSchedule;
 void nt_world_setschedule(ntWorld *world, const ntSchedule *schedule);
 /* After a step: the scheduler's bookkeeping, and at most one change. Returns the id of the body it
  * froze or woke, or 0; *frozen says which (its freeze's number, or 0). falling may be NULL. */
-int nt_world_schedule(ntWorld *world, cpBody *falling, double dt, int *frozen);
+int nt_world_schedule(ntWorld *world, cpBody *falling, ntReal dt, int *frozen);
 /* The pile's area in each of the field's lines (rows of rowheight from y 0), into out[NT_LINES]: what
  * gameA.lua's checklinedensity adds up from nt_shape_rowareas, kept for each body while it's frozen
  * or hasn't moved. The pile as for nt_world_schedule. */
-void nt_world_lineareas(ntWorld *world, cpBody *falling, double rowheight, double *out);
+void nt_world_lineareas(ntWorld *world, cpBody *falling, ntReal rowheight, ntReal *out);
 /* the shapes that began touching in the last step, as pairs of their ids:
  * returns how many pairs, and points *pairs at them until the next step */
 int nt_world_contacts(ntWorld *world, const int **pairs);
@@ -93,9 +106,9 @@ void nt_shape_setfilter(cpShape *shape, unsigned categories, unsigned mask);
 int nt_shape_testpoint(cpShape *shape, double x, double y);
 /* how far along the line from x1, y1 to x2, y2 it first meets the shape (0-1), or -1 */
 double nt_shape_raycast(cpShape *shape, double x1, double y1, double x2, double y2);
-int nt_shape_getworldpoints(cpShape *shape, double *out); /* how many points, into out[2*NT_MAXPOINTS] */
+int nt_shape_getworldpoints(cpShape *shape, ntReal *out); /* how many points, into out[2*NT_MAXPOINTS] */
 /* how much of the shape is in each of the rows of the given height it reaches: returns how many
  * rows, into areas[NT_MAXROWS], and the first row's number (from 0, at y 0) into *firstrow */
-int nt_shape_rowareas(cpShape *shape, double rowheight, int *firstrow, double *areas);
+int nt_shape_rowareas(cpShape *shape, ntReal rowheight, int *firstrow, ntReal *areas);
 
 #endif

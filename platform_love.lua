@@ -137,6 +137,12 @@ function platform.setscissor(...) --x, y, width, height in screen coordinates: d
 	love.graphics.setScissor(...)
 end
 
+--Something drawn by draw() in the top left corner, width by height; where a platform can, it keeps
+--the drawing while key stays the same rather than draw again. LÖVE draws every frame.
+function platform.drawcached(name, width, height, key, draw)
+	draw()
+end
+
 function platform.drawnow(draw) --show a frame from the middle of an update
 	love.graphics.clear()
 	draw()
