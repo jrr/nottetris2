@@ -422,10 +422,10 @@ end
 
 local function drawpiece(i, v, x, y, angle)
 	if platform.drawbody then
-		platform.drawbody(v, physicsscale)
+		platform.drawbody(v, physicsscale, tetrikind[i])
 		return
 	end
-	platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), x*physicsscale, y*physicsscale, angle, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale)
+	platform.drawpiece( tetriimages[i], piecepolygons(tetrishapes[i]), x*physicsscale, y*physicsscale, angle, piececenter[tetrikind[i]][1]*scale, piececenter[tetrikind[i]][2]*scale, tetrikind[i])
 end
 
 function drawpieces() --tetribodies, with the pile kept drawn where the platform does that
@@ -477,7 +477,7 @@ function drawpieces() --tetribodies, with the pile kept drawn where the platform
 			l[1], l[2], l[3] = x, y, angle
 			if l.still >= JOINFRAMES then
 				pile[v] = {x, y, angle}
-				platform.pilepiece(v, piecepolygons(tetrishapes[i]))
+				platform.pilepiece(v, piecepolygons(tetrishapes[i]), tetrikind[i])
 			else
 				drawpiece(i, v, x, y, angle)
 			end
@@ -488,9 +488,14 @@ end
 function piecepolygons(shapes) --where a piece's shapes are on the screen: {{x1, y1, x2, y2, ...}, ...}
 	local polygons = {}
 	for _, shape in pairs(shapes) do
-		local points = physics.getworldpoints(shape)
-		for j = 1, #points do
-			points[j] = points[j]*physicsscale
+		local points
+		if physics.getscreenpoints then --whole pixels, the piece's shape kept as it moves
+			points = physics.getscreenpoints(shape, physicsscale)
+		else
+			points = physics.getworldpoints(shape)
+			for j = 1, #points do
+				points[j] = points[j]*physicsscale
+			end
 		end
 		polygons[#polygons+1] = points
 	end

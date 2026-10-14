@@ -149,7 +149,7 @@ function gameA_draw()
 	else
 		for i = 1, #tetricutimg do
 			if pause == false then
-				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale)
+				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale, tetricutkind[i])
 			end
 		end
 		
