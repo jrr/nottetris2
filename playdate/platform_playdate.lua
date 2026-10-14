@@ -332,6 +332,28 @@ function platform.drawpiece(image, polygons, x, y, angle, originx, originy, kind
 	drawpolygons(polygons, kind, 0)
 end
 
+--The next piece, in the box at the side: its blocks where graphics/pieces/<kind>.png has them, the
+--image's top left at x, y: blocks of 8 (at scale), after a 1 pixel border, in columns and rows.
+local PREVIEWBLOCKS = {
+	{{0, 0}, {1, 0}, {2, 0}, {3, 0}}, --I
+	{{0, 0}, {1, 0}, {2, 0}, {2, 1}}, --J
+	{{0, 0}, {1, 0}, {2, 0}, {0, 1}}, --L
+	{{0, 0}, {1, 0}, {0, 1}, {1, 1}}, --O
+	{{1, 0}, {2, 0}, {0, 1}, {1, 1}}, --S
+	{{0, 0}, {1, 0}, {2, 0}, {1, 1}}, --T
+	{{0, 0}, {1, 0}, {1, 1}, {2, 1}}, --Z
+}
+
+function platform.drawpreview(kind, x, y, scale)
+	local polygons = {}
+	for _, b in ipairs(PREVIEWBLOCKS[kind] or {}) do
+		local x1, y1 = math.floor(x + (1 + b[1]*8)*scale), math.floor(y + (1 + b[2]*8)*scale)
+		local x2, y2 = math.floor(x + (1 + (b[1] + 1)*8)*scale), math.floor(y + (1 + (b[2] + 1)*8)*scale)
+		polygons[#polygons+1] = {x1, y1, x2, y1, x2, y2, x1, y2}
+	end
+	drawpolygons(polygons, kind, 0)
+end
+
 function platform.drawbody(body, scale, kind) --a piece by its body's shapes, in C: no tables of points to make
 	nt.body_draw(body.p, scale, kind, OFFSETX, 0)
 end

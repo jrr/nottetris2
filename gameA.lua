@@ -176,7 +176,11 @@ function gameA_draw()
 	platform.setcolor(1, 1, 1)
 	--Next piece
 	if pause == false then
-		platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		if platform.drawpreview then --as its blocks, where the image's top left would be
+			platform.drawpreview(nextpiece, (136 - piececenterpreview[nextpiece][1])*scale, (120 - piececenterpreview[nextpiece][2])*scale, scale)
+		else
+			platform.draw(nextpieceimg[nextpiece], 136*scale, 120*scale, nextpiecerot, 1, 1, piececenterpreview[nextpiece][1]*scale, piececenterpreview[nextpiece][2]*scale)
+		end
 	end
 	
 	----------------
