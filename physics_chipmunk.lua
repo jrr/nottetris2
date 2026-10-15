@@ -77,6 +77,10 @@ function physics.setcollides(body, collides) --false: it collides with nothing
 	nt.body_setcollides(check(body), collides)
 end
 
+function physics.setkind(body, kind) --the kind of piece it is (1-7), for a platform that draws pieces from the physics
+	nt.body_setkind(check(body), kind)
+end
+
 --The scheduler (scheduler.lua), in C: its settings, then after each step its bookkeeping and at most
 --one change, which it returns: the body it froze or woke, and true if it froze it.
 local SCHEDULE = {"liveRows", "maxAwake", "changesPerSecond", "idleSpeed", "idleTime", "maxTurn", "bumpSpeed",

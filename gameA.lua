@@ -122,6 +122,7 @@ function createtetriA(i, uniqueid, x, y) --creates block, including body, shapes
 	tetribodies[uniqueid]:setLinearDamping(0.5)
 	tetribodies[uniqueid]:resetMassData()
 	tetribodies[uniqueid]:setBullet(true)
+	physics.setkind(tetribodies[uniqueid], i)
 	
 	for i, v in pairs(tetrishapes[uniqueid]) do
 		v:setUserData({1})
@@ -534,6 +535,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						local oldx, oldy = tetribodies[i-ioffset]:getX(), tetribodies[i-ioffset]:getY()
 						tetribodies[i-ioffset]:destroy()
 						tetribodies[i-ioffset] = physics.newbody(world, oldx, oldy, "dynamic")
+						physics.setkind(tetribodies[i-ioffset], tetrikind[i-ioffset])
 						tetribodies[i-ioffset]:setAngle(rotation)
 						tetrishapes[i-ioffset] = {}
 						for b, c in pairs(tetrishapescopy) do
@@ -571,6 +573,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 						
 					else --create new bodyid
 						tetribodies[highestbody()+1] = physics.newbody(world, tetribodies[i-ioffset]:getX(), tetribodies[i-ioffset]:getY(), "dynamic")
+						physics.setkind(tetribodies[highestbody()], tetrikind[i-ioffset])
 						tetribodies[highestbody()]:setAngle(tetribodies[i-ioffset]:getAngle())
 						tetrishapes[highestbody()] = {}
 						

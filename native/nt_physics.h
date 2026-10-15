@@ -38,6 +38,7 @@ void nt_world_free(ntWorld *world); /* and every body and shape in it */
 void nt_world_setmaxrise(ntWorld *world, double speed);
 void nt_world_setiterations(ntWorld *world, int iterations); /* the solver's passes a step: more is stiffer and slower */
 void nt_world_step(ntWorld *world, double dt);
+int nt_world_getbodies(ntWorld *world, cpBody **out, int max); /* every body, static ones too: how many, up to max */
 
 /* The scheduler (scheduler.lua): simulates only part of the pile, freezing (making static) pieces
  * that have settled deep in it and letting them take turns being simulated again. The pile is every
@@ -91,6 +92,10 @@ void nt_body_setcollides(cpBody *body, int collides); /* off: its shapes collide
 /* the ids of the shapes of other bodies its shapes are touching: how many (up to max), into ids */
 int nt_body_touching(cpBody *body, int *ids, int max);
 int nt_body_getshapes(cpBody *body, cpShape **out, int max); /* how many, up to max */
+int nt_body_getid(cpBody *body); /* the id it was made with */
+/* the kind of piece it is, for drawing it (1-7), or 0, the default, for none: the walls */
+void nt_body_setkind(cpBody *body, int kind);
+int nt_body_getkind(cpBody *body);
 void nt_body_tolocal(cpBody *body, double x, double y, double *out);
 void nt_body_toworld(cpBody *body, double x, double y, double *out);
 

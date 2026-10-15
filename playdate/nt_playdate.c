@@ -9,6 +9,7 @@
  * back as that nt.Shape. So bodies and shapes go to Lua by handles, which are only freed when Lua
  * collects their objects, and which empty when what they point to is freed. */
 #include <math.h>
+#include <stdint.h>
 #include "pd_api.h"
 #include "nt_physics.h"
 
@@ -164,6 +165,7 @@ static int body_isstatic(lua_State *L) { pd->lua->pushBool(nt_body_isstatic(body
 static int body_setstatic(lua_State *L) { pd->lua->pushInt(nt_body_setstatic(body(1), pd->lua->getArgBool(2))); return 1; }
 static int body_gettop(lua_State *L) { pd->lua->pushFloat(nt_body_gettop(body(1))); return 1; }
 static int body_setcollides(lua_State *L) { nt_body_setcollides(body(1), pd->lua->getArgBool(2)); return 0; }
+static int body_setkind(lua_State *L) { nt_body_setkind(body(1), pd->lua->getArgInt(2)); return 0; }
 
 static int body_touching(lua_State *L) { /* the ids of the shapes it's touching, up to 16 */
 	int ids[16];
@@ -263,42 +265,230 @@ static int shape_screenpoints(lua_State *L) { /* x1, y1, x2, y2, ...: nt_shape_g
 	return count*2;
 }
 
-/* A body's shapes at scale, each a polygon filled with its kind's pattern and outlined in black:
- * what platform_playdate.lua drew from points in tables, which cost more to make on the Playdate
- * than the drawing. Points are nt_shape_getscreenpoints, as platform_playdate.lua's are for the
- * pile. Each shape's pattern starts at its first point, so that every block of a piece looks the
- * same and the pattern moves with it, unless the pattern is fixed to the screen. offsetx, offsety
- * is the draw offset, which the C API doesn't tell: patterns line up with the screen. */
-static int body_draw(lua_State *L) {
-	cpShape *shapes[16];
-	int count = nt_body_getshapes(body(1), shapes, 16);
-	ntReal scale = number(2);
-	int kind = pd->lua->getArgInt(3), offsetx = pd->lua->getArgInt(4), offsety = pd->lua->getArgInt(5);
+/* A polygon (points in whole pixels) filled with a kind's pattern and outlined in black, as
+ * platform_playdate.lua's drawpolygons does. The pattern starts at its first point, so that every
+ * block of a piece looks the same and the pattern moves with it, unless it's fixed to the screen.
+ * Patterns line up with the corner of what's drawn into: gridx, gridy is where that is on the
+ * screen, and the points are drawn offsetx, offsety from it (the draw offset, which the C API
+ * doesn't tell). */
+static void drawpolygon(int *coords, int n, int kind, int offsetx, int offsety, int gridx, int gridy) {
+	if (n < 3) {
+		return; /* not a polygon: nothing to draw */
+	}
 	int known = kind >= 0 && kind < NT_KINDS;
-	for (int i = 0; i < count; i++) {
-		int coords[NT_MAXPOINTS*2];
-		int n = nt_shape_getscreenpoints(shapes[i], scale, coords);
-		if (n < 3) {
-			continue; /* not a polygon: nothing to draw */
-		}
-		int dx = 0, dy = 0;
-		if (known && !fixed[kind]) {
-			dx = (coords[0] + offsetx) & 7;
-			dy = (coords[1] + offsety) & 7;
-		}
-		LCDPattern pattern;
-		for (int r = 0; r < 8; r++) {
-			uint8_t row = known ? patterns[kind][(r - dy) & 7] : 0;
-			pattern[r] = (uint8_t)((row >> dx) | (row << (8 - dx))); /* moved right dx */
-			pattern[8 + r] = 0xFF; /* opaque */
-		}
-		pd->graphics->fillPolygon(n, coords, (LCDColor)pattern, kPolygonFillNonZero);
-		for (int j = 0; j < n; j++) {
-			int k = (j + 1) % n;
-			pd->graphics->drawLine(coords[j*2], coords[j*2+1], coords[k*2], coords[k*2+1], 1, kColorBlack);
+	int dx = -gridx, dy = -gridy; /* the screen's corner, in the grid */
+	if (known && !fixed[kind]) {
+		dx = coords[0] + offsetx - gridx;
+		dy = coords[1] + offsety - gridy;
+	}
+	dx &= 7;
+	dy &= 7;
+	LCDPattern pattern;
+	for (int r = 0; r < 8; r++) {
+		uint8_t row = known ? patterns[kind][(r - dy) & 7] : 0;
+		pattern[r] = (uint8_t)((row >> dx) | (row << (8 - dx))); /* moved right dx */
+		pattern[8 + r] = 0xFF; /* opaque */
+	}
+	pd->graphics->fillPolygon(n, coords, (LCDColor)pattern, kPolygonFillNonZero);
+	for (int j = 0; j < n; j++) {
+		int k = (j + 1) % n;
+		pd->graphics->drawLine(coords[j*2], coords[j*2+1], coords[k*2], coords[k*2+1], 1, kColorBlack);
+	}
+}
+
+/* The pieces, each frame, in one call from Lua: platform_playdate.lua's platform.drawpieces.
+ * Pieces that have stopped moving are the pile, kept drawn in an image the size of the field
+ * rather than drawn each frame. A piece joins it once it's been still a few frames, and leaves it
+ * once it's visibly moved from where it was drawn into it, or is gone; what it covered is then
+ * redrawn from the pieces still there. Pieces are the world's bodies with a kind (nt_body_setkind),
+ * known here by their ids, as a new body can have the memory of one just freed. Points are
+ * nt_shape_getscreenpoints, so that a piece keeps its shape as it moves. */
+#define JOINFRAMES 3 /* frames still, for joining */
+#define STILL 0.1f /* screen pixels a frame, for joining */
+#define MOVED 0.5f /* screen pixels from where it joined, for leaving */
+#define MAXSHAPES 16 /* a piece's, drawn */
+#define MAXBODIES 512
+
+typedef struct {
+	int id, kind;
+	cpBody *body; /* this frame's, or NULL once it's gone */
+	int fresh; /* first seen this frame */
+	int still; /* frames it's been still */
+	int inpile;
+	ntReal last[3], joined[3]; /* x, y, angle: last frame, and when it joined the pile */
+	int x1, y1, x2, y2; /* what it covers in the pile's image */
+	int shapes, counts[MAXSHAPES];
+	int coords[MAXSHAPES][NT_MAXPOINTS*2];
+} pilepiece;
+
+static struct {
+	LCDBitmap *image;
+	pilepiece *pieces;
+	int count, capacity;
+} pile;
+
+static ntReal distance(const ntReal *a, const ntReal *b, ntReal scale) { /* in screen pixels; turning counts at a block's half-width */
+	return (fabsf(a[0] - b[0]) + fabsf(a[1] - b[1]) + fabsf(a[2] - b[2])*16)*scale;
+}
+
+static void drawpiece(pilepiece *p, int offsetx, int offsety, int gridx, int gridy) {
+	for (int i = 0; i < p->shapes; i++) {
+		drawpolygon(p->coords[i], p->counts[i], p->kind, offsetx, offsety, gridx, gridy);
+	}
+}
+
+static void getshapes(pilepiece *p, ntReal scale) { /* where its shapes are on the screen now */
+	cpShape *shapes[MAXSHAPES];
+	p->shapes = nt_body_getshapes(p->body, shapes, MAXSHAPES);
+	for (int i = 0; i < p->shapes; i++) {
+		p->counts[i] = nt_shape_getscreenpoints(shapes[i], scale, p->coords[i]);
+	}
+}
+
+static void unpile(pilepiece *p, int offsetx, int offsety) { /* out of the pile: redraw the area it covered */
+	p->inpile = 0;
+	int x = p->x1, y = p->y1, width = p->x2 - p->x1, height = p->y2 - p->y1;
+	pd->graphics->pushContext(pile.image);
+	pd->graphics->setClipRect(x, y, width, height);
+	pd->graphics->fillRect(x, y, width, height, kColorClear);
+	for (int i = 0; i < pile.count; i++) {
+		pilepiece *q = &pile.pieces[i];
+		if (q->inpile && q->x1 < p->x2 && q->x2 > p->x1 && q->y1 < p->y2 && q->y2 > p->y1) {
+			drawpiece(q, offsetx, offsety, offsetx, offsety);
 		}
 	}
-	return 0;
+	pd->graphics->clearClipRect();
+	pd->graphics->popContext();
+}
+
+static void joinpile(pilepiece *p, int offsetx, int offsety) { /* into the pile's image */
+	p->inpile = 1;
+	p->x1 = p->y1 = INT32_MAX;
+	p->x2 = p->y2 = INT32_MIN;
+	for (int i = 0; i < p->shapes; i++) {
+		for (int j = 0; j < p->counts[i]; j++) {
+			int x = p->coords[i][j*2], y = p->coords[i][j*2+1];
+			p->x1 = x < p->x1 ? x : p->x1;
+			p->x2 = x > p->x2 ? x : p->x2;
+			p->y1 = y < p->y1 ? y : p->y1;
+			p->y2 = y > p->y2 ? y : p->y2;
+		}
+	}
+	p->x1 -= 1;
+	p->y1 -= 1;
+	p->x2 += 1;
+	p->y2 += 1;
+	pd->graphics->pushContext(pile.image);
+	drawpiece(p, offsetx, offsety, offsetx, offsety);
+	pd->graphics->popContext();
+}
+
+static pilepiece *findpiece(int id) {
+	for (int i = 0; i < pile.count; i++) {
+		if (pile.pieces[i].id == id) {
+			return &pile.pieces[i];
+		}
+	}
+	return NULL;
+}
+
+/* world, the falling piece (which never joins the pile) or nil, scale, the draw offset, the pile's
+ * image's size, and whether it's a new game. Returns how many pieces joined the pile and how many
+ * left it. */
+static int pile_draw(lua_State *L) {
+	ntWorld *w = world(1);
+	cpBody *falling = pd->lua->getArgType(2, NULL) == kTypeNil ? NULL : body(2);
+	ntReal scale = number(3);
+	int offsetx = pd->lua->getArgInt(4), offsety = pd->lua->getArgInt(5);
+	int joined = 0, left = 0;
+	if (pile.image == NULL) {
+		pile.image = pd->graphics->newBitmap(pd->lua->getArgInt(6), pd->lua->getArgInt(7), kColorClear);
+	}
+	if (pd->lua->getArgBool(8)) {
+		pile.count = 0;
+		pd->graphics->clearBitmap(pile.image, kColorClear);
+	}
+	/* what's there now */
+	for (int i = 0; i < pile.count; i++) {
+		pile.pieces[i].body = NULL;
+	}
+	static cpBody *bodies[MAXBODIES];
+	int count = nt_world_getbodies(w, bodies, MAXBODIES);
+	for (int i = 0; i < count; i++) {
+		int kind = nt_body_getkind(bodies[i]);
+		if (kind == 0) {
+			continue;
+		}
+		int id = nt_body_getid(bodies[i]);
+		pilepiece *p = findpiece(id);
+		if (p == NULL) {
+			if (pile.count == pile.capacity) {
+				pile.capacity = pile.capacity ? pile.capacity*2 : 64;
+				pile.pieces = pd->system->realloc(pile.pieces, pile.capacity*sizeof(pilepiece));
+			}
+			p = &pile.pieces[pile.count++];
+			p->id = id;
+			p->fresh = 1;
+			p->still = 0;
+			p->inpile = 0;
+		}
+		p->kind = kind;
+		p->body = bodies[i];
+	}
+	/* first what leaves the pile, so it's patched before it's drawn */
+	for (int i = 0; i < pile.count; i++) {
+		pilepiece *p = &pile.pieces[i];
+		if (p->body && p->inpile) {
+			double pos[2];
+			nt_body_getposition(p->body, pos);
+			ntReal now[3] = {pos[0], pos[1], nt_body_getangle(p->body)};
+			if (distance(p->joined, now, scale) > MOVED) {
+				unpile(p, offsetx, offsety);
+				left++;
+			}
+		}
+	}
+	for (int i = 0; i < pile.count; i++) {
+		if (pile.pieces[i].body == NULL) {
+			if (pile.pieces[i].inpile) {
+				unpile(&pile.pieces[i], offsetx, offsety);
+				left++;
+			}
+			pile.pieces[i--] = pile.pieces[--pile.count];
+		}
+	}
+	pd->graphics->drawBitmap(pile.image, 0, 0, kBitmapUnflipped);
+	/* then what's moving, and what's joining the pile */
+	for (int i = 0; i < pile.count; i++) {
+		pilepiece *p = &pile.pieces[i];
+		if (p->inpile) {
+			continue;
+		}
+		double pos[2];
+		nt_body_getposition(p->body, pos);
+		ntReal now[3] = {pos[0], pos[1], nt_body_getangle(p->body)};
+		if (!p->fresh && p->body != falling && distance(p->last, now, scale) < STILL) {
+			p->still++;
+		} else {
+			p->still = 0;
+		}
+		p->fresh = 0;
+		for (int k = 0; k < 3; k++) {
+			p->last[k] = now[k];
+		}
+		getshapes(p, scale);
+		if (p->still >= JOINFRAMES) {
+			for (int k = 0; k < 3; k++) {
+				p->joined[k] = now[k];
+			}
+			joinpile(p, offsetx, offsety);
+			joined++;
+		}
+		drawpiece(p, offsetx, offsety, 0, 0);
+	}
+	pd->lua->pushInt(joined);
+	pd->lua->pushInt(left);
+	return 2;
 }
 
 static int shape_rowareas(lua_State *L) { /* first row, then the area in each */
@@ -346,6 +536,7 @@ static const struct {
 	{"nt.body_setstatic", body_setstatic},
 	{"nt.body_gettop", body_gettop},
 	{"nt.body_setcollides", body_setcollides},
+	{"nt.body_setkind", body_setkind},
 	{"nt.body_touching", body_touching},
 	{"nt.body_tolocal", body_tolocal},
 	{"nt.body_toworld", body_toworld},
@@ -359,7 +550,7 @@ static const struct {
 	{"nt.shape_raycast", shape_raycast},
 	{"nt.shape_getworldpoints", shape_getworldpoints},
 	{"nt.shape_rowareas", shape_rowareas},
-	{"nt.body_draw", body_draw},
+	{"nt.pile_draw", pile_draw},
 	{"nt.setpattern", setpattern},
 	{"nt.shape_screenpoints", shape_screenpoints},
 };

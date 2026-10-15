@@ -261,55 +261,11 @@ local function drawpolygons(polygons, kind, gridx, gridy, offsetx, offsety)
 	setcolor()
 end
 
---The pile: pieces that have stopped moving, kept drawn in an image the size of the game's screen.
---The game says when a piece joins it (drawn into the image) or leaves it (its area of the image
---redrawn from the pieces still there).
-platform.keepspile = true
-local pileimage = gfx.image.new(math.ceil(160*SCALE), 240)
-local pile = {} --key -> {polygons, x1, y1, x2, y2, kind}
-
-function platform.clearpile()
-	pile = {}
-	pileimage:clear(gfx.kColorClear)
-end
-
-function platform.pilepiece(key, polygons, kind) --into the pile, and onto the screen this frame
-	local x1, y1, x2, y2 = math.huge, math.huge, -math.huge, -math.huge
-	for _, points in ipairs(polygons) do
-		for i = 1, #points, 2 do
-			x1, x2 = math.min(x1, points[i]), math.max(x2, points[i])
-			y1, y2 = math.min(y1, points[i+1]), math.max(y2, points[i+1])
-		end
-	end
-	pile[key] = {polygons, math.floor(x1) - 1, math.floor(y1) - 1, math.ceil(x2) + 1, math.ceil(y2) + 1, kind}
-	gfx.pushContext(pileimage)
-	drawpolygons(polygons, kind, OFFSETX)
-	gfx.popContext()
-	drawpolygons(polygons, kind, 0)
-end
-
-function platform.unpile(key) --out of the pile: redraw the area it covered
-	local p = pile[key]
-	if not p then
-		return
-	end
-	pile[key] = nil
-	local x1, y1, x2, y2 = p[2], p[3], p[4], p[5]
-	gfx.pushContext(pileimage)
-	gfx.setClipRect(x1, y1, x2 - x1, y2 - y1)
-	gfx.setColor(gfx.kColorClear)
-	gfx.fillRect(x1, y1, x2 - x1, y2 - y1)
-	for _, q in pairs(pile) do
-		if q[2] < x2 and q[4] > x1 and q[3] < y2 and q[5] > y1 then
-			drawpolygons(q[1], q[6], OFFSETX)
-		end
-	end
-	gfx.clearClipRect()
-	gfx.popContext()
-end
-
-function platform.drawpile()
-	pileimage:draw(0, 0)
+--The pieces, in C (pile_draw in nt_playdate.c), which keeps those that have stopped moving drawn
+--in an image, the pile, rather than drawing each one every frame. Returns how many pieces joined the
+--pile and how many left it.
+function platform.drawpieces(world, falling, scale, newgame) --falling never joins the pile
+	return nt.pile_draw(world.p, falling and falling.p, scale, OFFSETX, 0, math.ceil(160*SCALE), 240, newgame)
 end
 
 --Drawings kept in images: drawn again when their key changes, but no more than 10 times a second.
@@ -371,10 +327,6 @@ function platform.drawpreview(kind, x, y, scale)
 		previews[kind] = p
 	end
 	p[1]:draw(ix, iy)
-end
-
-function platform.drawbody(body, scale, kind) --a piece by its body's shapes, in C: no tables of points to make
-	nt.body_draw(body.p, scale, kind, OFFSETX, 0)
 end
 
 function platform.print(text, x, y)
