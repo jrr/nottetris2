@@ -234,16 +234,17 @@ end
 
 --Polygons filled with a kind's pattern, each starting it at its first point (or lined up with the
 --screen, if it's fixed), outlined in black. Patterns line up with the corner of what's drawn into:
---gridx is where that is on the screen, 0 for the screen itself and OFFSETX for the pile's image;
---either way the points are drawn OFFSETX across.
-local function drawpolygons(polygons, kind, gridx)
+--gridx, gridy is where that is on the screen, 0, 0 for the screen itself, and the points are drawn
+--offsetx, offsety from it (by default OFFSETX, 0, as on the screen and in the pile's image).
+local function drawpolygons(polygons, kind, gridx, gridy, offsetx, offsety)
+	gridy, offsetx, offsety = gridy or 0, offsetx or OFFSETX, offsety or 0
 	local pattern = patterns[kind]
 	for _, points in ipairs(polygons) do
 		if #points >= 6 then --a polygon: 3 points or more
 			if pattern then
-				local x, y = -gridx, 0 --the screen's corner, in the grid
+				local x, y = -gridx, -gridy --the screen's corner, in the grid
 				if not pattern.fixed then
-					x, y = points[1] + OFFSETX - gridx, points[2]
+					x, y = points[1] + offsetx - gridx, points[2] + offsety - gridy
 				end
 				gfx.setPattern(pattern, (-x) % 8, (-y) % 8) --it turns left and up
 			else
@@ -346,14 +347,27 @@ local PREVIEWBLOCKS = {
 	{{0, 0}, {1, 0}, {1, 1}, {2, 1}}, --Z
 }
 
+--It's drawn into an image once for each kind, and the image drawn each frame: a call into C, not 16.
+local previews = {} --kind -> {image, x, y, scale}
+
 function platform.drawpreview(kind, x, y, scale)
-	local polygons = {}
-	for _, b in ipairs(PREVIEWBLOCKS[kind] or {}) do
-		local x1, y1 = math.floor(x + (1 + b[1]*8)*scale), math.floor(y + (1 + b[2]*8)*scale)
-		local x2, y2 = math.floor(x + (1 + (b[1] + 1)*8)*scale), math.floor(y + (1 + (b[2] + 1)*8)*scale)
-		polygons[#polygons+1] = {x1, y1, x2, y1, x2, y2, x1, y2}
+	local ix, iy = math.floor(x), math.floor(y) --the image's top left, which the blocks' corners are from
+	local p = previews[kind]
+	if not (p and p[2] == ix and p[3] == iy and p[4] == scale) then
+		local polygons = {}
+		for _, b in ipairs(PREVIEWBLOCKS[kind] or {}) do
+			local x1, y1 = math.floor(x + (1 + b[1]*8)*scale) - ix, math.floor(y + (1 + b[2]*8)*scale) - iy
+			local x2, y2 = math.floor(x + (1 + (b[1] + 1)*8)*scale) - ix, math.floor(y + (1 + (b[2] + 1)*8)*scale) - iy
+			polygons[#polygons+1] = {x1, y1, x2, y1, x2, y2, x1, y2}
+		end
+		p = {gfx.image.new(math.ceil((1 + 4*8)*scale) + 2, math.ceil((1 + 2*8)*scale) + 2, gfx.kColorClear), ix, iy, scale}
+		gfx.pushContext(p[1])
+		drawpolygons(polygons, kind, ix + OFFSETX, iy, ix + OFFSETX, iy)
+		gfx.popContext()
+		setcolor()
+		previews[kind] = p
 	end
-	drawpolygons(polygons, kind, 0)
+	p[1]:draw(ix, iy)
 end
 
 function platform.drawbody(body, scale, kind) --a piece by its body's shapes, in C: no tables of points to make
