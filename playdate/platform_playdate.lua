@@ -43,12 +43,15 @@ local function buttonkey(button)
 end
 
 local buttons = {playdate.kButtonLeft, playdate.kButtonRight, playdate.kButtonUp, playdate.kButtonDown, playdate.kButtonA, playdate.kButtonB}
+local held = 0 --the buttons held down this frame, as bits: read once a frame, as each call into C costs
 
 function playdate.update()
 	local dt = playdate.getElapsedTime()
 	playdate.resetElapsedTime()
+	local pressed
+	held, pressed = playdate.getButtonState()
 	for _, button in ipairs(buttons) do
-		if playdate.buttonJustPressed(button) then
+		if pressed & button ~= 0 then
 			game_keypressed(buttonkey(button))
 		end
 	end
@@ -101,13 +104,13 @@ function platform.setvolume(sound, volume) end
 function platform.setlooping(sound, looping) end
 
 --keys, by LÖVE's names: the d-pad is the arrows, A and B as above
-function platform.isdown(key) --held down right now
+function platform.isdown(key) --held down this frame
 	if dpad[key] then
-		return playdate.buttonIsPressed(dpad[key])
+		return held & dpad[key] ~= 0
 	elseif key == "x" then
-		return playdate.buttonIsPressed(playdate.kButtonA)
+		return held & playdate.kButtonA ~= 0
 	elseif key == "z" or key == "y" or key == "w" then
-		return playdate.buttonIsPressed(playdate.kButtonB)
+		return held & playdate.kButtonB ~= 0
 	end
 	return false
 end
