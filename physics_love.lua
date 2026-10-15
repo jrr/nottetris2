@@ -123,6 +123,9 @@ function physics.setcollides(body, collides) --false: it collides with nothing
 	end
 end
 
+function physics.setkind(body, kind) --nothing to do: only Chipmunk's C draws pieces
+end
+
 function physics.touching(body) --the bodies its shapes are touching: {body, ...}, maybe more than once
 	local bodies = {}
 	for _, contact in ipairs(body:getContacts()) do

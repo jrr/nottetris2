@@ -17,6 +17,7 @@ struct ntWorld {
 typedef struct {
 	cpFloat damping;
 	int id;
+	int kind; /* for drawing */
 	/* the scheduler's bookkeeping */
 	int frozen; /* 0, or the freeze's number */
 	int seen, slow;
@@ -136,6 +137,24 @@ void nt_world_free(ntWorld *world) {
 }
 
 void nt_world_setmaxrise(ntWorld *world, double speed) { world->maxrise = speed; }
+
+typedef struct {
+	cpBody **out;
+	int count, max;
+} bodylist;
+
+static void listbody(cpBody *body, void *data) {
+	bodylist *l = data;
+	if (l->count < l->max) {
+		l->out[l->count++] = body;
+	}
+}
+
+int nt_world_getbodies(ntWorld *world, cpBody **out, int max) {
+	bodylist l = {out, 0, max};
+	cpSpaceEachBody(world->space, listbody, &l);
+	return l.count;
+}
 void nt_world_setiterations(ntWorld *world, int iterations) { cpSpaceSetIterations(world->space, iterations); }
 
 /* after the contacts have been solved, since they can throw a body up; bodies move by it in the next step */
@@ -489,6 +508,10 @@ int nt_body_getshapes(cpBody *body, cpShape **out, int max) {
 	cpBodyEachShape(body, listshape, &l);
 	return l.count;
 }
+
+int nt_body_getid(cpBody *body) { return ((ntBody *)cpBodyGetUserData(body))->id; }
+void nt_body_setkind(cpBody *body, int kind) { ((ntBody *)cpBodyGetUserData(body))->kind = kind; }
+int nt_body_getkind(cpBody *body) { return ((ntBody *)cpBodyGetUserData(body))->kind; }
 
 int nt_body_touching(cpBody *body, int *ids, int max) {
 	touching t = {ids, 0, max};

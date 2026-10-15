@@ -11,9 +11,12 @@ end
 local totals, frames, since = {}, 0, ms()
 local joined, left = 0, 0
 
-local pilepiece, unpile = platform.pilepiece, platform.unpile
-function platform.pilepiece(...) joined = joined + 1 return pilepiece(...) end
-function platform.unpile(...) left = left + 1 return unpile(...) end
+local drawpieces = platform.drawpieces
+function platform.drawpieces(...)
+	local j, l = drawpieces(...)
+	joined, left = joined + j, left + l
+	return j, l
+end
 
 local function timed(name, f)
 	return function(...)

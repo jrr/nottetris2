@@ -111,6 +111,7 @@ function createtetriB(i, uniqueid, x, y)
 	tetribodies[uniqueid]:setLinearDamping(0.5)
 	tetribodies[uniqueid]:resetMassData()
 	tetribodies[uniqueid]:setBullet(true)
+	physics.setkind(tetribodies[uniqueid], i)
 	
 	for i, v in pairs(tetrishapes[uniqueid]) do
 		v:setUserData(uniqueid)
