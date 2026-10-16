@@ -116,6 +116,17 @@ function physics.gettop(body) --the smallest y of its shapes
 	return top
 end
 
+function physics.getbounds(body) --the smallest and largest y of its shapes' points (as physics.getworldpoints has them)
+	local top, bottom = math.huge, -math.huge
+	for _, fixture in ipairs(body:getFixtures()) do
+		local points = physics.getworldpoints(fixture)
+		for i = 2, #points, 2 do
+			top, bottom = math.min(top, points[i]), math.max(bottom, points[i])
+		end
+	end
+	return top, bottom
+end
+
 function physics.setcollides(body, collides) --false: it collides with nothing
 	for _, fixture in ipairs(body:getFixtures()) do
 		local category, _, group = fixture:getFilterData()

@@ -88,6 +88,9 @@ int nt_body_isstatic(cpBody *body);
  * (each freeze has its own), or 0 */
 int nt_body_setstatic(cpBody *body, int isstatic);
 double nt_body_gettop(cpBody *body); /* the smallest y of its shapes */
+/* the smallest and largest y of its shapes' points, into out[2]: the same numbers as
+ * nt_shape_getworldpoints gives (not the bounding boxes Chipmunk keeps, which only change with a step) */
+void nt_body_getbounds(cpBody *body, ntReal *out);
 void nt_body_setcollides(cpBody *body, int collides); /* off: its shapes collide with nothing */
 /* the ids of the shapes of other bodies its shapes are touching: how many (up to max), into ids */
 int nt_body_touching(cpBody *body, int *ids, int max);

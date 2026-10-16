@@ -73,6 +73,10 @@ function physics.gettop(body) --the smallest y of its shapes
 	return nt.body_gettop(check(body))
 end
 
+function physics.getbounds(body) --the smallest and largest y of its shapes' points (as physics.getworldpoints has them)
+	return nt.body_getbounds(check(body))
+end
+
 function physics.setcollides(body, collides) --false: it collides with nothing
 	nt.body_setcollides(check(body), collides)
 end

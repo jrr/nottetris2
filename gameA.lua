@@ -395,6 +395,13 @@ end
 --most of the pile is still from one check to the next.
 local pieceareas = setmetatable({}, {__mode = "k"}) --body -> {x=, y=, angle=, shapes=, [line] = area}
 
+local function reachesline(body) --whether a piece reaches the line being cleared (upperline to lowerline):
+	--one entirely above or below it is left as it is, as going through its points would find, at the
+	--cost of several calls into C and a convex hull for each block
+	local top, bottom = physics.getbounds(body)
+	return bottom >= upperline and top <= lowerline
+end
+
 function removeline(lineno) --Does all necessary things to clear a line. Refineshape and cutimage included.
 	pieceareas = setmetatable({}, {__mode = "k"}) --cutting changes pieces' shapes
 	scheduler_beforeclear(lineno)
@@ -411,7 +418,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 			print("oh yeah")
 			break
 		end
-		if i-ioffset > 1 then
+		if i-ioffset > 1 and reachesline(v) then
 			refined = false
 			coordinateproperties[i-ioffset] = {}
 			tetrishapescopy = {}

@@ -45,6 +45,7 @@ void nt_body_wake(cpBody *body);
 int nt_body_isstatic(cpBody *body);
 int nt_body_setstatic(cpBody *body, int isstatic);
 double nt_body_gettop(cpBody *body);
+void nt_body_getbounds(cpBody *body, double *out);
 void nt_body_setcollides(cpBody *body, int collides);
 void nt_body_setkind(cpBody *body, int kind);
 int nt_body_touching(cpBody *body, int *ids, int max);
@@ -210,6 +211,11 @@ end
 
 function nt.body_gettop(body)
 	return lib.nt_body_gettop(body)
+end
+
+function nt.body_getbounds(body) --top, bottom
+	lib.nt_body_getbounds(body, out)
+	return out[0], out[1]
 end
 
 function nt.body_setcollides(body, collides)
