@@ -9,6 +9,7 @@ local REFRESHRATE = 40 --frames a second we aim for (the Playdate's default is 3
 platform.maxstep = 1/30 --the longest step the game takes a frame: the game's 1/50 is slow motion below 50 fps
 platform.physicsiterations = 5 --Chipmunk's solver passes a step: fewer than the game's 10, for speed
 platform.stillpreview = true --the next piece doesn't spin: turning a bitmap each frame is slow here
+platform.spreadclears = true --a line clear's cutting is done while the lines blink, not in one long frame
 
 local SCALE = 240/144 --the Game Boy's 144 lines on the Playdate's 240
 local OFFSETX = math.floor((400 - 160*SCALE)/2) --centered, for now
