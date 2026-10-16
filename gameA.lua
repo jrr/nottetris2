@@ -148,6 +148,9 @@ function gameA_draw()
 	if cuttingtimer == lineclearduration then
 		drawpieces()
 	else
+		if platform.drawsnapshot and pause == false then
+			platform.drawsnapshot()
+		end
 		for i = 1, #tetricutimg do
 			if pause == false then
 				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale, tetricutkind[i])
@@ -857,14 +860,18 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 					tetricutimg = {}
 					tetricutpolygons = {}
 					
-					for i, v in pairs(tetribodies) do -- = 2, #tetribodies do
-						if tetribodies[i].getX then
-							table.insert(tetricutpos, tetribodies[i]:getX())
-							table.insert(tetricutpos, tetribodies[i]:getY())
-							table.insert(tetricutang, tetribodies[i]:getAngle())
-							table.insert(tetricutkind, tetrikind[i])
-							table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
-							table.insert(tetricutpolygons, piecepolygons(tetrishapes[i]))
+					if platform.snapshotpieces then --kept by the platform instead (as an image, on Playdate)
+						platform.snapshotpieces(world, physicsscale)
+					else
+						for i, v in pairs(tetribodies) do -- = 2, #tetribodies do
+							if tetribodies[i].getX then
+								table.insert(tetricutpos, tetribodies[i]:getX())
+								table.insert(tetricutpos, tetribodies[i]:getY())
+								table.insert(tetricutang, tetribodies[i]:getAngle())
+								table.insert(tetricutkind, tetrikind[i])
+								table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
+								table.insert(tetricutpolygons, piecepolygons(tetrishapes[i]))
+							end
 						end
 					end
 					

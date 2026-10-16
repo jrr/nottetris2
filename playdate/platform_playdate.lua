@@ -268,6 +268,15 @@ function platform.drawpieces(world, falling, scale, newgame) --falling never joi
 	return nt.pile_draw(world.p, falling and falling.p, scale, OFFSETX, 0, math.ceil(160*SCALE), 240, newgame)
 end
 
+--The pieces as they are now, kept in an image (in C) to be drawn while a line clear blinks
+function platform.snapshotpieces(world, scale)
+	nt.pieces_snapshot(world.p, scale, OFFSETX, 0, math.ceil(160*SCALE), 240)
+end
+
+function platform.drawsnapshot()
+	nt.pieces_drawsnapshot()
+end
+
 --Drawings kept in images: drawn again when their key changes, but no more than 10 times a second.
 local caches = {}
 local CACHEDELAY = 100 --ms
