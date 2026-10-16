@@ -641,6 +641,20 @@ int nt_shape_getscreenpoints(cpShape *shape, ntReal scale, int *out) {
 	return count;
 }
 
+void nt_body_getbounds(cpBody *body, ntReal *out) {
+	out[0] = INFINITY;
+	out[1] = -INFINITY;
+	CP_BODY_FOREACH_SHAPE(body, shape) {
+		ntReal points[NT_MAXPOINTS*2];
+		int count = nt_shape_getworldpoints(shape, points);
+		for (int i = 0; i < count; i++) {
+			ntReal y = points[i*2+1];
+			out[0] = y < out[0] ? y : out[0];
+			out[1] = y > out[1] ? y : out[1];
+		}
+	}
+}
+
 int nt_shape_getworldpoints(cpShape *shape, ntReal *out) {
 	cpBody *body = cpShapeGetBody(shape);
 	int count = cpPolyShapeGetCount(shape);

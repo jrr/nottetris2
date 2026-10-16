@@ -164,6 +164,14 @@ static int body_wake(lua_State *L) { nt_body_wake(body(1)); return 0; }
 static int body_isstatic(lua_State *L) { pd->lua->pushBool(nt_body_isstatic(body(1))); return 1; }
 static int body_setstatic(lua_State *L) { pd->lua->pushInt(nt_body_setstatic(body(1), pd->lua->getArgBool(2))); return 1; }
 static int body_gettop(lua_State *L) { pd->lua->pushFloat(nt_body_gettop(body(1))); return 1; }
+
+static int body_getbounds(lua_State *L) { /* top, bottom */
+	ntReal out[2];
+	nt_body_getbounds(body(1), out);
+	pd->lua->pushFloat(out[0]);
+	pd->lua->pushFloat(out[1]);
+	return 2;
+}
 static int body_setcollides(lua_State *L) { nt_body_setcollides(body(1), pd->lua->getArgBool(2)); return 0; }
 static int body_setkind(lua_State *L) { nt_body_setkind(body(1), pd->lua->getArgInt(2)); return 0; }
 
@@ -491,6 +499,39 @@ static int pile_draw(lua_State *L) {
 	return 2;
 }
 
+/* The pieces as they are, kept in an image while a line clear blinks, as cutting changes them:
+ * world, scale, the draw offset, and the image's size. Drawn as pile_draw draws them. */
+static LCDBitmap *snapshot;
+
+static int pieces_snapshot(lua_State *L) {
+	ntWorld *w = world(1);
+	ntReal scale = number(2);
+	int offsetx = pd->lua->getArgInt(3), offsety = pd->lua->getArgInt(4);
+	if (snapshot == NULL) {
+		snapshot = pd->graphics->newBitmap(pd->lua->getArgInt(5), pd->lua->getArgInt(6), kColorClear);
+	}
+	pd->graphics->clearBitmap(snapshot, kColorClear);
+	pd->graphics->pushContext(snapshot);
+	static cpBody *bodies[MAXBODIES];
+	int count = nt_world_getbodies(w, bodies, MAXBODIES);
+	for (int i = 0; i < count; i++) {
+		pilepiece p = {.kind = nt_body_getkind(bodies[i]), .body = bodies[i]};
+		if (p.kind != 0) {
+			getshapes(&p, scale);
+			drawpiece(&p, offsetx, offsety, offsetx, offsety);
+		}
+	}
+	pd->graphics->popContext();
+	return 0;
+}
+
+static int pieces_drawsnapshot(lua_State *L) {
+	if (snapshot) {
+		pd->graphics->drawBitmap(snapshot, 0, 0, kBitmapUnflipped);
+	}
+	return 0;
+}
+
 static int shape_rowareas(lua_State *L) { /* first row, then the area in each */
 	ntReal areas[NT_MAXROWS];
 	int first, count = nt_shape_rowareas(shape(1), number(2), &first, areas);
@@ -535,6 +576,7 @@ static const struct {
 	{"nt.body_isstatic", body_isstatic},
 	{"nt.body_setstatic", body_setstatic},
 	{"nt.body_gettop", body_gettop},
+	{"nt.body_getbounds", body_getbounds},
 	{"nt.body_setcollides", body_setcollides},
 	{"nt.body_setkind", body_setkind},
 	{"nt.body_touching", body_touching},
@@ -551,6 +593,8 @@ static const struct {
 	{"nt.shape_getworldpoints", shape_getworldpoints},
 	{"nt.shape_rowareas", shape_rowareas},
 	{"nt.pile_draw", pile_draw},
+	{"nt.pieces_snapshot", pieces_snapshot},
+	{"nt.pieces_drawsnapshot", pieces_drawsnapshot},
 	{"nt.setpattern", setpattern},
 	{"nt.shape_screenpoints", shape_screenpoints},
 };

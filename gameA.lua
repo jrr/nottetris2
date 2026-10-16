@@ -7,6 +7,7 @@ function gameA_load()
 	difficulty_speed = 100
 
 	cuttingtimer = lineclearduration
+	clearjob = nil
 	
 	scorescore = 0
 	levelscore = 0
@@ -148,6 +149,9 @@ function gameA_draw()
 	if cuttingtimer == lineclearduration then
 		drawpieces()
 	else
+		if platform.drawsnapshot and pause == false then
+			platform.drawsnapshot()
+		end
 		for i = 1, #tetricutimg do
 			if pause == false then
 				platform.drawpiece( tetricutimg[i], tetricutpolygons[i], tetricutpos[i*2-1]*physicsscale, tetricutpos[i*2]*physicsscale, tetricutang[i], piececenter[tetricutkind[i]][1]*scale, piececenter[tetricutkind[i]][2]*scale, tetricutkind[i])
@@ -279,6 +283,12 @@ function gameA_update(dt)
 	--CUTTING TIMER
 	if cuttingtimer < lineclearduration then
 		cuttingtimer = cuttingtimer + dt
+		if clearjob then
+			clearwork()
+			if clearjob then --the blink goes on till the cutting's done
+				cuttingtimer = math.min(cuttingtimer, lineclearduration*0.999)
+			end
+		end
 		if cuttingtimer >= lineclearduration then
 			--RANDOMIZE NEXT PIECE
 			nextpiece = math.random(7)
@@ -395,6 +405,50 @@ end
 --most of the pile is still from one check to the next.
 local pieceareas = setmetatable({}, {__mode = "k"}) --body -> {x=, y=, angle=, shapes=, [line] = area}
 
+--Cutting the pieces for a line clear, where a platform spreads it over the frames the lines blink
+--for (platform.spreadclears), as on Playdate it can take most of a second: clearjob is the
+--coroutine doing it, which removeline lets pause at clearpoint once a frame's share of time is
+--used, and what's to happen once it's done (the next piece). Nothing else touches the pieces
+--meanwhile: while the lines blink, the game shows a picture of the pieces from before, and the
+--physics, the line check and the controls wait.
+local CLEARBUDGET = 0.012 --seconds of cutting a frame
+
+function clearpoint() --where cutting can pause till the next frame
+	if clearjob and coroutine.running() == clearjob.co and platform.gettime() >= clearjob.deadline then
+		coroutine.yield()
+	end
+end
+
+function clearwork() --a frame's share of the cutting; once it's done, what's to happen next
+	clearjob.deadline = platform.gettime() + CLEARBUDGET
+	local ok, err = coroutine.resume(clearjob.co)
+	if not ok then
+		error(debug.traceback(clearjob.co, err), 0)
+	end
+	if coroutine.status(clearjob.co) == "dead" then
+		local after = clearjob.after
+		clearjob = nil
+		if after then
+			after()
+		end
+	end
+end
+
+function afterclear(f) --f once the cutting's done: now, unless it's spread over the blink
+	if clearjob then
+		clearjob.after = f
+	else
+		f()
+	end
+end
+
+local function reachesline(body) --whether a piece reaches the line being cleared (upperline to lowerline):
+	--one entirely above or below it is left as it is, as going through its points would find, at the
+	--cost of several calls into C and a convex hull for each block
+	local top, bottom = physics.getbounds(body)
+	return bottom >= upperline and top <= lowerline
+end
+
 function removeline(lineno) --Does all necessary things to clear a line. Refineshape and cutimage included.
 	pieceareas = setmetatable({}, {__mode = "k"}) --cutting changes pieces' shapes
 	scheduler_beforeclear(lineno)
@@ -411,7 +465,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 			print("oh yeah")
 			break
 		end
-		if i-ioffset > 1 then
+		if i-ioffset > 1 and reachesline(v) then
 			refined = false
 			coordinateproperties[i-ioffset] = {}
 			tetrishapescopy = {}
@@ -481,6 +535,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 					tetrishapescopy[#tetrishapescopy+1] = convexhull(physics.getworldpoints(tetrishapes[i-ioffset][j]))
 				end
 			end
+			clearpoint()
 			if refined == true then
 			
 			--create for either above our below; or both if body is cut in center.
@@ -625,6 +680,7 @@ function removeline(lineno) --Does all necessary things to clear a line. Refines
 			end --if refined
 			
 			tetrishapescopy = {}
+			clearpoint()
 		end --if i-ioffset > 1
 	end
 end
@@ -850,14 +906,18 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 					tetricutimg = {}
 					tetricutpolygons = {}
 					
-					for i, v in pairs(tetribodies) do -- = 2, #tetribodies do
-						if tetribodies[i].getX then
-							table.insert(tetricutpos, tetribodies[i]:getX())
-							table.insert(tetricutpos, tetribodies[i]:getY())
-							table.insert(tetricutang, tetribodies[i]:getAngle())
-							table.insert(tetricutkind, tetrikind[i])
-							table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
-							table.insert(tetricutpolygons, piecepolygons(tetrishapes[i]))
+					if platform.snapshotpieces then --kept by the platform instead (as an image, on Playdate)
+						platform.snapshotpieces(world, physicsscale)
+					else
+						for i, v in pairs(tetribodies) do -- = 2, #tetribodies do
+							if tetribodies[i].getX then
+								table.insert(tetricutpos, tetribodies[i]:getX())
+								table.insert(tetricutpos, tetribodies[i]:getY())
+								table.insert(tetricutang, tetribodies[i]:getAngle())
+								table.insert(tetricutkind, tetrikind[i])
+								table.insert(tetricutimg, platform.imagefrompixels(tetriimagedata[i]))
+								table.insert(tetricutpolygons, piecepolygons(tetrishapes[i]))
+							end
 						end
 					end
 					
@@ -926,13 +986,19 @@ function checklinedensity(active) --checks all 18 lines and, if active == true, 
 				newlevelbeep = true
 			end
 			
-			--Draw the screen before removing lines.
-			platform.drawnow(gameA_draw)
-			
-			for i = 1, 18 do
-				if linesremoved[i] then
-					removeline(i)
+			local function cut()
+				for i = 1, 18 do
+					if linesremoved[i] then
+						removeline(i)
+					end
 				end
+			end
+			if platform.spreadclears then --cut while the lines blink, a little each frame (clearwork)
+				clearjob = {co = coroutine.create(cut)}
+			else
+				--Draw the screen before removing lines.
+				platform.drawnow(gameA_draw)
+				cut()
 			end
 		else
 			platform.stop(blockfall)
@@ -1131,7 +1197,7 @@ end
 
 function endblockA() --handles failing, moving the current block to the end of the tables and calls checklinedensity in active mode
 	if checklinedensity(true) then
-		game_addTetriA()
+		afterclear(game_addTetriA)
 	else
 		game_addTetriA()
 		--RANDOMIZE NEXT PIECE
