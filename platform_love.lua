@@ -109,7 +109,9 @@ function platform.drawpiece(image, polygons, x, y, angle, originx, originy, kind
 	love.graphics.draw(image, x, y, angle, 1, 1, originx, originy)
 end
 --(a platform can instead have platform.drawpreview(kind, x, y, scale), to draw the next piece rather
---than its image, top left at x, y)
+--than its image, top left at x, y; or platform.drawhud(next, score, level, lines, added, rising), to
+--draw game A's panel its own way: the next piece (or nil), the numbers, and the score just added
+--(or nil) with how far it's risen, 0-1)
 
 --LÖVE draws every piece each frame, as above. A platform can instead draw them all itself, from the
 --physics, with platform.drawpieces(world, falling, scale, newgame) (as Playdate does, keeping the
