@@ -391,15 +391,84 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 	playdate.display.flush()
 end
 
---images: the LÖVE art, which pdc makes 1-bit, scaled
+--images: the LÖVE art, which pdc makes 1-bit, scaled; or the Playdate's own drawing of it, where
+--there is one (graphics/playdate/, from makeart.py), already the size it's drawn at
 local function load(path, scale)
 	local image = gfx.image.new(path)
 	assert(image, "no image " .. path)
 	return image:scaledImage(scale)
 end
 
+local own = {} --path -> the Playdate's own drawing of it
+
 function platform.newimage(path) --path without extension
+	local ownpath = path:gsub("^graphics/", "graphics/playdate/")
+	if playdate.file.exists(ownpath .. ".pdi") then
+		own[path] = gfx.image.new(ownpath)
+		return {image=own[path], drawnscale=SCALE}
+	end
 	return {image=load(path, SCALE), drawnscale=SCALE}
+end
+
+--Game A's panel, beside the field, in the Playdate's own drawing of it (panel.lua): twice as wide
+--as the Game Boy's, with its own rows. Its next piece, centred in its box, and its numbers, in
+--Nontendo Bold like its labels: drawn into the background when they change, so that a frame
+--draws them with it. The score just added rises out of sight under the score's band.
+local hudfont = gfx.font.new(panel.FONT)
+local hudshown = {}
+
+local function panelx(x) --a Game Boy x in the panel, on the screen
+	return panel.LEFT + (x - panel.PANELX)*2
+end
+
+local function panely(y) --a Game Boy y in the panel (fractions between rows), on the screen
+	local i = math.floor(y)
+	local a = panel.ROWS[i + 1]
+	return a + (y - i)*(panel.ROWS[i + 2] - a)
+end
+
+local function textrow(top) --where text goes whose Game Boy glyphs (8 high) would start at row top
+	return math.floor((panely(top) + panely(top + 8))/2 - (panel.INKTOP + panel.INKBOTTOM + 1)/2 + 0.5)
+end
+
+local function drawnumber(n, right, top)
+	local text = tostring(n)
+	hudfont:drawText(text, right - hudfont:getTextWidth(text), textrow(top))
+end
+
+function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-1, how far added has gone
+	local background = own["graphics/gamebackgroundgamea"]
+	if not background then
+		return
+	end
+	if hudshown.score ~= score or hudshown.level ~= level or hudshown.lines ~= lines then
+		hudshown = {score=score, level=level, lines=lines}
+		gfx.pushContext(background)
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(panelx(105), panely(23), background:getSize() - panelx(105), panely(33) - panely(23)) --the score's band
+		gfx.fillRect(panelx(112), panely(56), panelx(153) - panelx(112), panely(65) - panely(56)) --the boxes, under their labels
+		gfx.fillRect(panelx(112), panely(80), panelx(153) - panelx(112), panely(89) - panely(80))
+		drawnumber(score, panelx(152), 24)
+		drawnumber(level, panelx(144), 56)
+		drawnumber(lines, panelx(144), 80)
+		gfx.popContext()
+		setcolor()
+	end
+	if next and PREVIEWBLOCKS[next] then
+		local columns, rows = 0, 0
+		for _, b in ipairs(PREVIEWBLOCKS[next]) do
+			columns, rows = math.max(columns, b[1] + 1), math.max(rows, b[2] + 1)
+		end
+		local cx, cy = (panelx(119) + panelx(153))/2, (panely(103) + panely(137))/2
+		platform.drawpreview(next, cx - (columns*8/2 + 1)*SCALE, cy - (rows*8/2 + 1)*SCALE, SCALE)
+	end
+	if added then
+		gfx.setClipRect(panelx(105), panely(35), 400 - panelx(105), panely(45) - panely(35))
+		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+		drawnumber("+" .. added, panelx(144), 36 - rising*8)
+		gfx.setImageDrawMode(gfx.kDrawModeCopy)
+		gfx.clearClipRect()
+	end
 end
 
 function platform.newfont(path, glyphs) --the system font for now: just whether it's white

@@ -14,6 +14,11 @@ function failed_draw()
 		platform.draw(gameover, 16*scale, 0, 0, scale)
 	end
 	
+	if gameno == 1 and platform.drawhud then --the panel's numbers, drawn by the platform (gameA_draw)
+		platform.drawhud(nil, scorescore, levelscore, linesscore)
+		return
+	end
+	
 	--SCORES---------------------------------------
 	--"score"--
 	offsetX = 0
