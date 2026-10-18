@@ -179,8 +179,12 @@ function gameA_draw()
 	end
 	
 	platform.setcolor(1, 1, 1)
+	if platform.drawhud then --the panel's next piece and numbers, drawn by the platform, its own way
+		platform.drawhud(not pause and nextpiece, scorescore, levelscore, linesscore,
+			scoreaddtimer < scoreaddtime and lastscoreadd, scoreaddtimer/scoreaddtime)
+	end
 	--Next piece
-	if pause == false then
+	if pause == false and not platform.drawhud then
 		if platform.drawpreview then --as its blocks, where the image's top left would be
 			platform.drawpreview(nextpiece, (136 - piececenterpreview[nextpiece][1])*scale, (120 - piececenterpreview[nextpiece][2])*scale, scale)
 		else
@@ -190,7 +194,7 @@ function gameA_draw()
 	
 	----------------
 	--Last score
-	if scoreaddtimer < scoreaddtime then
+	if scoreaddtimer < scoreaddtime and not platform.drawhud then
 		platform.setscissor(105*scale, 35*scale, 55*scale, 9*scale)
 		
 		platform.setfont(whitefont)
@@ -239,6 +243,9 @@ function gameA_draw()
 	---------
 	
 	--SCORES---------------------------------------
+	if platform.drawhud then
+		return
+	end
 	--"score"--
 	offsetX = 0
 	

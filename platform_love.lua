@@ -109,7 +109,14 @@ function platform.drawpiece(image, polygons, x, y, angle, originx, originy, kind
 	love.graphics.draw(image, x, y, angle, 1, 1, originx, originy)
 end
 --(a platform can instead have platform.drawpreview(kind, x, y, scale), to draw the next piece rather
---than its image, top left at x, y)
+--than its image, top left at x, y; or platform.drawhud(next, score, level, lines, added, rising), to
+--draw game A's panel its own way: the next piece (or nil), the numbers, and the score just added
+--(or nil) with how far it's risen, 0-1; or platform.drawtitle(), to draw the title screen, with its
+--cursor, its own way; or platform.drawmenu(shown, names, scores, entering, cursor), to draw the
+--menu its own way: shown[1-6], the choices lettered black (normal, stack, a-type, b-type, c-type,
+--off), the top three names and scores, and the one whose name is being entered (or false) with
+--whether its cursor shows; or platform.drawcredits(lines), to letter the credits its own way, their
+--lines in the Game Boy font's characters, and the logo below the ninth)
 
 --LÖVE draws every piece each frame, as above. A platform can instead draw them all itself, from the
 --physics, with platform.drawpieces(world, falling, scale, newgame) (as Playdate does, keeping the

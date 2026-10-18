@@ -29,6 +29,11 @@ for f in gameA gameB menu failed rocket scheduler physics_chipmunk; do
 	cp ../$f.lua Source/
 done
 cp -R ../graphics Source/
+# the Playdate's own drawings of some of the art, and the font they're lettered in (makeart.py)
+mkdir -p Source/graphics/playdate
+cp panel.lua menuart.lua Source/
+cp art/*.png Source/graphics/playdate/
+cp -R art/fonts Source/
 
 quiet cmake -S . -B build/sim -DPRODUCT_DIR="$PWD/build/sim"
 quiet cmake --build build/sim -j

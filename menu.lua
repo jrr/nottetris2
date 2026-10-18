@@ -31,6 +31,9 @@ function menu_draw()
 			platform.draw(stabyourselflogo, 7*scale, math.floor(58*scale), 0, scale, scale)
 		end
 
+	elseif gamestate == "credits" and platform.drawcredits then --lettered by the platform, its own way
+		platform.drawcredits(creditstext)
+	
 	elseif gamestate == "credits" then------------		
 		for i, v in pairs(creditstext) do
 			platform.print( v, 0, i*8*scale, 0, scale)
@@ -39,9 +42,27 @@ function menu_draw()
 	------------------------------------------
 	
 	elseif gamestate == "title" then----------
-		platform.draw(title, 0, 0, 0, scale)
-	platform.print(">", 1*scale, 124*scale, 0, scale)
+		if platform.drawtitle then --the title and its cursor, drawn by the platform, its own way
+			platform.drawtitle()
+		else
+			platform.draw(title, 0, 0, 0, scale)
+			platform.print(">", 1*scale, 124*scale, 0, scale)
+		end
 	------------------------------------------
+	
+	elseif (gamestate == "menu" or gamestate == "highscoreentry") and platform.drawmenu then
+		--the menu drawn by the platform, its own way: which choices are lettered black (1-6: normal,
+		--stack, a-type, b-type, c-type, off), the top scores, and the name being entered
+		local shown = {}
+		if selection > 2 then
+			shown[gameno] = true
+		else
+			shown[musicno + 2] = true
+		end
+		if selectblink == true then
+			shown[selection] = true
+		end
+		platform.drawmenu(shown, highscorename, highscore, gamestate == "highscoreentry" and highscoreno, cursorblink)
 	
 	elseif gamestate == "menu" or gamestate == "highscoreentry" then
 		platform.draw(gametype, 0, 0, 0, scale)
@@ -82,7 +103,7 @@ function menu_draw()
 	
 	end
 	
-	if gamestate == "menu" or gamestate == "highscoreentry" then
+	if (gamestate == "menu" or gamestate == "highscoreentry") and not platform.drawmenu then
 		for i = 1, 3 do
 			if tonumber(highscore[i]) > 0 then
 				--name
@@ -97,7 +118,7 @@ function menu_draw()
 		end
 	end
 	
-	if gamestate == "highscoreentry" then
+	if gamestate == "highscoreentry" and not platform.drawmenu then
 		if highscorename[highscoreno]:len() < 6 then
 			offsetX = 0
 			for i = 1, highscorename[highscoreno]:len() do

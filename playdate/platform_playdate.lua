@@ -122,6 +122,9 @@ end
 --drawing. Images are scaled once when loaded; drawnscale is the scale the game draws them at,
 --which then needs no more scaling.
 function platform.draw(image, x, y, angle, sx, sy, originx, originy)
+	if image.whole then --a drawing of the whole screen, with everything in place in it
+		x, y = -OFFSETX, 0
+	end
 	sx = sx or 1
 	local k = sx/image.drawnscale
 	local width, height = image.image:getSize()
@@ -391,15 +394,132 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 	playdate.display.flush()
 end
 
---images: the LÖVE art, which pdc makes 1-bit, scaled
+--images: the LÖVE art, which pdc makes 1-bit, scaled; or the Playdate's own drawing of it, where
+--there is one (graphics/playdate/, from makeart.py), already the size it's drawn at. One 400 wide is
+--of the whole screen, with what's in it where it goes: it's drawn from the screen's corner, wherever
+--the game draws it (game A's background, and its game over, over the field)
 local function load(path, scale)
 	local image = gfx.image.new(path)
 	assert(image, "no image " .. path)
 	return image:scaledImage(scale)
 end
 
+local own = {} --path -> the Playdate's own drawing of it
+
 function platform.newimage(path) --path without extension
+	local ownpath = path:gsub("^graphics/", "graphics/playdate/")
+	if playdate.file.exists(ownpath .. ".pdi") then
+		own[path] = gfx.image.new(ownpath)
+		return {image=own[path], drawnscale=SCALE, whole=own[path]:getSize() == 400}
+	end
 	return {image=load(path, SCALE), drawnscale=SCALE}
+end
+
+--The title, with its menu and cursor lettered (makeart.py)
+function platform.drawtitle()
+	own["graphics/title"]:draw(0, 0)
+end
+
+--Game A's panel, beside the field, in the Playdate's own drawing of it, which is the whole screen
+--(panel.lua says where things go, on the screen): its numbers, in Nontendo Bold like its labels,
+--each centred across its place, drawn into the background when they change, so that a frame draws
+--them with it; the next piece, centred in its box; and the score just added, rising out of sight
+--under the score's band.
+local hudfont = gfx.font.new(panel.FONT)
+local hudshown = {}
+
+local function centred(text, place, y) --across a place on the screen, from the left x is (screen or game)
+	hudfont:drawText(text, math.floor((place.left + place.right - hudfont:getTextWidth(text))/2) - (place.offset or 0), y)
+end
+
+function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-1, how far added has gone
+	local background = own["graphics/gamebackgroundgamea"]
+	if not background then
+		return
+	end
+	if hudshown.score ~= score or hudshown.level ~= level or hudshown.lines ~= lines then
+		hudshown = {score=score, level=level, lines=lines}
+		gfx.pushContext(background) --which is the screen: no offset
+		for _, number in ipairs({{panel.SCORE, score}, {panel.LEVEL, level}, {panel.LINES, lines}}) do
+			local place = number[1]
+			gfx.setColor(gfx.kColorWhite)
+			gfx.fillRect(place.left, place.top, place.right - place.left, place.bottom - place.top)
+			centred(tostring(number[2]), place, place.text)
+		end
+		gfx.popContext()
+		setcolor()
+	end
+	if next and PREVIEWBLOCKS[next] then
+		local columns, rows = 0, 0
+		for _, b in ipairs(PREVIEWBLOCKS[next]) do
+			columns, rows = math.max(columns, b[1] + 1), math.max(rows, b[2] + 1)
+		end
+		local cx, cy = panel.NEXT.x - OFFSETX, panel.NEXT.y
+		platform.drawpreview(next, cx - (columns*8/2 + 1)*SCALE, cy - (rows*8/2 + 1)*SCALE, SCALE)
+	end
+	if added then
+		local place = panel.ADDED
+		gfx.setClipRect(place.left - OFFSETX, place.top, place.right - place.left, place.bottom - place.top)
+		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+		centred("+" .. added, {left=place.left, right=place.right, offset=OFFSETX},
+			math.floor(place.from + (place.to - place.from)*rising + 0.5))
+		gfx.setImageDrawMode(gfx.kDrawModeCopy)
+		gfx.clearClipRect()
+	end
+end
+
+--The credits, lettered in Nontendo Bold rather than the Game Boy's font, each line centred (they're
+--centred in that font with spaces), with its characters that aren't what they look: ' an opening
+--quote, T in TM, C a (c), # a full stop and closing quote. And the logo below the ninth line, "(c)2010
+--Maurice", lettered too. Drawn once, into an image.
+local credits
+
+function platform.drawcredits(lines)
+	if not credits then
+		local width = math.ceil(160*SCALE)
+		credits = gfx.image.new(width, 240) --clear, on the screen's background
+		gfx.pushContext(credits)
+		local function centred(text, row) --on the Game Boy's row of 8
+			hudfont:drawText(text, math.floor((width - hudfont:getTextWidth(text))/2), math.floor(row*8*SCALE + 0.5))
+		end
+		for i, line in ipairs(lines) do
+			line = line:gsub("'", '"'):gsub("C", "\u{a9}"):gsub("#", '."'):upper()
+			centred(line:match("^%s*(.-)%s*$"), i)
+		end
+		centred("\u{a9}2010 Maurice", 10)
+		gfx.popContext()
+	end
+	credits:draw(0, 0)
+end
+
+--The menu, in the Playdate's own drawing of it, every choice grey (menuart.lua): the chosen ones
+--lettered black over theirs, and the top scores over their dotted lines
+function platform.drawmenu(shown, names, scores, entering, cursor)
+	own["graphics/gametype"]:draw(0, 0)
+	for i, choice in ipairs(menuart.CHOICES) do
+		if shown[i] then
+			hudfont:drawText(choice[1], choice[2], choice[3])
+		end
+	end
+	for i = 1, 3 do
+		local y = menuart.ROWS[i]
+		if tonumber(scores[i]) > 0 then
+			local name = string.upper(string.sub(names[i], 1, 6))
+			local score = string.sub(tostring(scores[i]), 1, 6)
+			local namewidth, scorewidth = hudfont:getTextWidth(name), hudfont:getTextWidth(score)
+			gfx.setColor(gfx.kColorWhite) --off the dotted line
+			gfx.fillRect(menuart.NAMEX - 1, y - 1, namewidth + 2, 12)
+			gfx.fillRect(menuart.SCORERIGHT - scorewidth - 1, y - 1, scorewidth + 2, 12)
+			hudfont:drawText(name, menuart.NAMEX, y)
+			hudfont:drawText(score, menuart.SCORERIGHT - scorewidth, y)
+			if entering == i and cursor then --under where the next letter goes, or the last
+				local x = menuart.NAMEX + (name:len() < 6 and namewidth + 1 or hudfont:getTextWidth(name:sub(1, 5)) + 1)
+				gfx.setColor(gfx.kColorBlack)
+				gfx.fillRect(x, y + 11, 6, 2)
+			end
+			setcolor()
+		end
+	end
 end
 
 function platform.newfont(path, glyphs) --the system font for now: just whether it's white

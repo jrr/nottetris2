@@ -2,6 +2,8 @@
 --build.sh copies the game's files in beside this one (its main.lua as game.lua).
 require = function() end --the game's own requires are LÖVE's
 
+import "panel"
+import "menuart"
 import "platform_playdate"
 import "physics_chipmunk"
 import "game"
