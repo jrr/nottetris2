@@ -39,8 +39,12 @@ function menu_draw()
 	------------------------------------------
 	
 	elseif gamestate == "title" then----------
-		platform.draw(title, 0, 0, 0, scale)
-	platform.print(">", 1*scale, 124*scale, 0, scale)
+		if platform.drawtitle then --the title and its cursor, drawn by the platform, its own way
+			platform.drawtitle()
+		else
+			platform.draw(title, 0, 0, 0, scale)
+			platform.print(">", 1*scale, 124*scale, 0, scale)
+		end
 	------------------------------------------
 	
 	elseif gamestate == "menu" or gamestate == "highscoreentry" then

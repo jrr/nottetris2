@@ -410,6 +410,11 @@ function platform.newimage(path) --path without extension
 	return {image=load(path, SCALE), drawnscale=SCALE}
 end
 
+--The title, with its menu and cursor lettered (makeart.py)
+function platform.drawtitle()
+	own["graphics/title"]:draw(0, 0)
+end
+
 --Game A's panel, beside the field, in the Playdate's own drawing of it (panel.lua): twice as wide
 --as the Game Boy's, with its own rows. Its next piece, centred in its box, and its numbers, in
 --Nontendo Bold like its labels: drawn into the background when they change, so that a frame
