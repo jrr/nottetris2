@@ -265,11 +265,42 @@ local function drawpolygons(polygons, kind, gridx, gridy, offsetx, offsety)
 	setcolor()
 end
 
+--Pieces are drawn only between the walls (the game's wallshapes 0 and 1, left and right), so that
+--one pushed a little into a wall goes behind it rather than over it. Where there are no walls, as
+--in previews.lua, f is just called.
+local clipwalls, clipleft, clipright
+
+local function betweenwalls(f, ...)
+	local left, right = wallshapes and wallshapes[0], wallshapes and wallshapes[1]
+	if not (left and right) then
+		return f(...)
+	end
+	if clipwalls ~= left then
+		local inner = -math.huge
+		local points = physics.getworldpoints(left)
+		for i = 1, #points, 2 do
+			inner = math.max(inner, points[i])
+		end
+		clipleft = math.ceil(inner*physicsscale) + OFFSETX
+		inner = math.huge
+		points = physics.getworldpoints(right)
+		for i = 1, #points, 2 do
+			inner = math.min(inner, points[i])
+		end
+		clipright = math.floor(inner*physicsscale) + OFFSETX
+		clipwalls = left
+	end
+	gfx.setScreenClipRect(clipleft, 0, clipright - clipleft, 240)
+	local a, b = f(...)
+	gfx.clearClipRect()
+	return a, b
+end
+
 --The pieces, in C (pile_draw in nt_playdate.c), which keeps those that have stopped moving drawn
 --in an image, the pile, rather than drawing each one every frame. Returns how many pieces joined the
 --pile and how many left it.
 function platform.drawpieces(world, falling, scale, newgame) --falling never joins the pile
-	return nt.pile_draw(world.p, falling and falling.p, scale, OFFSETX, 0, math.ceil(160*SCALE), 240, newgame)
+	return betweenwalls(nt.pile_draw, world.p, falling and falling.p, scale, OFFSETX, 0, math.ceil(160*SCALE), 240, newgame)
 end
 
 --The pieces as they are now, kept in an image (in C) to be drawn while a line clear blinks
@@ -278,7 +309,7 @@ function platform.snapshotpieces(world, scale)
 end
 
 function platform.drawsnapshot()
-	nt.pieces_drawsnapshot()
+	betweenwalls(nt.pieces_drawsnapshot)
 end
 
 --Drawings kept in images: drawn again when their key changes, but no more than 10 times a second.
@@ -304,7 +335,7 @@ function platform.drawcached(name, width, height, key, draw)
 end
 
 function platform.drawpiece(image, polygons, x, y, angle, originx, originy, kind) --as its polygons
-	drawpolygons(polygons, kind, 0)
+	betweenwalls(drawpolygons, polygons, kind, 0)
 end
 
 --The next piece, in the box at the side: its blocks where graphics/pieces/<kind>.png has them, the
