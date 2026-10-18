@@ -31,7 +31,7 @@ done
 cp -R ../graphics Source/
 # the Playdate's own drawings of some of the art, and the font they're lettered in (makeart.py)
 mkdir -p Source/graphics/playdate
-cp panel.lua Source/
+cp panel.lua menuart.lua Source/
 cp art/*.png Source/graphics/playdate/
 cp -R art/fonts Source/
 

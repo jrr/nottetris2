@@ -3,6 +3,7 @@
 require = function() end --the game's own requires are LÖVE's
 
 import "panel"
+import "menuart"
 import "platform_playdate"
 import "physics_chipmunk"
 import "game"

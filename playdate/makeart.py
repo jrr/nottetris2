@@ -85,13 +85,13 @@ def inkrows(font, chars):
     return rows[0], rows[-1]
 
 
-def drawtext(image, font, s, x, y):
+def drawtext(image, font, s, x, y, ink=lambda x, y: BLACK):
     glyphs, tracking, _ = font
     for c in s:
         for gy, row in enumerate(glyphs[c]):
-            for gx, ink in enumerate(row):
-                if ink:
-                    image.putpixel((x + gx, y + gy), BLACK)
+            for gx, inked in enumerate(row):
+                if inked:
+                    image.putpixel((x + gx, y + gy), ink(x + gx, y + gy))
         x += len(glyphs[c][0]) + tracking
 
 
@@ -338,6 +338,20 @@ def spans(grid, code, y0, y1, gap):
     return out
 
 
+def redraw(grid, rows):
+    """a Game Boy screen's rows down to rows, traced and drawn again at 5/3 the size (240 high): the
+    image, and where the Game Boy's pixel edges went across and down"""
+    W = len(grid[0])
+    xs = axismap(thinness(lambda x, y: grid[y][x], W, rows), round(W*SCALE))
+    ys = axismap(thinness(lambda y, x: grid[y][x], rows, W), round(rows*SCALE))
+    image = Image.new("1", (xs[-1], 240), WHITE)
+    for codes, ink in [("ld#", lambda x, y: dither("l", x, y)), ("d#", lambda x, y: dither("d", x, y)),
+                       ("#", lambda x, y: BLACK)]:
+        inside = lambda x, y: 0 <= x < W and 0 <= y < rows and grid[y][x] in codes
+        fill(image, [[(along(xs, x), along(ys, y)) for x, y in smooth(loop)] for loop in trace(inside, W, rows)], ink)
+    return image, xs, ys
+
+
 def maketitle(font):
     art = Image.open(os.path.join(HERE, "..", "graphics", "title.png")).convert("RGB")
     W, H = art.size
@@ -357,14 +371,8 @@ def maketitle(font):
                 for x, y in region:
                     grid[y][x] = "."
 
-    width, scale = round(W*SCALE), SCALE
-    xs = axismap(thinness(lambda x, y: grid[y][x], W, MENU), width)
-    ys = axismap(thinness(lambda y, x: grid[y][x], MENU, W), round(MENU*scale))
-    image = Image.new("1", (width, 240), WHITE)
-    for codes, ink in [("ld#", lambda x, y: dither("l", x, y)), ("d#", lambda x, y: dither("d", x, y)),
-                       ("#", lambda x, y: BLACK)]:
-        inside = lambda x, y: 0 <= x < W and 0 <= y < MENU and grid[y][x] in codes
-        fill(image, [[(along(xs, x), along(ys, y)) for x, y in smooth(loop)] for loop in trace(inside, W, MENU)], ink)
+    image, xs, ys = redraw(grid, MENU)
+    scale = SCALE
     for sx, sy in stars:
         cx, cy = int(along(xs, sx)), int(along(ys, sy))
         for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
@@ -386,6 +394,107 @@ def maketitle(font):
                 image.putpixel((x, y), dither("d", x, y))
     drawtext(image, font, ">", sx(1), sx(125))
     image.save(os.path.join(HERE, "art", "title.png"))
+
+
+# The menu (game type, music type and top scores): traced as the title is, but its words are
+# lettered. Its boxes' insides are emptied and the words set in them: the headings black, and every
+# choice grey, as the Game Boy has them light brown; platform.drawmenu letters the chosen ones black
+# over them, and the top scores (menuart.lua says where). The specks in its light brown are left out.
+HEADINGS = ["GAME TYPE", "MUSIC TYPE", "TOP-SCORE"]
+CHOICES = ["NORMAL", "STACK", "A-TYPE", "B-TYPE", "C-TYPE", "OFF"]
+
+
+def blobs(grid, inside):
+    """the 4-connected regions where inside(code) (as regions(), for more than one color)"""
+    W, H = len(grid[0]), len(grid)
+    seen, out = set(), []
+    for y in range(H):
+        for x in range(W):
+            if not inside(grid[y][x]) or (x, y) in seen:
+                continue
+            region, todo = [], [(x, y)]
+            seen.add((x, y))
+            while todo:
+                px, py = todo.pop()
+                region.append((px, py))
+                for nx, ny in ((px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1)):
+                    if 0 <= nx < W and 0 <= ny < H and inside(grid[ny][nx]) and (nx, ny) not in seen:
+                        seen.add((nx, ny))
+                        todo.append((nx, ny))
+            out.append(region)
+    return out
+
+
+def bounds(region):
+    return (min(x for x, _ in region), min(y for _, y in region), max(x for x, _ in region) + 1,
+            max(y for _, y in region) + 1)
+
+
+def makemenu(font):
+    art = Image.open(os.path.join(HERE, "..", "graphics", "gametype.png")).convert("RGB")
+    W, H = art.size
+    grid = [[COLORS[art.getpixel((x, y))] for x in range(W)] for y in range(H)]
+
+    # the boxes: white regions of some size, not the margins around everything; emptied of what's
+    # inside them (what doesn't reach out of them: their own borders do)
+    boxes = sorted((bounds(r) for r in blobs(grid, lambda c: c == ".") if len(r) >= 100),
+                   key=lambda b: (b[1], b[0]))
+    boxes = [b for b in boxes if b[2] - b[0] < 150]
+    for x0, y0, x1, y1 in boxes:
+        for blob in blobs([[c if x0 <= x < x1 and y0 <= y < y1 else "." for x, c in enumerate(row)]
+                           for y, row in enumerate(grid)], lambda c: c != "."):
+            bx0, by0, bx1, by1 = bounds(blob)
+            if x0 < bx0 and bx1 < x1 and y0 < by0 and by1 < y1:
+                for x, y in blob:
+                    grid[y][x] = "."
+    assert len(boxes) == 11, boxes  # 3 headings, 6 choices, the ranks and the scores
+    specks = [(x, y) for y in range(1, H - 1) for x in range(1, W - 1) if grid[y][x] == "#" and
+              [grid[y][x - 1], grid[y][x + 1], grid[y - 1][x], grid[y + 1][x]].count("#") <= 1]
+    for x, y in specks:  # on its own, or on the edge of a box (a border's pixels have two or more beside them)
+        grid[y][x] = "l"
+
+    image, xs, ys = redraw(grid, H)
+    inktop, inkbottom = inkrows(font, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+    def screen(box):
+        x0, y0, x1, y1 = box
+        return xs[x0], ys[y0], xs[x1], ys[y1]
+    def centered(text, box, ink=lambda x, y: BLACK):
+        x0, y0, x1, y1 = screen(box)
+        x = (x0 + x1)//2 - textwidth(font, text)//2
+        y = (y0 + y1)//2 - (inktop + inkbottom + 1)//2
+        drawtext(image, font, text, x, y, ink)
+        return x, y
+    headings = [boxes[0], boxes[3], boxes[8]]
+    for text, box in zip(HEADINGS, headings):
+        centered(text, box)
+    choices = []
+    for text, box in zip(CHOICES, boxes[1:3] + boxes[4:8]):
+        choices.append(centered(text, box, lambda x, y: dither("d", x, y)))
+
+    # the top scores: three rows, 8 Game Boy pixels apart from 110, with their ranks; a name from
+    # x 33, a score to 145, and a dotted line along each until they're filled in
+    ranks, scores = boxes[9], boxes[10]
+    rows = []
+    for i in range(3):
+        top, bottom = ys[110 + 8*i], ys[118 + 8*i]
+        y = (top + bottom)//2 - (inktop + inkbottom + 1)//2
+        rows.append(y)
+        centered(str(i + 1), (ranks[0], 110 + 8*i, ranks[2], 118 + 8*i))
+        dots = (top + bottom)//2
+        for x0, x1 in ((33, 80), (97, 144)):
+            for x in range(xs[x0], xs[x1], 3):
+                image.putpixel((x, dots), BLACK)
+    image.save(os.path.join(HERE, "art", "gametype.png"))
+
+    with open(os.path.join(HERE, "menuart.lua"), "w") as out:
+        out.write("--Made by makeart.py: where the menu's words go in art/gametype.png. CHOICES: each choice's\n"
+                  "--text and its top left; ROWS: the top scores' rows' tops, a name from NAMEX and a score to\n"
+                  "--SCORERIGHT; and between, from LINEFROM to LINETO, their dotted lines.\n")
+        out.write("menuart = {\n")
+        out.write("\tCHOICES = {" + ", ".join('{"%s", %d, %d}' % (t, x, y) for t, (x, y) in zip(CHOICES, choices)) + "},\n")
+        out.write("\tROWS = {%s},\n" % ", ".join(str(r) for r in rows))
+        out.write("\tNAMEX = %d, SCORERIGHT = %d, LINEFROM = %d, LINETO = %d,\n" % (xs[33], xs[145], xs[scores[0]], xs[scores[2]]))
+        out.write("}\n")
 
 
 def main():
@@ -452,7 +561,9 @@ def main():
 
     os.makedirs(os.path.join(HERE, "art"), exist_ok=True)
     addglyphs()
-    maketitle(loadfont(os.path.basename(FONT), os.path.join(HERE, "art", "fonts")))
+    lettering = loadfont(os.path.basename(FONT), os.path.join(HERE, "art", "fonts"))
+    maketitle(lettering)
+    makemenu(lettering)
     image.save(os.path.join(HERE, "art", "gamebackgroundgamea.png"))
     with open(os.path.join(HERE, "panel.lua"), "w") as out:
         out.write("--Made by makeart.py: where game A's panel is in art/gamebackgroundgamea.png. The panel is\n"
@@ -464,7 +575,7 @@ def main():
         out.write("\tINKTOP = %d, INKBOTTOM = %d,\n" % (inktop, inkbottom))
         out.write("\tROWS = {" + ", ".join(str(r) for r in rowstart) + "},\n")
         out.write("}\n")
-    print("wrote art/gamebackgroundgamea.png, art/title.png, art/fonts/ and panel.lua")
+    print("wrote art/gamebackgroundgamea.png, art/title.png, art/gametype.png, art/fonts/, panel.lua and menuart.lua")
 
 
 if __name__ == "__main__":

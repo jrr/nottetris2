@@ -476,6 +476,60 @@ function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-
 	end
 end
 
+--The credits, lettered in Nontendo Bold rather than the Game Boy's font, each line centred (they're
+--centred in that font with spaces), with its characters that aren't what they look: ' an opening
+--quote, T in TM, C a (c), # a full stop and closing quote. And the logo below the ninth line, "(c)2010
+--Maurice", lettered too. Drawn once, into an image.
+local credits
+
+function platform.drawcredits(lines)
+	if not credits then
+		local width = math.ceil(160*SCALE)
+		credits = gfx.image.new(width, 240) --clear, on the screen's background
+		gfx.pushContext(credits)
+		local function centred(text, row) --on the Game Boy's row of 8
+			hudfont:drawText(text, math.floor((width - hudfont:getTextWidth(text))/2), math.floor(row*8*SCALE + 0.5))
+		end
+		for i, line in ipairs(lines) do
+			line = line:gsub("'", '"'):gsub("C", "\u{a9}"):gsub("#", '."'):upper()
+			centred(line:match("^%s*(.-)%s*$"), i)
+		end
+		centred("\u{a9}2010 Maurice", 10)
+		gfx.popContext()
+	end
+	credits:draw(0, 0)
+end
+
+--The menu, in the Playdate's own drawing of it, every choice grey (menuart.lua): the chosen ones
+--lettered black over theirs, and the top scores over their dotted lines
+function platform.drawmenu(shown, names, scores, entering, cursor)
+	own["graphics/gametype"]:draw(0, 0)
+	for i, choice in ipairs(menuart.CHOICES) do
+		if shown[i] then
+			hudfont:drawText(choice[1], choice[2], choice[3])
+		end
+	end
+	for i = 1, 3 do
+		local y = menuart.ROWS[i]
+		if tonumber(scores[i]) > 0 then
+			local name = string.upper(string.sub(names[i], 1, 6))
+			local score = string.sub(tostring(scores[i]), 1, 6)
+			local namewidth, scorewidth = hudfont:getTextWidth(name), hudfont:getTextWidth(score)
+			gfx.setColor(gfx.kColorWhite) --off the dotted line
+			gfx.fillRect(menuart.NAMEX - 1, y - 1, namewidth + 2, 12)
+			gfx.fillRect(menuart.SCORERIGHT - scorewidth - 1, y - 1, scorewidth + 2, 12)
+			hudfont:drawText(name, menuart.NAMEX, y)
+			hudfont:drawText(score, menuart.SCORERIGHT - scorewidth, y)
+			if entering == i and cursor then --under where the next letter goes, or the last
+				local x = menuart.NAMEX + (name:len() < 6 and namewidth + 1 or hudfont:getTextWidth(name:sub(1, 5)) + 1)
+				gfx.setColor(gfx.kColorBlack)
+				gfx.fillRect(x, y + 11, 6, 2)
+			end
+			setcolor()
+		end
+	end
+end
+
 function platform.newfont(path, glyphs) --the system font for now: just whether it's white
 	return {white=path:find("white") ~= nil}
 end
