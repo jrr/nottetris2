@@ -6,6 +6,8 @@
 #   playdate/build.sh --sim     # build and run it in the Simulator
 #   playdate/build.sh --device  # build, copy it to a USB-connected Playdate, run it there and
 #                               # show its console output (until Ctrl-C)
+#   playdate/build.sh --previews  # build previews.lua in place of the game and run it in the
+#                                 # Simulator: pictures of the pieces, written to build/previews
 #
 # Source/ is put together here each time: this directory's Lua, the game's (its main.lua as
 # game.lua, since Playdate's own entry point is main.lua) and its art, and the C built for the
@@ -34,6 +36,12 @@ mkdir -p Source/graphics/playdate
 cp panel.lua menuart.lua Source/
 cp art/*.png Source/graphics/playdate/
 cp -R art/fonts Source/
+if [ "${1:-}" = --previews ]; then
+	mkdir -p build/previews
+	cp previews.lua Source/
+	echo "PREVIEWSOUT = \"$PWD/build/previews\"" > Source/previewsout.lua
+	printf 'import "previewsout"\nimport "previews"\n' >> Source/main.lua
+fi
 
 quiet cmake -S . -B build/sim -DPRODUCT_DIR="$PWD/build/sim"
 quiet cmake --build build/sim -j
@@ -49,7 +57,7 @@ rm -rf build/nottetris2.pdx
 pdc Source build/nottetris2.pdx
 echo "built playdate/build/nottetris2.pdx"
 
-if [ "${1:-}" = --sim ]; then
+if [ "${1:-}" = --sim ] || [ "${1:-}" = --previews ]; then
 	exec "$PLAYDATE_SDK_PATH/bin/Playdate Simulator.app/Contents/MacOS/Playdate Simulator" "$PWD/build/nottetris2.pdx"
 fi
 
