@@ -122,6 +122,9 @@ end
 --drawing. Images are scaled once when loaded; drawnscale is the scale the game draws them at,
 --which then needs no more scaling.
 function platform.draw(image, x, y, angle, sx, sy, originx, originy)
+	if image.whole then --a drawing of the whole screen, with everything in place in it
+		x, y = -OFFSETX, 0
+	end
 	sx = sx or 1
 	local k = sx/image.drawnscale
 	local width, height = image.image:getSize()
@@ -392,7 +395,9 @@ function platform.drawnow(draw) --show a frame from the middle of an update
 end
 
 --images: the LÖVE art, which pdc makes 1-bit, scaled; or the Playdate's own drawing of it, where
---there is one (graphics/playdate/, from makeart.py), already the size it's drawn at
+--there is one (graphics/playdate/, from makeart.py), already the size it's drawn at. One 400 wide is
+--of the whole screen, with what's in it where it goes: it's drawn from the screen's corner, wherever
+--the game draws it (game A's background, and its game over, over the field)
 local function load(path, scale)
 	local image = gfx.image.new(path)
 	assert(image, "no image " .. path)
@@ -405,7 +410,7 @@ function platform.newimage(path) --path without extension
 	local ownpath = path:gsub("^graphics/", "graphics/playdate/")
 	if playdate.file.exists(ownpath .. ".pdi") then
 		own[path] = gfx.image.new(ownpath)
-		return {image=own[path], drawnscale=SCALE}
+		return {image=own[path], drawnscale=SCALE, whole=own[path]:getSize() == 400}
 	end
 	return {image=load(path, SCALE), drawnscale=SCALE}
 end
@@ -415,30 +420,16 @@ function platform.drawtitle()
 	own["graphics/title"]:draw(0, 0)
 end
 
---Game A's panel, beside the field, in the Playdate's own drawing of it (panel.lua): twice as wide
---as the Game Boy's, with its own rows. Its next piece, centred in its box, and its numbers, in
---Nontendo Bold like its labels: drawn into the background when they change, so that a frame
---draws them with it. The score just added rises out of sight under the score's band.
+--Game A's panel, beside the field, in the Playdate's own drawing of it, which is the whole screen
+--(panel.lua says where things go, on the screen): its numbers, in Nontendo Bold like its labels,
+--each centred across its place, drawn into the background when they change, so that a frame draws
+--them with it; the next piece, centred in its box; and the score just added, rising out of sight
+--under the score's band.
 local hudfont = gfx.font.new(panel.FONT)
 local hudshown = {}
 
-local function panelx(x) --a Game Boy x in the panel, on the screen
-	return panel.LEFT + (x - panel.PANELX)*2
-end
-
-local function panely(y) --a Game Boy y in the panel (fractions between rows), on the screen
-	local i = math.floor(y)
-	local a = panel.ROWS[i + 1]
-	return a + (y - i)*(panel.ROWS[i + 2] - a)
-end
-
-local function textrow(top) --where text goes whose Game Boy glyphs (8 high) would start at row top
-	return math.floor((panely(top) + panely(top + 8))/2 - (panel.INKTOP + panel.INKBOTTOM + 1)/2 + 0.5)
-end
-
-local function drawnumber(n, right, top)
-	local text = tostring(n)
-	hudfont:drawText(text, right - hudfont:getTextWidth(text), textrow(top))
+local function centred(text, place, y) --across a place on the screen, from the left x is (screen or game)
+	hudfont:drawText(text, math.floor((place.left + place.right - hudfont:getTextWidth(text))/2) - (place.offset or 0), y)
 end
 
 function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-1, how far added has gone
@@ -448,14 +439,13 @@ function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-
 	end
 	if hudshown.score ~= score or hudshown.level ~= level or hudshown.lines ~= lines then
 		hudshown = {score=score, level=level, lines=lines}
-		gfx.pushContext(background)
-		gfx.setColor(gfx.kColorWhite)
-		gfx.fillRect(panelx(105), panely(23), background:getSize() - panelx(105), panely(33) - panely(23)) --the score's band
-		gfx.fillRect(panelx(112), panely(56), panelx(153) - panelx(112), panely(65) - panely(56)) --the boxes, under their labels
-		gfx.fillRect(panelx(112), panely(80), panelx(153) - panelx(112), panely(89) - panely(80))
-		drawnumber(score, panelx(152), 24)
-		drawnumber(level, panelx(144), 56)
-		drawnumber(lines, panelx(144), 80)
+		gfx.pushContext(background) --which is the screen: no offset
+		for _, number in ipairs({{panel.SCORE, score}, {panel.LEVEL, level}, {panel.LINES, lines}}) do
+			local place = number[1]
+			gfx.setColor(gfx.kColorWhite)
+			gfx.fillRect(place.left, place.top, place.right - place.left, place.bottom - place.top)
+			centred(tostring(number[2]), place, place.text)
+		end
 		gfx.popContext()
 		setcolor()
 	end
@@ -464,13 +454,15 @@ function platform.drawhud(next, score, level, lines, added, rising) --rising: 0-
 		for _, b in ipairs(PREVIEWBLOCKS[next]) do
 			columns, rows = math.max(columns, b[1] + 1), math.max(rows, b[2] + 1)
 		end
-		local cx, cy = (panelx(119) + panelx(153))/2, (panely(103) + panely(137))/2
+		local cx, cy = panel.NEXT.x - OFFSETX, panel.NEXT.y
 		platform.drawpreview(next, cx - (columns*8/2 + 1)*SCALE, cy - (rows*8/2 + 1)*SCALE, SCALE)
 	end
 	if added then
-		gfx.setClipRect(panelx(105), panely(35), 400 - panelx(105), panely(45) - panely(35))
+		local place = panel.ADDED
+		gfx.setClipRect(place.left - OFFSETX, place.top, place.right - place.left, place.bottom - place.top)
 		gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-		drawnumber("+" .. added, panelx(144), 36 - rising*8)
+		centred("+" .. added, {left=place.left, right=place.right, offset=OFFSETX},
+			math.floor(place.from + (place.to - place.from)*rising + 0.5))
 		gfx.setImageDrawMode(gfx.kDrawModeCopy)
 		gfx.clearClipRect()
 	end

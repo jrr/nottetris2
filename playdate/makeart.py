@@ -23,10 +23,11 @@ from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCALE = 5/3
-WIDTH = 334  # from the game's x 0 (OFFSETX on the screen) to the screen's right edge
 BLACK, WHITE = 0, 1
 PANELX = 104  # Game Boy x where the panel starts: a white line, then the boxes
-LABELS = [("SCORE", 8, 17), ("LEVEL", 47, 56), ("LINES", 71, 80)]  # label, Game Boy rows of its box's inside
+BOXES = [((5, 18), (109, 154)), ((45, 90), (109, 154)), ((99, 140), (115, 156))]  # the panel's boxes:
+# Game Boy rows and columns (the score's label and its joins to the band; level's and lines'; next's)
+LABELS = [("SCORE", 6, 17), ("LEVEL", 47, 56), ("LINES", 71, 80)]  # label, Game Boy rows of its box's inside
 FONT = "Nontendo/Nontendo-Bold"
 
 COLORS = {(0, 0, 0): "#", (116, 92, 73): "d", (209, 174, 145): "l", (232, 232, 232): "g", (255, 255, 255): ".",
@@ -96,7 +97,7 @@ def drawtext(image, font, s, x, y, ink=lambda x, y: BLACK):
 
 
 # characters the font hasn't, in its style (strokes two pixels, capitals and digits ten rows): the +
-# of the score just added, and the title's > and (c)
+# of the score just added, the game over's heart, and the title's > and (c)
 GLYPHS = {
     "+": ["......",
           "......",
@@ -118,6 +119,16 @@ GLYPHS = {
           "###...",
           "##....",
           "......"],
+    "\u2665": [".........",
+               ".###.###.",
+               "#########",
+               "#########",
+               "#########",
+               ".#######.",
+               "..#####..",
+               "...###...",
+               "....#....",
+               "........."],
     "\u00a9": ["..######..",
                ".##....##.",
                "##..###..#",
@@ -132,7 +143,7 @@ GLYPHS = {
 
 
 def addglyphs():
-    """the font with GLYPHS added, in cells its table has spare"""
+    """the font with GLYPHS added, in cells its table has spare (or in a row more of them)"""
     fonts = os.path.join(os.environ["PLAYDATE_SDK_PATH"], "Resources", "Fonts")
     folder = os.path.join(fonts, os.path.dirname(FONT))
     name = os.path.basename(FONT)
@@ -145,7 +156,10 @@ def addglyphs():
     columns = image.width // cw
     lines = []
     for c, rows in GLYPHS.items():
-        assert n < columns*(image.height // ch), "no spare cell"
+        if n >= columns*(image.height // ch):  # another row of cells
+            grown = Image.new("RGBA", (image.width, image.height + ch), (0, 0, 0, 0))
+            grown.paste(image, (0, 0))
+            image = grown
         x0, y0 = (n % columns)*cw, (n // columns)*ch
         for y, row in enumerate(rows):
             for x, ink in enumerate(row):
@@ -250,7 +264,7 @@ def smooth(loop):
         if not a:
             points.append((x, y))
         h = min(length, 1)/2
-        if a and b:
+        if a and b and linked[k]:  # a side within a staircase (not a long one between two)
             points.append((x + dx*length/2, y + dy*length/2))
         else:
             if a:
@@ -338,11 +352,11 @@ def spans(grid, code, y0, y1, gap):
     return out
 
 
-def redraw(grid, rows):
-    """a Game Boy screen's rows down to rows, traced and drawn again at 5/3 the size (240 high): the
-    image, and where the Game Boy's pixel edges went across and down"""
+def redraw(grid, rows, width=None):
+    """a Game Boy screen's rows down to rows, traced and drawn again at 5/3 the size (240 high; and
+    across, that or width): the image, and where the Game Boy's pixel edges went across and down"""
     W = len(grid[0])
-    xs = axismap(thinness(lambda x, y: grid[y][x], W, rows), round(W*SCALE))
+    xs = axismap(thinness(lambda x, y: grid[y][x], W, rows), width or round(W*SCALE))
     ys = axismap(thinness(lambda y, x: grid[y][x], rows, W), round(rows*SCALE))
     image = Image.new("1", (xs[-1], 240), WHITE)
     for codes, ink in [("ld#", lambda x, y: dither("l", x, y)), ("d#", lambda x, y: dither("d", x, y)),
@@ -497,6 +511,43 @@ def makemenu(font):
         out.write("}\n")
 
 
+# Game A's game over, over its field: the box traced and drawn again as the title is, as wide as the
+# field, its words lettered; and below it PLEASE TRY AGAIN, each word further along as at the Game Boy
+# but the three centred, on dotted lines. The whole screen, clear but for the field (the game draws it
+# over the background).
+def makegameover(font, offset):
+    art = Image.open(os.path.join(HERE, "..", "graphics", "gameovercutoff.png")).convert("RGB")
+    W, H = art.size  # Game Boy x 14 on: the field (its box from 11 to 70)
+    original = [[COLORS[art.getpixel((x, y))] for x in range(W)] for y in range(H)]
+    grid = [row[:] if y < 70 else ["."]*W for y, row in enumerate(original)]  # the box, emptied
+    for y in range(23, 65):
+        for x in range(15, 67):
+            grid[y][x] = "."
+    field = 136  # the field's width on the screen (from the game's x 24)
+    image, xs, ys = redraw(grid, H, field)
+    inktop, inkbottom = inkrows(font, "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    def textat(top, bottom):  # where text goes centred on the Game Boy's rows top to bottom
+        return (ys[top] + ys[bottom + 1])//2 - (inktop + inkbottom + 1)//2
+    for word, top, line in (("GAME", 33, 40), ("OVER", 49, 56)):
+        x = (xs[11] + xs[71])//2 - textwidth(font, word)//2
+        drawtext(image, font, word, x, textat(top, top + 5))
+        for y in (ys[line], ys[line] + 1):  # its light brown line, dark
+            for lx in range(x - 2, x + textwidth(font, word) + 2):
+                image.putpixel((lx, y), dither("d", lx, y))
+    words = (("PLEASE", 97, 104), ("TRY", 113, 120), ("AGAIN\u2665", 129, 136))
+    step = round(8*SCALE)  # each word a Game Boy letter on from the one above
+    block = max(i*step + textwidth(font, w) for i, (w, _, _) in enumerate(words))
+    left = (field - block)//2
+    for i, (word, top, line) in enumerate(words):
+        x = left + i*step
+        drawtext(image, font, word, x, textat(top, top + 5))
+        for dx in range(x - 1, x + textwidth(font, word) + 1, 3):
+            image.putpixel((dx, ys[line]), BLACK)
+    screen = Image.new("LA", (400, 240), (0, 0))
+    screen.paste(image.convert("L").convert("LA"), (offset + 24, 0))
+    screen.save(os.path.join(HERE, "art", "gameovercutoff.png"))
+
+
 def main():
     art = Image.open(os.path.join(HERE, "..", "graphics", "gamebackgroundgamea.png")).convert("RGBA")
     grid = [[COLORS[art.getpixel((x, y))[:3]] for x in range(160)] for y in range(144)]
@@ -532,50 +583,75 @@ def main():
     assert total == 240, total
     rowstart = [sum(heights[:y]) for y in range(145)]
 
-    image = Image.new("1", (WIDTH, 240), BLACK)
+    # the whole screen: the game's x 0 is OFFSET along it, as platform_playdate.lua has it (OFFSETX)
+    OFFSET = math.floor((400 - 160*SCALE)/2)
+    image = Image.new("1", (400, 240), BLACK)
     draw = ImageDraw.Draw(image)
 
     # the field, plain white (not the Game Boy's grey stripes), and its walls; and left of them,
     # white as at the Game Boy, where game A's line meter is drawn
-    draw.rectangle((24, 0, 159, 239), fill=WHITE)
-    draw.rectangle((0, 0, 9, 239), fill=WHITE)
-    bricks(image, 10, 24)
-    bricks(image, 160, 174)
+    draw.rectangle((OFFSET + 24, 0, OFFSET + 159, 239), fill=WHITE)
+    draw.rectangle((OFFSET, 0, OFFSET + 9, 239), fill=WHITE)
+    bricks(image, OFFSET + 10, OFFSET + 24)
+    bricks(image, OFFSET + 160, OFFSET + 174)
 
-    # the panel, twice as wide, to the screen's edge (the score's band goes on as at the Game Boy's)
-    panelleft = 174
+    # the panel, twice as wide: its white line by the wall, then from LEFT to the screen's edge each
+    # of its boxes centred, and what's either side of a box (black, or the score's band, which so goes
+    # on to the wall and the edge as at the Game Boy) on out from it
+    def place(a, b):  # where Game Boy columns a to b go, centred
+        return LEFT + (400 - LEFT - 2*(b - a + 1))//2
+    def column(sx, y):
+        for (r0, r1), (a, b) in BOXES:
+            if r0 <= y <= r1:
+                d = sx - place(a, b)
+                return a - 1 if d < 0 else b + 1 if d >= 2*(b - a + 1) else a + d//2
+        return PANELX + 1  # a row the same all along
+    LEFT = OFFSET + 176
     for y in range(144):
         for r in range(heights[y]):
             sy = rowstart[y] + r
-            for sx in range(panelleft, WIDTH):
-                x = min(PANELX + (sx - panelleft)//2, 159)
+            for sx in range(OFFSET + 174, 400):
+                x = PANELX if sx < LEFT else column(sx, y)
                 image.putpixel((sx, sy), dither(grid[y][x], sx, sy))
 
-    def screenx(x):
-        return panelleft + (x - PANELX)*2
+    def screenx(x, box):  # a Game Boy column in a box, on the screen
+        (a, b) = box
+        return place(a, b) + (x - a)*2
+    def textrow(top):  # where text goes whose Game Boy glyphs (8 high) would start at row top
+        return math.floor((rowstart[top] + rowstart[top + 8])/2 - (inktop + inkbottom + 1)/2 + 0.5)
     inktop, inkbottom = inkrows(font, "SCORELVINS0123456789")
+    labelbox, nextbox = BOXES[0][1], BOXES[2][1]
     for label, top, bottom in LABELS:
-        x = (screenx(111) + screenx(153))//2 - textwidth(font, label)//2
+        x = (screenx(111, labelbox) + screenx(153, labelbox))//2 - textwidth(font, label)//2
         y = (rowstart[top + 1] + rowstart[bottom]) // 2 - (inktop + inkbottom + 1)//2
         drawtext(image, font, label, x, y)
+
+    # where platform.drawhud's things go, on the screen: each number centred across its place, in
+    # a box below its label or along the score's band, at text's row; the next piece's middle; and
+    # the score just added, rising (from and to text's rows) out of sight under the band
+    def place_lua(name, left, right, top, bottom, text):
+        return "\t%s = {left = %d, right = %d, top = %d, bottom = %d, text = %d},\n" % (name, left, right, top, bottom, text)
+    hud = (place_lua("SCORE", LEFT, 400, rowstart[23], rowstart[33], textrow(24)) +
+           place_lua("LEVEL", screenx(111, labelbox), screenx(153, labelbox), rowstart[56], rowstart[65], textrow(56)) +
+           place_lua("LINES", screenx(111, labelbox), screenx(153, labelbox), rowstart[80], rowstart[89], textrow(80)) +
+           "\tNEXT = {x = %g, y = %g},\n" % ((screenx(119, nextbox) + screenx(153, nextbox))/2, (rowstart[103] + rowstart[137])/2) +
+           "\tADDED = {left = %d, right = 400, top = %d, bottom = %d, from = %d, to = %d},\n" % (LEFT, rowstart[35], rowstart[45], textrow(36), textrow(28)))
 
     os.makedirs(os.path.join(HERE, "art"), exist_ok=True)
     addglyphs()
     lettering = loadfont(os.path.basename(FONT), os.path.join(HERE, "art", "fonts"))
     maketitle(lettering)
     makemenu(lettering)
+    makegameover(lettering, OFFSET)
     image.save(os.path.join(HERE, "art", "gamebackgroundgamea.png"))
     with open(os.path.join(HERE, "panel.lua"), "w") as out:
-        out.write("--Made by makeart.py: where game A's panel is in art/gamebackgroundgamea.png. The panel is\n"
-                  "--twice as wide as at the Game Boy from PANELX on (Game Boy pixels), and ROWS[y + 1] is where its\n"
-                  "--Game Boy row y starts. INKTOP and INKBOTTOM are the rows of the font's cells letters and digits\n"
-                  "--fill, for centering them.\n")
+        out.write("--Made by makeart.py: where game A's panel's numbers, next piece and score just added go, on the\n"
+                  "--screen (art/gamebackgroundgamea.png is all of it), and the font they're in.\n")
         out.write("panel = {\n")
-        out.write("\tPANELX = %d, LEFT = %d, FONT = %r,\n" % (PANELX, panelleft, "fonts/" + os.path.basename(FONT)))
-        out.write("\tINKTOP = %d, INKBOTTOM = %d,\n" % (inktop, inkbottom))
-        out.write("\tROWS = {" + ", ".join(str(r) for r in rowstart) + "},\n")
+        out.write("\tFONT = %r,\n" % ("fonts/" + os.path.basename(FONT)))
+        out.write(hud)
         out.write("}\n")
-    print("wrote art/gamebackgroundgamea.png, art/title.png, art/gametype.png, art/fonts/, panel.lua and menuart.lua")
+    print("wrote art/: gamebackgroundgamea.png, gameovercutoff.png, title.png, gametype.png and fonts/; panel.lua and menuart.lua")
 
 
 if __name__ == "__main__":
